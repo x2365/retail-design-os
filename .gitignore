@@ -17,7 +17,8 @@ backend/test_smoke_uploads/
 backend/test_uploads/
 backend/tests/test_uploads/
 
-# frontend (added in Part B)
+# frontend
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/*.tsbuildinfo

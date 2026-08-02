@@ -27,5 +27,16 @@ repos:
         pass_filenames: false
         files: ^backend/app/.*\.py$
 
-# Frontend hooks (eslint/prettier) are added once frontend/package.json exists
-# — see plan Part B1.
+      - id: frontend-eslint
+        name: eslint (frontend)
+        entry: bash -c 'cd frontend && npm run -s lint'
+        language: system
+        pass_filenames: false
+        files: ^frontend/src/.*\.(ts|tsx)$
+
+      - id: frontend-prettier
+        name: prettier --check (frontend)
+        entry: bash -c 'cd frontend && npx -s prettier --check .'
+        language: system
+        pass_filenames: false
+        files: ^frontend/(src|.*\.(json|ya?ml|md))/.*$

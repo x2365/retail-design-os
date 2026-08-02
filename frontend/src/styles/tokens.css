@@ -1,0 +1,67 @@
+/* Design tokens — ported 1:1 from the original vanilla dashboard so the
+   React rewrite keeps the same visual identity (dark theme, gold accents,
+   Unbounded/Geologica type). Component styles live in CSS Modules next to
+   each component; this file only holds the shared palette + base reset. */
+
+:root {
+  --bg: #090b10;
+  --surface: #13151c;
+  --surface2: #1b1e28;
+  --surface3: #252939;
+  --border: #2b2f40;
+  --border2: #353a4e;
+  --accent: #6470f5;
+  --accent2: #8b5cf6;
+  --accent3: #14c79a;
+  --warn: #f5a623;
+  --danger: #ef4444;
+  --gold: #d4af6a;
+  --gold-soft: rgba(212, 175, 106, 0.14);
+  --text: #eaecf4;
+  --text2: #969bb3;
+  --text3: #626888;
+  --brand-a: #6470f5;
+  --brand-b: #14c79a;
+  --brand-c: #f5a623;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: "Geologica", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Unbounded", sans-serif;
+  font-weight: 600;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
