@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from .. import models, security
+from .. import models, schemas, security
 from ..config import get_settings
 from ..database import get_db
 from ..services import assistant as assistant_svc
@@ -23,12 +23,12 @@ class AssistantQuery(BaseModel):
     filters: dict | None = None
 
 
-@router.get("/status")
+@router.get("/status", response_model=schemas.AssistantStatusOut)
 def assistant_status(_user: models.User = ReadDep) -> dict:
     return {"enabled": settings.llm_enabled, "model": settings.llm_model}
 
 
-@router.post("")
+@router.post("", response_model=schemas.AssistantAnswerOut)
 def ask_assistant(
     body: AssistantQuery, db: Session = Depends(get_db), _user: models.User = ReadDep
 ) -> dict:

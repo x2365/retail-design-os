@@ -997,6 +997,23 @@ export interface components {
             /** Task */
             task?: string | null;
         };
+        /** AssistantAnswerOut */
+        AssistantAnswerOut: {
+            /** Answer */
+            answer: string;
+            /**
+             * Used Tools
+             * @default []
+             */
+            used_tools: string[];
+            /** Error */
+            error?: string | null;
+            /**
+             * Disabled
+             * @default false
+             */
+            disabled: boolean;
+        };
         /** AssistantQuery */
         AssistantQuery: {
             /** Query */
@@ -1007,6 +1024,13 @@ export interface components {
             filters?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** AssistantStatusOut */
+        AssistantStatusOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Model */
+            model: string;
         };
         /** Body_login_api_auth_login_post */
         Body_login_api_auth_login_post: {
@@ -3069,9 +3093,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AssistantStatusOut"];
                 };
             };
         };
@@ -3095,9 +3117,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AssistantAnswerOut"];
                 };
             };
             /** @description Validation Error */

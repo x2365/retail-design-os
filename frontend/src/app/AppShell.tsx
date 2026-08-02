@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ROLE_LABELS, type Role } from "../auth/roles";
 import { useChangeMyPassword } from "../api/queries/users";
+import { AssistantWidget } from "../features/assistant/AssistantWidget";
 import { PasswordModal } from "../features/users/PasswordModal";
 import { NAV_SECTIONS, ROUTE_TITLES } from "./navConfig";
 import styles from "./AppShell.module.css";
@@ -100,6 +101,8 @@ export default function AppShell() {
           <Outlet />
         </div>
       </div>
+
+      <AssistantWidget />
     </div>
   );
 }

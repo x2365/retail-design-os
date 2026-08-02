@@ -523,3 +523,16 @@ class DashboardKpis(BaseModel):
     groups_count: int
     points_total: int = 0
     on_time_rate: int | None = None
+
+
+# ---- Assistant copilot -------------------------------------------------------
+class AssistantStatusOut(BaseModel):
+    enabled: bool
+    model: str
+
+
+class AssistantAnswerOut(BaseModel):
+    answer: str
+    used_tools: list[str] = []
+    error: str | None = None
+    disabled: bool = False
