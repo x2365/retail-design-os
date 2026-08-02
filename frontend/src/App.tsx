@@ -13,6 +13,7 @@ import BudgetPage from "./features/budget/BudgetPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import PaymentsPage from "./features/payments/PaymentsPage";
 import PipelinePage from "./features/tasks/PipelinePage";
+import TTPage from "./features/tt/TTPage";
 
 export default function App() {
   return (
@@ -30,7 +31,7 @@ export default function App() {
                 <Route path="archive" element={<ComingSoon title="Архив задач" />} />
                 <Route path="budget" element={<BudgetPage />} />
                 <Route path="payments" element={<PaymentsPage />} />
-                <Route path="tt" element={<ComingSoon title="Торговые точки" />} />
+                <Route path="tt" element={<TTPage />} />
                 <Route path="approvals" element={<ApprovalsPage />} />
                 <Route path="brands" element={<ComingSoon title="Бренды" />} />
                 <Route path="library" element={<ComingSoon title="Библиотека" />} />
