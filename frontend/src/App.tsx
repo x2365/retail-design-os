@@ -13,6 +13,7 @@ import BudgetPage from "./features/budget/BudgetPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import PaymentsPage from "./features/payments/PaymentsPage";
 import BrandsPage from "./features/brands/BrandsPage";
+import EquipmentPage from "./features/equipment/EquipmentPage";
 import PipelinePage from "./features/tasks/PipelinePage";
 import TTPage from "./features/tt/TTPage";
 
@@ -35,7 +36,7 @@ export default function App() {
                 <Route path="tt" element={<TTPage />} />
                 <Route path="approvals" element={<ApprovalsPage />} />
                 <Route path="brands" element={<BrandsPage />} />
-                <Route path="library" element={<ComingSoon title="Библиотека" />} />
+                <Route path="library" element={<EquipmentPage />} />
                 <Route
                   path="users"
                   element={

@@ -246,11 +246,24 @@ def card_detail(eq_id: int, db: Session = Depends(get_db), _user: models.User = 
     }
 
 
+@router.delete("/{eq_id}", status_code=204)
 def delete_equipment(eq_id: int, db: Session = Depends(get_db), _user: models.User = WriteDep):
     e = db.get(models.Equipment, eq_id)
     if not e:
         raise HTTPException(404, "Оборудование не найдено")
-    db.delete(e)
+    task_count = (
+        db.scalar(
+            select(func.count()).select_from(models.Task).where(models.Task.equipment_id == eq_id)
+        )
+        or 0
+    )
+    if task_count:
+        raise HTTPException(
+            409,
+            f"Нельзя удалить: на изделии есть запущенные задачи ({task_count}). "
+            "Переведите его в архив вместо удаления.",
+        )
+    db.delete(e)  # cascades documents (ondelete=CASCADE)
     db.commit()
 
 

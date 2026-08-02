@@ -646,7 +646,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Equipment */
+        delete: operations["delete_equipment_api_equipment__eq_id__delete"];
         options?: never;
         head?: never;
         /** Update Equipment */
@@ -3695,6 +3696,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EquipmentOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_equipment_api_equipment__eq_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eq_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
