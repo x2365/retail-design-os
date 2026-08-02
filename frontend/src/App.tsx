@@ -6,11 +6,12 @@ import AppShell from "./app/AppShell";
 import ProtectedRoute from "./app/ProtectedRoute";
 import { RequireRole } from "./app/RequireRole";
 import { AuthProvider } from "./auth/AuthContext";
-import { ComingSoon } from "./components/ComingSoon";
 import LoginPage from "./features/auth/LoginPage";
 import ApprovalsPage from "./features/approvals/ApprovalsPage";
+import ArchivePage from "./features/archive/ArchivePage";
 import BudgetPage from "./features/budget/BudgetPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
+import GanttPage from "./features/gantt/GanttPage";
 import PaymentsPage from "./features/payments/PaymentsPage";
 import BrandsPage from "./features/brands/BrandsPage";
 import EquipmentPage from "./features/equipment/EquipmentPage";
@@ -30,8 +31,8 @@ export default function App() {
               <Route element={<AppShell />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="pipeline" element={<PipelinePage />} />
-                <Route path="gantt" element={<ComingSoon title="Таймлайн" />} />
-                <Route path="archive" element={<ComingSoon title="Архив задач" />} />
+                <Route path="gantt" element={<GanttPage />} />
+                <Route path="archive" element={<ArchivePage />} />
                 <Route path="budget" element={<BudgetPage />} />
                 <Route path="payments" element={<PaymentsPage />} />
                 <Route path="tt" element={<TTPage />} />

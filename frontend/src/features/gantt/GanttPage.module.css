@@ -1,0 +1,80 @@
+.wrap {
+  overflow-x: auto;
+}
+.windowLabel {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.label {
+  width: 150px;
+  font-size: 11px;
+  color: var(--text2);
+  flex-shrink: 0;
+  padding-right: 10px;
+}
+.code {
+  font-size: 9px;
+  color: var(--text3);
+}
+.track {
+  flex: 1;
+  height: 20px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  min-width: 300px;
+}
+.bar {
+  position: absolute;
+  height: 100%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  font-size: 9px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--danger);
+  z-index: 2;
+}
+.pct {
+  width: 36px;
+  text-align: right;
+  font-size: 10px;
+  color: var(--text3);
+  padding-left: 8px;
+}
+.legend {
+  margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text2);
+}
+.legendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+}
