@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 12  # 12h
 
+    # Brute-force mitigation on /auth/login (slowapi / limits syntax, e.g. "5/minute").
+    login_rate_limit: str = "5/minute"
+
     # --- Uploads ------------------------------------------------------------
     upload_dir: str = "./uploads"  # mount a volume here in production
     max_upload_mb: int = 25  # per-file limit

@@ -29,3 +29,14 @@ def test_me_reflects_the_logged_in_user(client: TestClient, admin_headers: dict[
     r = client.get("/api/auth/me", headers=admin_headers)
     assert r.status_code == 200
     assert r.json()["email"] == "admin@retail.os"
+
+
+def test_login_is_rate_limited_after_repeated_failures(client: TestClient, db: Session):
+    # default budget is 5/minute (settings.login_rate_limit) — burn it, then
+    # confirm the *next* attempt (whether the password is right or wrong) is
+    # throttled rather than evaluated.
+    for _ in range(5):
+        client.post("/api/auth/login", data={"username": "admin@retail.os", "password": "nope"})
+
+    r = client.post("/api/auth/login", data={"username": "admin@retail.os", "password": "admin123"})
+    assert r.status_code == 429

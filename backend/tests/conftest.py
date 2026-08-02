@@ -30,12 +30,23 @@ if _TEST_DB.exists():
 import pytest  # noqa: E402
 from app.database import engine, get_db  # noqa: E402
 from app.main import app  # noqa: E402
+from app.rate_limit import limiter  # noqa: E402
 from app.seed import USERS  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 # email -> plaintext password, from the seed data (see app/seed.py)
 _PASSWORDS: dict[str, str] = {email: pw for email, _name, _role, pw in USERS}
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """The login rate limiter is a process-wide singleton (in-memory storage);
+    without this every test after test_login_rate_limit would inherit its
+    429s, since TestClient requests all share the same 'testclient' remote
+    address."""
+    limiter.reset()
+    yield
 
 
 @pytest.fixture(scope="session")
