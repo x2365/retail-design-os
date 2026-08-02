@@ -1,0 +1,40 @@
+.btn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-family: "Geologica", sans-serif;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghost {
+  background: var(--surface2);
+  color: var(--text2);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--surface3);
+  color: var(--text);
+}
+
+.primary {
+  background: var(--accent);
+  color: white;
+}
+.primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.danger {
+  background: var(--surface2);
+  color: var(--danger);
+}
+.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}

@@ -1,32 +1,45 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { queryClient } from "./app/queryClient";
-import { AuthProvider, useAuth } from "./auth/AuthContext";
-
-function Shell() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) return <p style={{ padding: 24 }}>Загрузка…</p>;
-
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>RetailDesign OS</h1>
-      <p>
-        {user
-          ? `Вошли как ${user.full_name} (${user.role})`
-          : "Не авторизованы — экран входа появится в следующем шаге."}
-      </p>
-    </div>
-  );
-}
+import AppShell from "./app/AppShell";
+import ProtectedRoute from "./app/ProtectedRoute";
+import { RequireRole } from "./app/RequireRole";
+import { AuthProvider } from "./auth/AuthContext";
+import { ComingSoon } from "./components/ComingSoon";
+import LoginPage from "./features/auth/LoginPage";
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <Shell />
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppShell />}>
+                <Route index element={<ComingSoon title="Дашборд" />} />
+                <Route path="pipeline" element={<ComingSoon title="Воронка задач" />} />
+                <Route path="gantt" element={<ComingSoon title="Таймлайн" />} />
+                <Route path="archive" element={<ComingSoon title="Архив задач" />} />
+                <Route path="budget" element={<ComingSoon title="Бюджеты" />} />
+                <Route path="payments" element={<ComingSoon title="Оплаты / КП" />} />
+                <Route path="tt" element={<ComingSoon title="Торговые точки" />} />
+                <Route path="approvals" element={<ComingSoon title="Согласования" />} />
+                <Route path="brands" element={<ComingSoon title="Бренды" />} />
+                <Route path="library" element={<ComingSoon title="Библиотека" />} />
+                <Route
+                  path="users"
+                  element={
+                    <RequireRole roles={["admin"]}>
+                      <ComingSoon title="Пользователи" />
+                    </RequireRole>
+                  }
+                />
+              </Route>
+            </Route>
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
