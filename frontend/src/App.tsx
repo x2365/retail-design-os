@@ -8,6 +8,7 @@ import { RequireRole } from "./app/RequireRole";
 import { AuthProvider } from "./auth/AuthContext";
 import { ComingSoon } from "./components/ComingSoon";
 import LoginPage from "./features/auth/LoginPage";
+import DashboardPage from "./features/dashboard/DashboardPage";
 
 export default function App() {
   return (
@@ -19,7 +20,7 @@ export default function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
-                <Route index element={<ComingSoon title="Дашборд" />} />
+                <Route index element={<DashboardPage />} />
                 <Route path="pipeline" element={<ComingSoon title="Воронка задач" />} />
                 <Route path="gantt" element={<ComingSoon title="Таймлайн" />} />
                 <Route path="archive" element={<ComingSoon title="Архив задач" />} />

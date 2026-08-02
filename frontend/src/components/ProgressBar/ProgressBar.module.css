@@ -1,0 +1,23 @@
+.wrap {
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.blue {
+  background: var(--accent);
+}
+.green {
+  background: var(--accent3);
+}
+.amber {
+  background: var(--warn);
+}
+.red {
+  background: var(--danger);
+}

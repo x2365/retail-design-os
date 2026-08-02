@@ -68,7 +68,7 @@ def _derived_approvals(db: Session) -> list[dict]:
     return out
 
 
-@router.get("")
+@router.get("", response_model=list[schemas.ApprovalOut])
 def list_approvals(
     status: str = "pending", db: Session = Depends(get_db), _user: models.User = ReadDep
 ):

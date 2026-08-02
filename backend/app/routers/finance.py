@@ -123,7 +123,7 @@ def upsert_payment(
     return serializers.payment_to_out(pay)
 
 
-@router.get("/tt")
+@router.get("/tt", response_model=list[schemas.TTOut])
 def list_retail_points(db: Session = Depends(get_db), _user: models.User = ReadDep):
     """Per-task ТТ delivery summary (only tasks that actually ship to TT)."""
     tasks = db.scalars(

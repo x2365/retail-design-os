@@ -1,0 +1,18 @@
+.gridMain {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.sideStack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.placeholder {
+  color: var(--text3);
+  font-size: 12px;
+  padding: 8px;
+}

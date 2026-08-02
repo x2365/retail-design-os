@@ -978,6 +978,29 @@ export interface components {
              */
             comment: string;
         };
+        /** ApprovalOut */
+        ApprovalOut: {
+            /** Id */
+            id: number;
+            /** From Name */
+            from_name: string;
+            /** Role */
+            role: string;
+            /** Summary */
+            summary: string;
+            /** Type */
+            type: string;
+            /** Avatar */
+            avatar: string;
+            /** Color */
+            color: string;
+            /** Status */
+            status: string;
+            /** Comment */
+            comment?: string | null;
+            /** Task */
+            task?: string | null;
+        };
         /** AssistantQuery */
         AssistantQuery: {
             /** Query */
@@ -1640,6 +1663,25 @@ export interface components {
             comment?: string | null;
             /** At */
             at: string;
+        };
+        /** TTOut */
+        TTOut: {
+            /** Task */
+            task: string;
+            /** Brand */
+            brand: string;
+            /** Name */
+            name: string;
+            /** Tt Total */
+            tt_total: number;
+            /** Tt Ok */
+            tt_ok: number;
+            /** Tt Partial */
+            tt_partial: number;
+            /** Tt Miss */
+            tt_miss: number;
+            /** Days Left */
+            days_left: number;
         };
         /** TaskCreate */
         TaskCreate: {
@@ -2848,7 +2890,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ApprovalOut"][];
                 };
             };
             /** @description Validation Error */
@@ -3150,7 +3192,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TTOut"][];
                 };
             };
         };

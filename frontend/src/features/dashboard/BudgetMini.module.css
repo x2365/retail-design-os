@@ -1,0 +1,35 @@
+.group {
+  margin-bottom: 18px;
+}
+.group:last-child {
+  margin-bottom: 0;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.name {
+  font-size: 12px;
+  font-weight: 500;
+}
+.total {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text2);
+}
+.barWrap {
+  margin-bottom: 6px;
+}
+.foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text3);
+}
