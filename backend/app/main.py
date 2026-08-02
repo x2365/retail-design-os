@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy.exc import IntegrityError
 
 from .config import get_settings
 from .database import Base, SessionLocal, engine
@@ -49,7 +50,13 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     if settings.seed_on_startup:
         with SessionLocal() as db:
-            seed(db)
+            try:
+                seed(db)
+            except IntegrityError:
+                # Multiple gunicorn workers each run this lifespan on boot;
+                # whichever one loses the race on the check-then-insert just
+                # rolls back — the winner's data is already committed.
+                db.rollback()
     yield
 
 
