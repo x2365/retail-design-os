@@ -15,6 +15,7 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 backend/test_smoke_uploads/
 backend/test_uploads/
+backend/tests/test_uploads/
 
 # frontend (added in Part B)
 frontend/node_modules/

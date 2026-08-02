@@ -99,8 +99,13 @@ User(role)           # аутентификация и RBAC
 
 ## Тесты
 ```bash
-cd backend && python test_smoke.py   # 25 интеграционных проверок (auth, RBAC, ТТ-агрегаты, CRUD)
+cd backend && pip install -r requirements-dev.txt
+cd backend && pytest -q              # auth, RBAC, состояние пайплайна, документы, KPI
+ruff check backend && mypy backend/app   # lint + типы
 ```
+Каждый тест изолирован: справочные данные (пользователи/группы/бренды/ТТ) сидируются
+один раз на сессию, а любые изменения, которые делает тест, откатываются в конце
+(SAVEPOINT-транзакция) — без пересидирования 90 точек перед каждым тестом.
 
 ## Переход на продакшен
 - Задать сильный `JWT_SECRET` и `DATABASE_URL` на Postgres.

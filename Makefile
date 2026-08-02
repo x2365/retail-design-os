@@ -6,8 +6,8 @@ install:        ## install backend deps incl. dev tooling (local dev)
 dev:            ## run API locally on :8000 (SQLite, auto-reload)
 	cd backend && uvicorn app.main:app --reload --port 8000
 
-test:           ## run the integration smoke tests
-	cd backend && python test_smoke.py
+test:           ## run the backend test suite
+	cd backend && pytest -q
 
 lint:           ## ruff check (backend)
 	ruff check backend
