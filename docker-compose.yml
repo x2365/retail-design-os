@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: retail
+      POSTGRES_PASSWORD: retail
+      POSTGRES_DB: retaildesign
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retail -d retaildesign"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Not exposed publicly; only the api talks to it.
+
+  api:
+    build: ./backend
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://retail:retail@db:5432/retaildesign
+      JWT_SECRET: ${JWT_SECRET:-please-change-this-in-production}
+      CORS_ORIGINS: "*"
+      WEB_CONCURRENCY: 4
+      SEED_ON_STARTUP: "true"
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    # Scale horizontally: `docker compose up --scale api=3`
+    deploy:
+      replicas: 1
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"     # open http://localhost:8080
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  uploads:

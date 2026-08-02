@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetailDesign OS — Библиотека проектов</title>
+<style>
+  :root{
+    --bg:#0a0b0f; --surface:#12141a; --surface2:#1a1d26; --surface3:#222535;
+    --border:#2a2d3e; --accent:#5b6af0; --accent2:#8b5cf6; --accent3:#06d6a0;
+    --warn:#f59e0b; --danger:#ef4444; --text:#e8eaf2; --text2:#8b90a8; --text3:#5a5f78;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4}
+  .wrap{max-width:1200px;margin:0 auto;padding:24px}
+  .topbar{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .logo{font-weight:700;letter-spacing:.5px}
+  .logo span{color:var(--accent)}
+  .spacer{margin-left:auto}
+  .muted{color:var(--text2)} .dim{color:var(--text3)}
+  .btn{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--accent)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-primary:hover{filter:brightness(1.08)}
+  .btn-ghost{background:transparent}
+  .input,select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:12px;outline:none}
+  .input:focus,select:focus{border-color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:18px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .card h3{font-size:14px;margin-bottom:4px}
+  .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;background:var(--surface3);color:var(--text2)}
+  .badge-green{background:rgba(6,214,160,.15);color:var(--accent3)}
+  .badge-amber{background:rgba(245,158,11,.15);color:var(--warn)}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .actions .btn{font-size:11px;padding:6px 10px}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .overlay.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:560px;width:100%;max-height:86vh;overflow:auto}
+  .modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .x{cursor:pointer;color:var(--text3);font-size:18px;background:var(--surface2);border:none;border-radius:8px;width:32px;height:32px}
+  .file{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;margin-bottom:6px}
+  .file:hover{border-color:var(--accent)}
+  /* login */
+  .login{max-width:340px;margin:12vh auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px}
+  .login h2{font-size:18px;margin-bottom:4px}
+  .login .field{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+  .login label{font-size:11px;color:var(--text2)}
+  .err{color:var(--danger);font-size:12px;margin-top:10px;min-height:16px}
+  .hidden{display:none!important}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-view">
+  <div class="login">
+    <h2>Библиотека проектов</h2>
+    <div class="dim">RetailDesign OS</div>
+    <div class="field"><label>E-mail</label><input class="input" id="lg-email" value="admin@retail.os" autocomplete="username"></div>
+    <div class="field"><label>Пароль</label><input class="input" id="lg-pass" type="password" value="admin123" autocomplete="current-password"></div>
+    <div class="err" id="lg-err"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doLogin()">Войти</button>
+    <div class="dim" style="margin-top:12px;font-size:11px">API: <span id="api-base-label"></span></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app-view" class="hidden">
+  <div class="topbar">
+    <div class="logo">RETAIL<span>DESIGN</span> · Библиотека</div>
+    <div class="spacer"></div>
+    <span class="muted" id="who"></span>
+    <button class="btn btn-ghost" onclick="logout()">Выйти</button>
+  </div>
+  <div class="wrap">
+    <div class="row">
+      <h2 style="font-size:16px">Карточки проектов <span class="dim" id="count"></span></h2>
+      <div class="spacer"></div>
+      <button class="btn btn-primary hidden" id="add-btn" onclick="openCardForm()">+ Карточка</button>
+    </div>
+    <div class="toolbar">
+      <input class="input" id="search" placeholder="Поиск по названию/бренду" oninput="render()" style="width:240px">
+      <select id="brand-filter" onchange="render()"><option value="">Все бренды</option></select>
+      <label class="muted" style="font-size:12px"><input type="checkbox" id="active-only" onchange="render()"> только активные</label>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- ── FILES MODAL ── -->
+<div class="overlay" id="files-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div style="font-weight:600" id="files-title">Файлы проекта</div><div class="dim">Полные файлы проекта</div></div>
+      <button class="x" onclick="close_('files-modal')">✕</button>
+    </div>
+    <div id="files-list"></div>
+    <div id="files-upload" class="row hidden" style="margin-top:14px">
+      <select id="file-kind">
+        <option value="brief">ТЗ бренда</option><option value="kp">КП подрядчика</option>
+        <option value="sketch">Эскизы</option><option value="model3d">3D-модель</option>
+        <option value="photo">Фото</option><option value="other">Прочее</option>
+      </select>
+      <input type="file" id="file-input">
+      <button class="btn btn-primary" onclick="uploadFile()">↑ Загрузить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARD FORM MODAL ── -->
+<div class="overlay" id="card-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <div style="font-weight:600" id="card-form-title">Новая карточка</div>
+      <button class="x" onclick="close_('card-modal')">✕</button>
+    </div>
+    <div class="field" style="display:flex;flex-direction:column;gap:10px">
+      <div><label class="dim">Бренд</label><select id="cf-brand" style="width:100%"></select></div>
+      <div><label class="dim">Название</label><input class="input" id="cf-name" style="width:100%"></div>
+      <div class="row">
+        <div style="flex:1"><label class="dim">Тип</label>
+          <select id="cf-kind" style="width:100%">
+            <option value="stand">Подставка</option><option value="display">Дисплей</option>
+            <option value="corner">Корнер</option><option value="shelf">Полка</option>
+            <option value="container">Ёмкость</option><option value="other">Прочее</option>
+          </select></div>
+        <div style="flex:1"><label class="dim">Бюджет, ₽</label><input class="input" id="cf-budget" type="number" min="0" value="0" style="width:100%"></div>
+      </div>
+      <div><label class="dim">Размеры</label><input class="input" id="cf-dim" placeholder="45×45×120 мм" style="width:100%"></div>
+    </div>
+    <div class="err" id="cf-err"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="close_('card-modal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveCard()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── config / state ────────────────────────────────────────────────
+function computeApiBase(){
+  if (window.RETAIL_API) return window.RETAIL_API;
+  if (location.protocol === 'file:') return 'http://localhost:8000';
+  const port = location.port;
+  if (port === '' || port === '80' || port === '443' || port === '8080') return '';
+  return location.protocol + '//' + location.hostname + ':8000';
+}
+const API = computeApiBase() + '/api';
+let TOKEN = null, ME = null, CARDS = [], BRANDS = [], CURRENT_CARD = null, EDIT_ID = null;
+document.getElementById('api-base-label').textContent = API;
+
+function isEditor(){ return ME && (ME.role === 'admin' || ME.role === 'manager'); }
+function rub(kop){ return Math.round((kop||0)/100).toLocaleString('ru-RU'); }
+function close_(id){ document.getElementById(id).classList.remove('open'); }
+function open_(id){ document.getElementById(id).classList.add('open'); }
+
+async function api(path, opts={}){
+  const headers = Object.assign({'Authorization':'Bearer '+TOKEN}, opts.headers||{});
+  if (opts.body && !(opts.body instanceof FormData)) headers['Content-Type']='application/json';
+  const res = await fetch(API+path, Object.assign({}, opts, {headers}));
+  if (res.status === 204) return null;
+  const data = await res.json().catch(()=>({}));
+  if (!res.ok) throw new Error(data.detail || ('HTTP '+res.status));
+  return data;
+}
+
+// ── auth ──────────────────────────────────────────────────────────
+async function doLogin(){
+  const err = document.getElementById('lg-err'); err.textContent='';
+  const body = new URLSearchParams({username:document.getElementById('lg-email').value, password:document.getElementById('lg-pass').value});
+  try{
+    const r = await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail||'Ошибка входа');
+    TOKEN = d.access_token;
+    ME = await api('/auth/me');
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('app-view').classList.remove('hidden');
+    document.getElementById('who').textContent = ME.full_name + ' · ' + ME.role;
+    document.getElementById('add-btn').classList.toggle('hidden', !isEditor());
+    await loadAll();
+  }catch(e){ err.textContent = e.message; }
+}
+function logout(){ TOKEN=null; ME=null; location.reload(); }
+
+// ── data ──────────────────────────────────────────────────────────
+async function loadAll(){
+  try{
+    BRANDS = await api('/brands');
+    const bf = document.getElementById('brand-filter');
+    bf.innerHTML = '<option value="">Все бренды</option>' + BRANDS.map(b=>`<option>${b.name}</option>`).join('');
+    const cb = document.getElementById('cf-brand');
+    if (cb) cb.innerHTML = BRANDS.map(b=>`<option>${b.name}</option>`).join('');
+  }catch(e){ console.error(e); }
+  CARDS = await api('/equipment');
+  render();
+}
+
+function render(){
+  const q = (document.getElementById('search').value||'').trim().toLowerCase();
+  const brand = document.getElementById('brand-filter').value;
+  const activeOnly = document.getElementById('active-only').checked;
+  let list = CARDS.slice();
+  if (brand) list = list.filter(c=>c.brand===brand);
+  if (activeOnly) list = list.filter(c=>c.is_active);
+  if (q) list = list.filter(c=>c.name.toLowerCase().includes(q)||c.brand.toLowerCase().includes(q));
+  document.getElementById('count').textContent = '· ' + list.length;
+  const editor = isEditor();
+  document.getElementById('grid').innerHTML = list.map(c=>`
+    <div class="card">
+      <div class="row"><span class="badge">${c.kind_label}</span>
+        <span class="badge ${c.is_active?'badge-green':''}">${c.is_active?'используется':'в архиве'}</span></div>
+      <h3 style="margin-top:8px">${c.name}</h3>
+      <div class="muted">${c.brand} · Группа ${c.group}</div>
+      <div class="muted" style="margin-top:8px">Бюджет: <b style="color:var(--text)">${rub(c.est_budget)} ${c.currency}</b></div>
+      ${c.times_produced?`<div class="dim" style="font-size:11px">Запусков: ${c.times_produced}</div>`:''}
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="openFiles(${c.id}, ${JSON.stringify(c.name)})">📁 Файлы проекта</button>
+        ${editor?`<button class="btn btn-ghost" onclick="openCardForm(${c.id})">✎</button>`:''}
+        ${editor?`<button class="btn btn-ghost" onclick="toggleArchive(${c.id})">${c.is_active?'В архив':'Из архива'}</button>`:''}
+      </div>
+    </div>`).join('') || '<div class="dim">Карточек не найдено</div>';
+}
+
+// ── files ─────────────────────────────────────────────────────────
+async function openFiles(id, name){
+  CURRENT_CARD = id;
+  document.getElementById('files-title').textContent = '📁 ' + name;
+  document.getElementById('files-upload').classList.toggle('hidden', !isEditor());
+  open_('files-modal');
+  await loadFiles();
+}
+async function loadFiles(){
+  const box = document.getElementById('files-list');
+  box.innerHTML = '<div class="dim">Загрузка…</div>';
+  try{
+    const docs = await api('/equipment/'+CURRENT_CARD+'/documents');
+    const editor = isEditor();
+    box.innerHTML = docs.length ? docs.map(d=>`
+      <div class="file" onclick="downloadDoc(${d.id})">
+        <b>${d.kind_label}:</b> ${d.filename}
+        <span class="dim" style="font-size:10px">${(d.size/1024).toFixed(0)} КБ</span>
+        ${editor?`<span style="margin-left:auto;color:var(--text3)" onclick="event.stopPropagation();delDoc(${d.id})">✕</span>`:''}
+      </div>`).join('') : '<div class="dim">Файлов проекта пока нет</div>';
+  }catch(e){ box.innerHTML = '<div class="err">'+e.message+'</div>'; }
+}
+async function uploadFile(){
+  const fi = document.getElementById('file-input');
+  if(!fi.files.length){ alert('Выберите файл'); return; }
+  const fd = new FormData(); fd.append('file', fi.files[0]); fd.append('kind', document.getElementById('file-kind').value);
+  try{ await api('/equipment/'+CURRENT_CARD+'/documents',{method:'POST',body:fd}); fi.value=''; await loadFiles(); }
+  catch(e){ alert('Не удалось загрузить: '+e.message); }
+}
+async function delDoc(id){ if(!confirm('Удалить файл?'))return; try{ await api('/documents/'+id,{method:'DELETE'}); await loadFiles(); }catch(e){ alert(e.message); } }
+async function downloadDoc(id){
+  try{
+    const res = await fetch(API+'/documents/'+id+'/download',{headers:{'Authorization':'Bearer '+TOKEN}});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const blob = await res.blob(); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=''; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }catch(e){ alert('Не удалось скачать: '+e.message); }
+}
+
+// ── card create/edit/archive ──────────────────────────────────────
+function openCardForm(id){
+  EDIT_ID = id || null;
+  const c = id ? CARDS.find(x=>x.id===id) : null;
+  document.getElementById('card-form-title').textContent = id ? 'Редактировать карточку' : 'Новая карточка';
+  document.getElementById('cf-err').textContent = '';
+  document.getElementById('cf-brand').value = c ? c.brand : (BRANDS[0]&&BRANDS[0].name||'');
+  document.getElementById('cf-brand').disabled = !!id; // бренд не меняем при редактировании
+  document.getElementById('cf-name').value = c ? c.name : '';
+  document.getElementById('cf-kind').value = c ? c.kind : 'stand';
+  document.getElementById('cf-budget').value = c ? Math.round(c.est_budget/100) : 0;
+  document.getElementById('cf-dim').value = c ? c.dimensions : '';
+  open_('card-modal');
+}
+async function saveCard(){
+  const err = document.getElementById('cf-err'); err.textContent='';
+  const payload = {
+    name: document.getElementById('cf-name').value.trim(),
+    kind: document.getElementById('cf-kind').value,
+    dimensions: document.getElementById('cf-dim').value.trim(),
+    est_budget: parseInt(document.getElementById('cf-budget').value||'0',10)*100, // ₽→копейки
+  };
+  try{
+    if(EDIT_ID){ await api('/equipment/'+EDIT_ID,{method:'PATCH',body:JSON.stringify(payload)}); }
+    else { payload.brand = document.getElementById('cf-brand').value; await api('/equipment',{method:'POST',body:JSON.stringify(payload)}); }
+    close_('card-modal'); CARDS = await api('/equipment'); render();
+  }catch(e){ err.textContent = e.message; }
+}
+async function toggleArchive(id){
+  const c = CARDS.find(x=>x.id===id);
+  try{ await api('/equipment/'+id,{method:'PATCH',body:JSON.stringify({is_active:!c.is_active})}); CARDS = await api('/equipment'); render(); }
+  catch(e){ alert(e.message); }
+}
+
+// Enter to login
+document.getElementById('lg-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
