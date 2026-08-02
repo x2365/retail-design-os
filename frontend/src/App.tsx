@@ -16,6 +16,7 @@ import BrandsPage from "./features/brands/BrandsPage";
 import EquipmentPage from "./features/equipment/EquipmentPage";
 import PipelinePage from "./features/tasks/PipelinePage";
 import TTPage from "./features/tt/TTPage";
+import UsersPage from "./features/users/UsersPage";
 
 export default function App() {
   return (
@@ -41,7 +42,7 @@ export default function App() {
                   path="users"
                   element={
                     <RequireRole roles={["admin"]}>
-                      <ComingSoon title="Пользователи" />
+                      <UsersPage />
                     </RequireRole>
                   }
                 />

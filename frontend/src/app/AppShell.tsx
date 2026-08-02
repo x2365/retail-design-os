@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
 import { ROLE_LABELS, type Role } from "../auth/roles";
+import { useChangeMyPassword } from "../api/queries/users";
+import { PasswordModal } from "../features/users/PasswordModal";
 import { NAV_SECTIONS, ROUTE_TITLES } from "./navConfig";
 import styles from "./AppShell.module.css";
 
@@ -15,6 +18,8 @@ export default function AppShell() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const title = ROUTE_TITLES[location.pathname] ?? "RetailDesign OS";
+  const changeMyPassword = useChangeMyPassword();
+  const [changingPassword, setChangingPassword] = useState(false);
 
   return (
     <div className={styles.app}>
@@ -58,6 +63,14 @@ export default function AppShell() {
               <button
                 className={styles.navItem}
                 style={{ padding: "4px 7px" }}
+                title="Сменить пароль"
+                onClick={() => setChangingPassword(true)}
+              >
+                🔑
+              </button>
+              <button
+                className={styles.navItem}
+                style={{ padding: "4px 7px" }}
                 title="Выйти"
                 onClick={logout}
               >
@@ -67,6 +80,17 @@ export default function AppShell() {
           </div>
         )}
       </aside>
+
+      {changingPassword && (
+        <PasswordModal
+          title="Сменить пароль"
+          requireCurrent
+          onSubmit={({ currentPassword, newPassword }) =>
+            changeMyPassword.mutateAsync({ currentPassword: currentPassword ?? "", newPassword })
+          }
+          onClose={() => setChangingPassword(false)}
+        />
+      )}
 
       <div className={styles.main}>
         <div className={styles.topbar}>
