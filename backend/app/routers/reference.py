@@ -1,4 +1,5 @@
 """Reference data: groups (brands moved to brands.py with full CRUD)."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
@@ -15,15 +16,16 @@ ReadDep = Depends(security.get_current_user)
 @router.get("/groups", response_model=list[schemas.GroupOut])
 def list_groups(db: Session = Depends(get_db), _user: models.User = ReadDep):
     groups = db.scalars(select(models.Group).order_by(models.Group.code)).all()
-    spent = dict(db.execute(
+    spent_rows = db.execute(
         select(models.Brand.group_id, func.coalesce(func.sum(models.Task.production_cost), 0))
         .select_from(models.Task)
         .join(models.Brand, models.Task.brand_id == models.Brand.id)
         .group_by(models.Brand.group_id)
-    ).all())
+    ).all()
+    spent: dict[int, int] = {group_id: total for group_id, total in spent_rows}
     out = []
     for g in groups:
         go = schemas.GroupOut.model_validate(g)
-        go.budget_spent = int(spent.get(g.id, 0))   # реальное «освоено» = сумма себестоимости задач
+        go.budget_spent = int(spent.get(g.id, 0))  # реальное «освоено» = сумма себестоимости задач
         out.append(go)
     return out

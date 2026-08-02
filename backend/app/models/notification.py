@@ -1,4 +1,5 @@
 """Журнал уведомлений/напоминаний (engine рассылки ответственным за этап)."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -37,15 +38,15 @@ class Notification(Base, TimestampMixin):
         ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True, index=True
     )
     stage: Mapped[int | None] = mapped_column(nullable=True)
-    rule: Mapped[str] = mapped_column(String(32))            # stage_stuck | deadline | approval_pending
+    rule: Mapped[str] = mapped_column(String(32))  # stage_stuck | deadline | approval_pending
     message: Mapped[str] = mapped_column(String(500))
-    dedup_key: Mapped[str] = mapped_column(String(160))      # UNIQUE — не слать одно и то же дважды
+    dedup_key: Mapped[str] = mapped_column(String(160))  # UNIQUE — не слать одно и то же дважды
     status: Mapped[str] = mapped_column(String(16), default="pending")  # pending|sent|failed
-    channels: Mapped[str] = mapped_column(String(120), default="")      # какие каналы отработали
+    channels: Mapped[str] = mapped_column(String(120), default="")  # какие каналы отработали
     sent_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    user: Mapped["User | None"] = relationship(lazy="joined")
-    task: Mapped["Task | None"] = relationship(lazy="joined")
+    user: Mapped[User | None] = relationship(lazy="joined")
+    task: Mapped[Task | None] = relationship(lazy="joined")
 
 
 __all__ = ["Notification"]

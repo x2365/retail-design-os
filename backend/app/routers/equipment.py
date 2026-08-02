@@ -1,4 +1,5 @@
 """Equipment library + launching production tasks from a library item."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -9,18 +10,21 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from .. import aggregates, models, schemas, security, serializers
-from ..timeutils import to_utc_datetime
 from ..database import get_db
-from ..services import library
-from ..services import task_stage
+from ..services import library, task_stage
+from ..timeutils import to_utc_datetime
 
 router = APIRouter(prefix="/equipment", tags=["equipment"])
 ReadDep = Depends(security.get_current_user)
 WriteDep = Depends(security.require_roles(models.Role.manager))
 
 KIND_LABELS = {
-    "display": "Дисплей", "stand": "Подставка", "corner": "Корнер",
-    "shelf": "Полка", "container": "Ёмкость", "other": "Прочее",
+    "display": "Дисплей",
+    "stand": "Подставка",
+    "corner": "Корнер",
+    "shelf": "Полка",
+    "container": "Ёмкость",
+    "other": "Прочее",
 }
 ALLOWED_KINDS = set(KIND_LABELS)
 
@@ -37,7 +41,10 @@ _RENDER_KINDS = (models.DocKind.photo, models.DocKind.model3d)
 def _linked_task(db: Session, eq_id: int):
     """Связанная задача карточки (1:1 по смыслу; берём самую раннюю)."""
     return db.scalar(
-        select(models.Task).where(models.Task.equipment_id == eq_id).order_by(models.Task.id).limit(1)
+        select(models.Task)
+        .where(models.Task.equipment_id == eq_id)
+        .order_by(models.Task.id)
+        .limit(1)
     )
 
 
@@ -57,11 +64,20 @@ def _cover_doc_id(db: Session, eq_id: int, task_id: int | None) -> int | None:
 def _to_out(e: models.Equipment, db: Session) -> dict:
     task = _linked_task(db, e.id)
     return {
-        "id": e.id, "brand": e.brand.name, "group": e.brand.group.code,
-        "name": e.name, "kind": e.kind, "kind_label": KIND_LABELS.get(e.kind, "Прочее"),
-        "description": e.description, "dimensions": e.dimensions, "currency": e.currency,
-        "est_budget": e.est_budget, "est_sample": e.est_sample, "est_tirazh": e.est_tirazh,
-        "is_active": e.is_active, "times_produced": e.times_produced,
+        "id": e.id,
+        "brand": e.brand.name,
+        "group": e.brand.group.code,
+        "name": e.name,
+        "kind": e.kind,
+        "kind_label": KIND_LABELS.get(e.kind, "Прочее"),
+        "description": e.description,
+        "dimensions": e.dimensions,
+        "currency": e.currency,
+        "est_budget": e.est_budget,
+        "est_sample": e.est_sample,
+        "est_tirazh": e.est_tirazh,
+        "is_active": e.is_active,
+        "times_produced": e.times_produced,
         "rc_ship_date": e.rc_ship_date.isoformat() if e.rc_ship_date else None,
         "rc_remainder": e.rc_remainder,
         "task_code": task.code if task else None,
@@ -77,8 +93,10 @@ def _base():
 
 @router.get("", response_model=list[schemas.EquipmentOut])
 def list_equipment(
-    db: Session = Depends(get_db), _user: models.User = ReadDep,
-    brand: str | None = None, active_only: bool = False,
+    db: Session = Depends(get_db),
+    _user: models.User = ReadDep,
+    brand: str | None = None,
+    active_only: bool = False,
     q: str | None = Query(default=None, description="поиск по названию или ШК/SKU"),
 ):
     stmt = _base()
@@ -94,7 +112,8 @@ def list_equipment(
             .join(models.NomenclatureItem, models.NomenclatureItem.task_id == models.Task.id)
             .where(
                 models.Task.equipment_id.is_not(None),
-                models.NomenclatureItem.barcode.ilike(like) | models.NomenclatureItem.sku.ilike(like),
+                models.NomenclatureItem.barcode.ilike(like)
+                | models.NomenclatureItem.sku.ilike(like),
             )
         )
         stmt = stmt.where(models.Equipment.name.ilike(like) | models.Equipment.id.in_(bc_ids))
@@ -103,15 +122,23 @@ def list_equipment(
 
 
 @router.post("", response_model=schemas.EquipmentOut, status_code=201)
-def create_equipment(payload: schemas.EquipmentCreate, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def create_equipment(
+    payload: schemas.EquipmentCreate, db: Session = Depends(get_db), _user: models.User = WriteDep
+):
     brand = db.scalar(select(models.Brand).where(models.Brand.name == payload.brand))
     if not brand:
         raise HTTPException(422, f"Бренд '{payload.brand}' не найден")
     _check_kind(payload.kind)
     e = models.Equipment(
-        brand_id=brand.id, name=payload.name, kind=payload.kind, description=payload.description,
-        dimensions=payload.dimensions, currency=payload.currency, est_budget=payload.est_budget,
-        est_sample=payload.est_sample, est_tirazh=payload.est_tirazh,
+        brand_id=brand.id,
+        name=payload.name,
+        kind=payload.kind,
+        description=payload.description,
+        dimensions=payload.dimensions,
+        currency=payload.currency,
+        est_budget=payload.est_budget,
+        est_sample=payload.est_sample,
+        est_tirazh=payload.est_tirazh,
     )
     db.add(e)
     db.commit()
@@ -120,7 +147,12 @@ def create_equipment(payload: schemas.EquipmentCreate, db: Session = Depends(get
 
 
 @router.patch("/{eq_id}", response_model=schemas.EquipmentOut)
-def update_equipment(eq_id: int, payload: schemas.EquipmentUpdate, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def update_equipment(
+    eq_id: int,
+    payload: schemas.EquipmentUpdate,
+    db: Session = Depends(get_db),
+    _user: models.User = WriteDep,
+):
     e = db.scalar(_base().where(models.Equipment.id == eq_id))
     if not e:
         raise HTTPException(404, "Оборудование не найдено")
@@ -154,23 +186,37 @@ def card_detail(eq_id: int, db: Session = Depends(get_db), _user: models.User = 
     cond = models.Document.equipment_id == e.id
     if task_id is not None:
         cond = cond | (models.Document.task_id == task_id)
-    docs = db.scalars(
-        select(models.Document).where(cond).order_by(models.Document.id)
-    ).all()
+    docs = db.scalars(select(models.Document).where(cond).order_by(models.Document.id)).all()
 
     slot_map = {
-        models.DocKind.photo: "render", models.DocKind.model3d: "render",
-        models.DocKind.brief: "brief", models.DocKind.ds: "ds",
-        models.DocKind.invoice: "invoice", models.DocKind.planogram: "planogram",
+        models.DocKind.photo: "render",
+        models.DocKind.model3d: "render",
+        models.DocKind.brief: "brief",
+        models.DocKind.ds: "ds",
+        models.DocKind.invoice: "invoice",
+        models.DocKind.planogram: "planogram",
     }
-    slots: dict[str, list] = {"render": [], "brief": [], "ds": [], "invoice": [], "planogram": [], "other": []}
+    slots: dict[str, list] = {
+        "render": [],
+        "brief": [],
+        "ds": [],
+        "invoice": [],
+        "planogram": [],
+        "other": [],
+    }
     for d in docs:
         bucket = slot_map.get(d.kind, "other")
-        slots[bucket].append({
-            "id": d.id, "kind": d.kind.value, "filename": d.filename,
-            "stage": d.stage, "content_type": d.content_type, "size": d.size,
-            "source": "card" if d.equipment_id == e.id else "task",
-        })
+        slots[bucket].append(
+            {
+                "id": d.id,
+                "kind": d.kind.value,
+                "filename": d.filename,
+                "stage": d.stage,
+                "content_type": d.content_type,
+                "size": d.size,
+                "source": "card" if d.equipment_id == e.id else "task",
+            }
+        )
 
     nomenclature = []
     if task is not None:
@@ -180,14 +226,24 @@ def card_detail(eq_id: int, db: Session = Depends(get_db), _user: models.User = 
             .order_by(models.NomenclatureItem.id)
         ).all()
         nomenclature = [
-            {"id": n.id, "sku": n.sku, "barcode": n.barcode, "name": n.name,
-             "qty": n.qty, "status": n.status.value,
-             "status_label": models.NOMENCLATURE_STATUS_LABELS.get(n.status, n.status.value)}
+            {
+                "id": n.id,
+                "sku": n.sku,
+                "barcode": n.barcode,
+                "name": n.name,
+                "qty": n.qty,
+                "status": n.status.value,
+                "status_label": models.NOMENCLATURE_STATUS_LABELS.get(n.status, n.status.value),
+            }
             for n in items
         ]
 
-    return {"card": card, "task_code": card["task_code"], "slots": slots, "nomenclature": nomenclature}
-
+    return {
+        "card": card,
+        "task_code": card["task_code"],
+        "slots": slots,
+        "nomenclature": nomenclature,
+    }
 
 
 def delete_equipment(eq_id: int, db: Session = Depends(get_db), _user: models.User = WriteDep):
@@ -204,7 +260,12 @@ def _next_task_code(db: Session) -> str:
 
 
 @router.post("/{eq_id}/produce", response_model=schemas.TaskOut, status_code=201)
-def produce(eq_id: int, payload: schemas.ProduceRequest, db: Session = Depends(get_db), user: models.User = WriteDep):
+def produce(
+    eq_id: int,
+    payload: schemas.ProduceRequest,
+    db: Session = Depends(get_db),
+    user: models.User = WriteDep,
+):
     """Создаёт производственную задачу (RD-xxx) на основе изделия из библиотеки."""
     e = db.scalar(_base().where(models.Equipment.id == eq_id))
     if not e:
@@ -230,9 +291,11 @@ def produce(eq_id: int, payload: schemas.ProduceRequest, db: Session = Depends(g
         launch_date=to_utc_datetime(payload.launch),
     )
     if payload.team:
-        existing = db.scalars(
-            select(models.TeamMember).where(models.TeamMember.name.in_(payload.team))
-        ).all()
+        existing = list(
+            db.scalars(
+                select(models.TeamMember).where(models.TeamMember.name.in_(payload.team))
+            ).all()
+        )
         names = {m.name for m in existing}
         for n in payload.team:
             if n not in names:
@@ -241,10 +304,15 @@ def produce(eq_id: int, payload: schemas.ProduceRequest, db: Session = Depends(g
                 existing.append(m)
         task.members = existing
 
-    e.times_produced += 1          # счётчик запусков у исходной карточки
+    e.times_produced += 1  # счётчик запусков у исходной карточки
     # Предзаполняем ТЗ (brief_data) из карточки изделия, чтобы задача не стартовала с пустым ТЗ.
-    _kind_map = {"shelf": "полка", "stand": "стойка", "corner": "корнер",
-                 "display": "дисплей", "container": "контейнер"}
+    _kind_map = {
+        "shelf": "полка",
+        "stand": "стойка",
+        "corner": "корнер",
+        "display": "дисплей",
+        "container": "контейнер",
+    }
     brief = {
         "group": e.brand.group.code,
         "brand": e.brand.name,
@@ -252,17 +320,19 @@ def produce(eq_id: int, payload: schemas.ProduceRequest, db: Session = Depends(g
         "construction_type": _kind_map.get(e.kind, ""),
         "dimensions": e.dimensions or "",
         "deliverables": e.description or "",
-        "fill_date": dt.datetime.now(dt.timezone.utc).date().isoformat(),
+        "fill_date": dt.datetime.now(dt.UTC).date().isoformat(),
     }
     task.dimensions = e.dimensions or ""
     task.brief_data = json.dumps(brief, ensure_ascii=False)
     db.add(task)
     db.flush()
-    library.ensure_library_card(db, task)  # вернёт исходную карточку (task.equipment_id уже задан) — дубль не создаётся
+    library.ensure_library_card(
+        db, task
+    )  # вернёт исходную карточку (task.equipment_id уже задан) — дубль не создаётся
     task_stage.record_creation(db, task, user_id=user.id)  # исходная запись истории
     db.commit()
 
-    task = db.scalar(
+    reloaded = db.scalar(
         select(models.Task)
         .options(
             selectinload(models.Task.brand).selectinload(models.Brand.group),
@@ -270,4 +340,5 @@ def produce(eq_id: int, payload: schemas.ProduceRequest, db: Session = Depends(g
         )
         .where(models.Task.id == task.id)
     )
-    return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
+    assert reloaded is not None
+    return serializers.task_to_out(reloaded, aggregates.counts_for_task(db, reloaded.id))

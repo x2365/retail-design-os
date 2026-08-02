@@ -1,5 +1,6 @@
 """Pydantic schemas (API contract). Clean snake_case; the frontend adapter maps
 these to whatever keys its render functions expect."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -21,7 +22,7 @@ class Page(BaseModel, Generic[T]):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: "UserOut"
+    user: UserOut
 
 
 class UserOut(BaseModel):
@@ -71,7 +72,7 @@ class GroupOut(BaseModel):
 
 
 class GroupBudgetUpdate(BaseModel):
-    budget_planned: int = Field(ge=0)   # копейки
+    budget_planned: int = Field(ge=0)  # копейки
 
 
 class CommentCreate(BaseModel):
@@ -79,18 +80,18 @@ class CommentCreate(BaseModel):
 
 
 class PrepApproval(BaseModel):
-    gate: str            # "brand" | "zya"
+    gate: str  # "brand" | "zya"
     approved: bool = True
-    comment: str = ""    # причина при «не согласовано»
+    comment: str = ""  # причина при «не согласовано»
 
 
 class KpApproval(BaseModel):
-    gate: str            # "manager"|"director"|"network" (финансы/бренд/сеть)
+    gate: str  # "manager"|"director"|"network" (финансы/бренд/сеть)
     approved: bool = True
 
 
 class SampleApproval(BaseModel):
-    gate: str | None = None   # qc|brand|network|None(legacy=all)
+    gate: str | None = None  # qc|brand|network|None(legacy=all)
     approved: bool = True
 
 
@@ -119,7 +120,7 @@ class ContractorOut(BaseModel):
 
 
 class PaymentUpsert(BaseModel):
-    task: str                                  # код задачи (RD-xxx)
+    task: str  # код задачи (RD-xxx)
     contractor: str = Field(default="", max_length=160)
     kp_date: dt.date | None = None
     currency: str = "RUB"
@@ -326,6 +327,7 @@ class RetailPointUpdate(BaseModel):
 
 class PointDeliveryOut(BaseModel):
     """A delivery seen from the retail-point side: what equipment shipped here."""
+
     id: int
     task: str
     task_name: str
@@ -429,7 +431,8 @@ class EquipmentUpdate(BaseModel):
 
 class ProduceRequest(BaseModel):
     """Launch a production task from a library item."""
-    name: str | None = None        # override name; default = equipment name
+
+    name: str | None = None  # override name; default = equipment name
     deadline: dt.date | None = None
     launch: dt.date | None = None
     team: list[str] = []

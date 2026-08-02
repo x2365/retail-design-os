@@ -1,4 +1,5 @@
 """Библиотека проектов/изделий (Equipment)."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -10,8 +11,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from .reference import Brand
     from .ops import Document
+    from .reference import Brand
 
 
 class Equipment(Base, TimestampMixin):
@@ -24,7 +25,9 @@ class Equipment(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     brand_id: Mapped[int] = mapped_column(ForeignKey("brands.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(200))
-    kind: Mapped[str] = mapped_column(String(40), default="other")  # display/stand/corner/shelf/container/other
+    kind: Mapped[str] = mapped_column(
+        String(40), default="other"
+    )  # display/stand/corner/shelf/container/other
     description: Mapped[str] = mapped_column(String(500), default="")
     dimensions: Mapped[str] = mapped_column(String(80), default="")  # "45×45×120 мм"
     currency: Mapped[str] = mapped_column(String(8), default="RUB")
@@ -37,8 +40,8 @@ class Equipment(Base, TimestampMixin):
     rc_ship_date: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     rc_remainder: Mapped[int] = mapped_column(Integer, default=0)  # остаток на РЦ, шт
 
-    brand: Mapped["Brand"] = relationship(back_populates="equipment")
-    documents: Mapped[list["Document"]] = relationship(
+    brand: Mapped[Brand] = relationship(back_populates="equipment")
+    documents: Mapped[list[Document]] = relationship(
         back_populates="equipment", cascade="all, delete-orphan"
     )
 

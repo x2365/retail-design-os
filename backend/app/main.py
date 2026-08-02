@@ -3,6 +3,7 @@
 Stateless by design: any number of identical workers can run behind a load
 balancer. State lives only in the database.
 """
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,10 +13,11 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .routers import (
-    assistant,
     approvals,
+    assistant,
     auth,
     brands,
+    contractors,
     dashboard,
     deliveries,
     documents,
@@ -23,11 +25,10 @@ from .routers import (
     export,
     finance,
     internal,
-    users,
-    contractors,
     nomenclature,
     reference,
     tasks,
+    users,
 )
 from .seed import seed
 
@@ -37,6 +38,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     import os
+
     settings.validate_runtime()  # fail fast on insecure prod config
     os.makedirs(settings.upload_dir, exist_ok=True)
     # In production, prefer Alembic migrations over create_all.
@@ -81,8 +83,10 @@ async def security_headers(request, call_next):
 async def unhandled_exception_handler(request, exc):
     # Never leak stack traces / internals to clients.
     import logging
+
     logging.getLogger("uvicorn.error").exception("Unhandled error: %s", exc)
     return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
+
 
 for r in (
     auth.router,

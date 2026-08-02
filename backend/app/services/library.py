@@ -2,6 +2,7 @@
 1:1). Карточка — «дом проекта»: на ней лежат полные файлы проекта (Document с
 equipment_id), отдельно от рабочих документов по этапам задачи.
 """
+
 from __future__ import annotations
 
 from sqlalchemy.orm import Session

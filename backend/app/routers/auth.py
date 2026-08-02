@@ -1,4 +1,5 @@
 """Authentication endpoints."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,9 +13,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login", response_model=schemas.Token)
-def login(
-    form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
-):
+def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     # OAuth2 form uses 'username' — we treat it as email.
     user = security.authenticate(db, form.username, form.password)
     if not user:

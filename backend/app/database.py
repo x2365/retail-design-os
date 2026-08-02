@@ -4,6 +4,7 @@ The engine is configured with a connection pool sized for horizontal scaling:
 every API worker keeps a small pool, and many workers can run behind a load
 balancer. SQLite (dev) ignores pool settings and needs check_same_thread=False.
 """
+
 from collections.abc import Generator
 
 from sqlalchemy import create_engine

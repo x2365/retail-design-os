@@ -1,4 +1,5 @@
 """Brands: list + full CRUD (create / rename / move group / delete)."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,15 +15,29 @@ WriteDep = Depends(security.require_roles(models.Role.manager))
 
 
 def _to_out(db: Session, b: models.Brand) -> dict:
-    active = db.scalar(
-        select(func.count()).select_from(models.Task)
-        .where(models.Task.brand_id == b.id, models.Task.stage < 12)
-    ) or 0
-    eq = db.scalar(
-        select(func.count()).select_from(models.Equipment).where(models.Equipment.brand_id == b.id)
-    ) or 0
-    return {"id": b.id, "name": b.name, "group": b.group.code,
-            "active_tasks": active, "equipment_count": eq}
+    active = (
+        db.scalar(
+            select(func.count())
+            .select_from(models.Task)
+            .where(models.Task.brand_id == b.id, models.Task.stage < 12)
+        )
+        or 0
+    )
+    eq = (
+        db.scalar(
+            select(func.count())
+            .select_from(models.Equipment)
+            .where(models.Equipment.brand_id == b.id)
+        )
+        or 0
+    )
+    return {
+        "id": b.id,
+        "name": b.name,
+        "group": b.group.code,
+        "active_tasks": active,
+        "equipment_count": eq,
+    }
 
 
 def _group_by_code(db: Session, code: str) -> models.Group:
@@ -41,7 +56,9 @@ def list_brands(db: Session = Depends(get_db), _user: models.User = ReadDep):
 
 
 @router.post("", response_model=schemas.BrandOut, status_code=201)
-def create_brand(payload: schemas.BrandCreate, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def create_brand(
+    payload: schemas.BrandCreate, db: Session = Depends(get_db), _user: models.User = WriteDep
+):
     if db.scalar(select(models.Brand).where(models.Brand.name == payload.name)):
         raise HTTPException(409, f"Бренд '{payload.name}' уже существует")
     group = _group_by_code(db, payload.group)
@@ -53,13 +70,20 @@ def create_brand(payload: schemas.BrandCreate, db: Session = Depends(get_db), _u
 
 
 @router.patch("/{brand_id}", response_model=schemas.BrandOut)
-def update_brand(brand_id: int, payload: schemas.BrandUpdate, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def update_brand(
+    brand_id: int,
+    payload: schemas.BrandUpdate,
+    db: Session = Depends(get_db),
+    _user: models.User = WriteDep,
+):
     brand = db.get(models.Brand, brand_id)
     if not brand:
         raise HTTPException(404, "Бренд не найден")
     if payload.name is not None:
         clash = db.scalar(
-            select(models.Brand).where(models.Brand.name == payload.name, models.Brand.id != brand_id)
+            select(models.Brand).where(
+                models.Brand.name == payload.name, models.Brand.id != brand_id
+            )
         )
         if clash:
             raise HTTPException(409, f"Бренд '{payload.name}' уже существует")
@@ -76,10 +100,16 @@ def delete_brand(brand_id: int, db: Session = Depends(get_db), _user: models.Use
     brand = db.get(models.Brand, brand_id)
     if not brand:
         raise HTTPException(404, "Бренд не найден")
-    task_count = db.scalar(
-        select(func.count()).select_from(models.Task).where(models.Task.brand_id == brand_id)
-    ) or 0
+    task_count = (
+        db.scalar(
+            select(func.count()).select_from(models.Task).where(models.Task.brand_id == brand_id)
+        )
+        or 0
+    )
     if task_count:
-        raise HTTPException(409, f"Нельзя удалить: у бренда есть задачи ({task_count}). Сначала закройте/перенесите их.")
+        raise HTTPException(
+            409,
+            f"Нельзя удалить: у бренда есть задачи ({task_count}). Сначала закройте/перенесите их.",
+        )
     db.delete(brand)  # cascades equipment
     db.commit()

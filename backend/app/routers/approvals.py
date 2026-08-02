@@ -1,4 +1,5 @@
 """Approvals queue (auth required; decisions need brand/retailer/manager role)."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,7 +11,9 @@ from ..database import get_db
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
 ReadDep = Depends(security.get_current_user)
-DecideDep = Depends(security.require_roles(models.Role.manager, models.Role.brand, models.Role.retailer))
+DecideDep = Depends(
+    security.require_roles(models.Role.manager, models.Role.brand, models.Role.retailer)
+)
 
 
 def _derived_approvals(db: Session) -> list[dict]:
@@ -39,28 +42,36 @@ def _derived_approvals(db: Session) -> list[dict]:
             type_ = "КП"
             role = "Финансы / Бренд / Сеть"
         else:  # stage 7
-            if t.sample_qc_approved_at and t.sample_brand_approved_at and t.sample_network_approved_at:
+            if (
+                t.sample_qc_approved_at
+                and t.sample_brand_approved_at
+                and t.sample_network_approved_at
+            ):
                 continue
             type_ = "Образец"
             role = "КК / Бренд / Сеть"
         av = (brand[:2] if brand else (t.code[-2:] if t.code else "??")).upper()
-        out.append({
-            "id": -t.id,                       # отрицательный id = производное (решение в карточке)
-            "from_name": f"Команда {brand}" if brand else t.code,
-            "role": role,
-            "summary": f"{t.code} — {t.name}",
-            "type": type_,
-            "avatar": av,
-            "color": COLORS.get(t.stage, "#5b6af0"),
-            "status": "pending",
-            "comment": "",
-            "task": t.code,
-        })
+        out.append(
+            {
+                "id": -t.id,  # отрицательный id = производное (решение в карточке)
+                "from_name": f"Команда {brand}" if brand else t.code,
+                "role": role,
+                "summary": f"{t.code} — {t.name}",
+                "type": type_,
+                "avatar": av,
+                "color": COLORS.get(t.stage, "#5b6af0"),
+                "status": "pending",
+                "comment": "",
+                "task": t.code,
+            }
+        )
     return out
 
 
 @router.get("")
-def list_approvals(status: str = "pending", db: Session = Depends(get_db), _user: models.User = ReadDep):
+def list_approvals(
+    status: str = "pending", db: Session = Depends(get_db), _user: models.User = ReadDep
+):
     stmt = select(models.Approval)
     if status != "all":
         stmt = stmt.where(models.Approval.status == models.ApprovalStatus(status))
@@ -92,8 +103,12 @@ def reject(approval_id: int, db: Session = Depends(get_db), _user: models.User =
 
 
 @router.post("/{approval_id}/comment")
-def comment_approval(approval_id: int, payload: schemas.ApprovalComment,
-                     db: Session = Depends(get_db), _user: models.User = DecideDep):
+def comment_approval(
+    approval_id: int,
+    payload: schemas.ApprovalComment,
+    db: Session = Depends(get_db),
+    _user: models.User = DecideDep,
+):
     a = db.get(models.Approval, approval_id)
     if not a:
         raise HTTPException(404, f"Approval {approval_id} not found")

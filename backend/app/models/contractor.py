@@ -1,4 +1,5 @@
 """Справочник подрядчиков (для выбора на этапе КП)."""
+
 from __future__ import annotations
 
 from sqlalchemy import Boolean, String, Text

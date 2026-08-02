@@ -1,6 +1,7 @@
 """Dashboard aggregates. Computed in the database with aggregate queries rather
 than pulling every row into the app — this keeps the endpoint O(1) on payload
 size regardless of how many tasks exist."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -20,27 +21,26 @@ def kpis(db: Session = Depends(get_db), _user: models.User = Depends(security.ge
     today = dt.date.today()
     soon = today + dt.timedelta(days=14)
 
-    active = db.scalar(
-        select(func.count()).select_from(models.Task).where(models.Task.stage < 12)
-    ) or 0
-    due_soon = db.scalar(
-        select(func.count())
-        .select_from(models.Task)
-        .where(models.Task.stage < 12)
-        .where(models.Task.deadline_tt.is_not(None))
-        .where(models.Task.deadline_tt <= soon)
-    ) or 0
-    completed = db.scalar(
-        select(func.count()).select_from(models.Task).where(models.Task.stage == 12)
-    ) or 0
+    active = (
+        db.scalar(select(func.count()).select_from(models.Task).where(models.Task.stage < 12)) or 0
+    )
+    due_soon = (
+        db.scalar(
+            select(func.count())
+            .select_from(models.Task)
+            .where(models.Task.stage < 12)
+            .where(models.Task.deadline_tt.is_not(None))
+            .where(models.Task.deadline_tt <= soon)
+        )
+        or 0
+    )
+    completed = (
+        db.scalar(select(func.count()).select_from(models.Task).where(models.Task.stage == 12)) or 0
+    )
     tt_unconfirmed = aggregates.tt_unconfirmed_total(db)
-    budget_total = db.scalar(
-        select(func.coalesce(func.sum(models.Group.budget_planned), 0))
-    ) or 0
+    budget_total = db.scalar(select(func.coalesce(func.sum(models.Group.budget_planned), 0))) or 0
     # «Освоено» = суммарная себестоимость задач (реальные данные, а не засеянное число).
-    budget_spent = db.scalar(
-        select(func.coalesce(func.sum(models.Task.production_cost), 0))
-    ) or 0
+    budget_spent = db.scalar(select(func.coalesce(func.sum(models.Task.production_cost), 0))) or 0
     brands_count = db.scalar(select(func.count()).select_from(models.Brand)) or 0
     groups_count = db.scalar(select(func.count()).select_from(models.Group)) or 0
     points_total = db.scalar(select(func.count()).select_from(models.RetailPoint)) or 0
@@ -56,8 +56,10 @@ def kpis(db: Session = Depends(get_db), _user: models.User = Depends(security.ge
         ).all()
         done = [(dl, cl) for dl, cl in rows if dl is not None and cl is not None]
         if done:
+
             def _utc(d):
-                return d if d.tzinfo else d.replace(tzinfo=dt.timezone.utc)
+                return d if d.tzinfo else d.replace(tzinfo=dt.UTC)
+
             on_t = sum(1 for dl, cl in done if _utc(cl) <= _utc(dl))
             on_time_rate = round(on_t / len(done) * 100)
 

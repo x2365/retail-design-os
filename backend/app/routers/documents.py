@@ -5,6 +5,7 @@ avoid collisions and path-traversal; the original filename is kept in the DB
 for display. In production mount upload_dir on durable storage (or swap the
 read/write helpers for S3 / object storage).
 """
+
 from __future__ import annotations
 
 import os
@@ -29,10 +30,34 @@ WriteDep = Depends(security.require_roles(models.Role.manager))
 # Whitelist of allowed file types (defence against uploading executable/script
 # content). Extensions are checked case-insensitively.
 ALLOWED_EXTENSIONS = {
-    ".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg",
-    ".doc", ".docx", ".xls", ".xlsx", ".csv", ".ppt", ".pptx",
-    ".stl", ".obj", ".step", ".stp", ".3mf", ".skp", ".dwg", ".ai", ".psd", ".eps",
-    ".zip", ".rar", ".7z", ".txt",
+    ".pdf",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".gif",
+    ".svg",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".csv",
+    ".ppt",
+    ".pptx",
+    ".stl",
+    ".obj",
+    ".step",
+    ".stp",
+    ".3mf",
+    ".skp",
+    ".dwg",
+    ".ai",
+    ".psd",
+    ".eps",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".txt",
 }
 SAFE_EXT_RE = re.compile(r"[^a-z0-9]")
 
@@ -48,6 +73,7 @@ def _safe_ext(filename: str) -> str:
     # Returns the extension WITHOUT the leading dot, lowercased, alnum only.
     ext = os.path.splitext(filename or "")[1].lower().lstrip(".")
     return SAFE_EXT_RE.sub("", ext)[:10]
+
 
 KIND_LABELS = {
     models.DocKind.brief: "ТЗ бренда",
@@ -88,8 +114,8 @@ def _validate_and_store(file: UploadFile, data: bytes, kind: str):
     (doc_kind, clean_name, storage_name)."""
     try:
         doc_kind = models.DocKind(kind)
-    except ValueError:
-        raise HTTPException(422, f"Invalid kind '{kind}'")
+    except ValueError as exc:
+        raise HTTPException(422, f"Invalid kind '{kind}'") from exc
     max_bytes = settings.max_upload_mb * 1024 * 1024
     if len(data) == 0:
         raise HTTPException(422, "Пустой файл")
@@ -108,7 +134,7 @@ def _validate_and_store(file: UploadFile, data: bytes, kind: str):
 
 
 def _reload_doc(db: Session, doc_id: int) -> models.Document:
-    return db.scalar(
+    doc = db.scalar(
         select(models.Document)
         .options(
             selectinload(models.Document.task),
@@ -116,6 +142,8 @@ def _reload_doc(db: Session, doc_id: int) -> models.Document:
         )
         .where(models.Document.id == doc_id)
     )
+    assert doc is not None
+    return doc
 
 
 def _get_task(db: Session, code: str) -> models.Task:
@@ -126,7 +154,9 @@ def _get_task(db: Session, code: str) -> models.Task:
 
 
 @router.get("/tasks/{code}/documents", response_model=list[schemas.DocumentOut])
-def list_documents(code: str, stage: int | None = None, db: Session = Depends(get_db), _user: models.User = ReadDep):
+def list_documents(
+    code: str, stage: int | None = None, db: Session = Depends(get_db), _user: models.User = ReadDep
+):
     task = _get_task(db, code)
     stmt = (
         select(models.Document)
@@ -154,9 +184,14 @@ async def upload_document(
     data = await file.read()
     doc_kind, clean_name, storage_name = _validate_and_store(file, data, kind)
     doc = models.Document(
-        task_id=task.id, kind=doc_kind, stage=stage, filename=clean_name,
-        storage_name=storage_name, content_type=file.content_type or "application/octet-stream",
-        size=len(data), uploaded_by_id=user.id,
+        task_id=task.id,
+        kind=doc_kind,
+        stage=stage,
+        filename=clean_name,
+        storage_name=storage_name,
+        content_type=file.content_type or "application/octet-stream",
+        size=len(data),
+        uploaded_by_id=user.id,
     )
     db.add(doc)
     db.commit()
@@ -166,7 +201,11 @@ async def upload_document(
     if doc_kind == models.DocKind.kp:
         existing = db.scalar(select(models.Payment).where(models.Payment.task_id == task.id))
         if existing is None:
-            db.add(models.Payment(task_id=task.id, contractor="", kp_date=doc.created_at, status="Ожидает оплаты"))
+            db.add(
+                models.Payment(
+                    task_id=task.id, contractor="", kp_date=doc.created_at, status="Ожидает оплаты"
+                )
+            )
             db.commit()
         elif not existing.kp_date:
             existing.kp_date = doc.created_at
@@ -203,9 +242,13 @@ async def upload_card_document(
     data = await file.read()
     doc_kind, clean_name, storage_name = _validate_and_store(file, data, kind)
     doc = models.Document(
-        equipment_id=card.id, kind=doc_kind, filename=clean_name,
-        storage_name=storage_name, content_type=file.content_type or "application/octet-stream",
-        size=len(data), uploaded_by_id=user.id,
+        equipment_id=card.id,
+        kind=doc_kind,
+        filename=clean_name,
+        storage_name=storage_name,
+        content_type=file.content_type or "application/octet-stream",
+        size=len(data),
+        uploaded_by_id=user.id,
     )
     db.add(doc)
     db.commit()
@@ -222,8 +265,12 @@ def download_document(doc_id: int, db: Session = Depends(get_db), _user: models.
     # Defence in depth: never serve a file outside the upload directory.
     if not (path == base or path.startswith(base + os.sep)) or not os.path.isfile(path):
         raise HTTPException(410, "Файл отсутствует в хранилище")
-    return FileResponse(path, media_type=doc.content_type, filename=doc.filename,
-                        headers={"Cache-Control": "no-store, max-age=0"})
+    return FileResponse(
+        path,
+        media_type=doc.content_type,
+        filename=doc.filename,
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 
 @router.delete("/documents/{doc_id}", status_code=204)

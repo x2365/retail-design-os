@@ -10,13 +10,19 @@
 
 Слой services не лезет в HTTP — бросает ValueError, роутер транслирует в 4xx.
 """
+
 from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
 from ..models import (
-    TaskStage, TaskStageHistory,
-    Delivery, DeliveryStatus, Approval, ApprovalStatus, Payment,
+    Approval,
+    ApprovalStatus,
+    Delivery,
+    DeliveryStatus,
+    Payment,
+    TaskStage,
+    TaskStageHistory,
 )
 
 FIRST = int(TaskStage.BRIEF_RECEIVED)
@@ -25,6 +31,7 @@ LAST = int(TaskStage.CLOSED)
 
 def label(stage: int) -> str:
     from ..models import STAGE_LABELS
+
     return STAGE_LABELS[TaskStage(stage)]
 
 
@@ -55,14 +62,24 @@ def next_stage(current: int) -> int:
 
 
 def record_transition(
-    db: Session, *, task_id: int, from_stage: int | None, to_stage: int,
-    user_id: int | None = None, comment: str | None = None,
+    db: Session,
+    *,
+    task_id: int,
+    from_stage: int | None,
+    to_stage: int,
+    user_id: int | None = None,
+    comment: str | None = None,
 ) -> None:
     """Пишет одну запись в лог переходов. Коммит — на вызывающем коде."""
-    db.add(TaskStageHistory(
-        task_id=task_id, from_stage=from_stage, to_stage=to_stage,
-        user_id=user_id, comment=comment,
-    ))
+    db.add(
+        TaskStageHistory(
+            task_id=task_id,
+            from_stage=from_stage,
+            to_stage=to_stage,
+            user_id=user_id,
+            comment=comment,
+        )
+    )
 
 
 def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
@@ -72,21 +89,27 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
     Применяется только при движении вперёд; возврат назад не блокируется.
     Этап CLOSED проверяется отдельно в check_close_preconditions.
     """
-    from sqlalchemy import func, select as _select
-    from ..models import Document, DocKind
     import json as _json
 
+    from sqlalchemy import func
+    from sqlalchemy import select as _select
+
+    from ..models import DocKind, Document
+
     def has_doc(*kinds) -> bool:
-        return bool(db.scalar(
-            _select(func.count()).select_from(Document)
-            .where(Document.task_id == task.id, Document.kind.in_(list(kinds)))
-        ))
+        return bool(
+            db.scalar(
+                _select(func.count())
+                .select_from(Document)
+                .where(Document.task_id == task.id, Document.kind.in_(list(kinds)))
+            )
+        )
 
     reasons: list[str] = []
     s = int(stage)
 
     if s == 1:  # ТЗ получено → нужно заполненное ТЗ
-        brief = {}
+        brief: dict = {}
         try:
             brief = _json.loads(task.brief_data) if task.brief_data else {}
         except Exception:
@@ -125,7 +148,8 @@ def check_close_preconditions(db: Session, task) -> list[str]:
     все поставки доставлены + есть оплата + все согласования согласованы.
     Возвращает список невыполненных условий (пустой = можно закрывать).
     """
-    from sqlalchemy import func, select as _select
+    from sqlalchemy import func
+    from sqlalchemy import select as _select
 
     reasons: list[str] = []
 
@@ -155,7 +179,12 @@ def check_close_preconditions(db: Session, task) -> list[str]:
 
 
 def apply_transition(
-    db: Session, task, target: int, *, user_id: int | None = None, comment: str | None = None,
+    db: Session,
+    task,
+    target: int,
+    *,
+    user_id: int | None = None,
+    comment: str | None = None,
 ) -> None:
     """Валидирует переход, логирует его и выставляет task.stage.
 
@@ -170,16 +199,18 @@ def apply_transition(
     if target > task.stage:
         pre = check_stage_preconditions(db, task, task.stage)
         if pre:
-            raise ValueError(
-                f"Этап «{label(task.stage)}» не завершён: " + "; ".join(pre) + "."
-            )
+            raise ValueError(f"Этап «{label(task.stage)}» не завершён: " + "; ".join(pre) + ".")
     if target == LAST:
         reasons = check_close_preconditions(db, task)
         if reasons:
             raise ValueError("Нельзя закрыть задачу: " + "; ".join(reasons) + ".")
     record_transition(
-        db, task_id=task.id, from_stage=task.stage, to_stage=target,
-        user_id=user_id, comment=comment,
+        db,
+        task_id=task.id,
+        from_stage=task.stage,
+        to_stage=target,
+        user_id=user_id,
+        comment=comment,
     )
     task.stage = target
 
@@ -187,6 +218,10 @@ def apply_transition(
 def record_creation(db: Session, task, *, user_id: int | None = None) -> None:
     """Исходная запись истории при создании задачи (from_stage = NULL)."""
     record_transition(
-        db, task_id=task.id, from_stage=None, to_stage=task.stage,
-        user_id=user_id, comment="создание задачи",
+        db,
+        task_id=task.id,
+        from_stage=None,
+        to_stage=task.stage,
+        user_id=user_id,
+        comment="создание задачи",
     )

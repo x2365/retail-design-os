@@ -1,4 +1,5 @@
 """Справочник подрядчиков."""
+
 from __future__ import annotations
 
 import json
@@ -18,14 +19,17 @@ WriteDep = Depends(security.require_roles(models.Role.manager))
 @router.get("/contractors", response_model=list[schemas.ContractorOut])
 def list_contractors(db: Session = Depends(get_db), _user: models.User = ReadDep):
     rows = db.scalars(
-        select(models.Contractor).where(models.Contractor.is_active == True).order_by(models.Contractor.name)  # noqa: E712
+        select(models.Contractor)
+        .where(models.Contractor.is_active.is_(True))
+        .order_by(models.Contractor.name)
     ).all()
     return [serializers.contractor_to_out(c) for c in rows]
 
 
 @router.post("/contractors", response_model=schemas.ContractorOut, status_code=201)
-def create_contractor(payload: schemas.ContractorCreate,
-                      db: Session = Depends(get_db), _user: models.User = WriteDep):
+def create_contractor(
+    payload: schemas.ContractorCreate, db: Session = Depends(get_db), _user: models.User = WriteDep
+):
     name = payload.name.strip()
     if db.scalar(select(models.Contractor).where(models.Contractor.name == name)):
         raise HTTPException(409, "Подрядчик с таким названием уже есть")
@@ -33,9 +37,12 @@ def create_contractor(payload: schemas.ContractorCreate,
     # контакт по умолчанию подтянем из деталей (телефон/почта), если не задан
     contact = payload.contact.strip()
     if not contact:
-        contact = (details.get("Контактный номер телефона") or details.get("Электронная почта") or "").strip()
+        contact = (
+            details.get("Контактный номер телефона") or details.get("Электронная почта") or ""
+        ).strip()
     ct = models.Contractor(
-        name=name, contact=contact[:200],
+        name=name,
+        contact=contact[:200],
         details=json.dumps(details, ensure_ascii=False) if details else "",
         is_active=True,
     )

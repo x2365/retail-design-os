@@ -3,6 +3,7 @@
 Counts are computed with a single grouped query for a set of task ids, avoiding
 N+1 queries when serializing task lists.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import case, func, select
@@ -14,25 +15,20 @@ DS = models.DeliveryStatus
 
 
 def _counts_select():
-    return (
-        select(
-            models.Delivery.task_id.label("task_id"),
-            func.count().label("total"),
-            func.sum(case((models.Delivery.status == DS.delivered, 1), else_=0)).label("ok"),
-            func.sum(case((models.Delivery.status == DS.partial, 1), else_=0)).label("partial"),
-            func.sum(case((models.Delivery.status == DS.missing, 1), else_=0)).label("miss"),
-        )
-        .group_by(models.Delivery.task_id)
-    )
+    return select(
+        models.Delivery.task_id.label("task_id"),
+        func.count().label("total"),
+        func.sum(case((models.Delivery.status == DS.delivered, 1), else_=0)).label("ok"),
+        func.sum(case((models.Delivery.status == DS.partial, 1), else_=0)).label("partial"),
+        func.sum(case((models.Delivery.status == DS.missing, 1), else_=0)).label("miss"),
+    ).group_by(models.Delivery.task_id)
 
 
 def counts_for_tasks(db: Session, task_ids: list[int]) -> dict[int, dict]:
     """Return {task_id: {total, ok, partial, miss}} for the given task ids."""
     if not task_ids:
         return {}
-    rows = db.execute(
-        _counts_select().where(models.Delivery.task_id.in_(task_ids))
-    ).all()
+    rows = db.execute(_counts_select().where(models.Delivery.task_id.in_(task_ids))).all()
     out: dict[int, dict] = {}
     for r in rows:
         out[r.task_id] = {

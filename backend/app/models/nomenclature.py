@@ -1,4 +1,5 @@
 """Номенклатура / штрих-коды по задаче (П3)."""
+
 from __future__ import annotations
 
 import enum
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class NomenclatureStatus(str, enum.Enum):
-    draft = "draft"            # черновик
+    draft = "draft"  # черновик
     sent_to_rc = "sent_to_rc"  # направлено на РЦ
     registered = "registered"  # заведено в РЦ
 
@@ -42,7 +43,7 @@ class NomenclatureItem(Base, TimestampMixin):
         Enum(NomenclatureStatus), default=NomenclatureStatus.draft, index=True
     )
 
-    task: Mapped["Task"] = relationship()
+    task: Mapped[Task] = relationship()
 
 
 __all__ = ["NomenclatureItem", "NomenclatureStatus", "NOMENCLATURE_STATUS_LABELS"]

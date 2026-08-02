@@ -3,6 +3,7 @@
 Предназначен для внешнего планировщика (cron/launchd). Безопасен к повторным
 запускам — уведомления дедуплицируются по дню (см. services/reminders).
 """
+
 from __future__ import annotations
 
 import logging
@@ -18,8 +19,10 @@ def main() -> None:
     db = SessionLocal()
     try:
         result = reminders.run_reminders(db, dry_run=True if dry else None)
-        print(f"reminders: создано={result['created']} разослано={result['dispatched']} "
-              f"ошибок={result['failed']} dry_run={result['dry_run']}")
+        print(
+            f"reminders: создано={result['created']} разослано={result['dispatched']} "
+            f"ошибок={result['failed']} dry_run={result['dry_run']}"
+        )
     finally:
         db.close()
 

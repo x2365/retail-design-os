@@ -3,6 +3,7 @@
 Сейчас используется для правок бюджета (только админ), но модель универсальна:
 entity_type/entity_code + поле + старое/новое значение.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -24,14 +25,16 @@ class AuditLog(Base, TimestampMixin):
     user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    user_name: Mapped[str] = mapped_column(String(150), default="")   # денормализовано для отображения
-    entity_type: Mapped[str] = mapped_column(String(24))             # task | group
+    user_name: Mapped[str] = mapped_column(
+        String(150), default=""
+    )  # денормализовано для отображения
+    entity_type: Mapped[str] = mapped_column(String(24))  # task | group
     entity_code: Mapped[str] = mapped_column(String(32))
-    field: Mapped[str] = mapped_column(String(40))                   # человекочитаемая подпись поля
+    field: Mapped[str] = mapped_column(String(40))  # человекочитаемая подпись поля
     old_value: Mapped[str] = mapped_column(String(120), default="")
     new_value: Mapped[str] = mapped_column(String(120), default="")
 
-    user: Mapped["User | None"] = relationship(lazy="joined")
+    user: Mapped[User | None] = relationship(lazy="joined")
 
 
 __all__ = ["AuditLog"]

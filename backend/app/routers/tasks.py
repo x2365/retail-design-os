@@ -1,4 +1,5 @@
 """Tasks API — the core resource (filtering, pagination, RBAC-protected writes)."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -9,18 +10,19 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from .. import aggregates, models, schemas, security, serializers
-from ..timeutils import to_utc_datetime
 from ..config import get_settings
 from ..database import get_db
-from ..services import task_stage
-from ..services import library
+from ..services import library, task_stage
+from ..timeutils import to_utc_datetime
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 settings = get_settings()
 
 STAGE_BANDS = {
-    "dev": [1, 2], "approval": [3, 4, 5, 6],
-    "production": [7, 8], "logistics": [9, 10, 11, 12],
+    "dev": [1, 2],
+    "approval": [3, 4, 5, 6],
+    "production": [7, 8],
+    "logistics": [9, 10, 11, 12],
 }
 
 # any authenticated user may read
@@ -78,7 +80,9 @@ def list_tasks(
     counts = aggregates.counts_for_tasks(db, [t.id for t in tasks])
     return schemas.Page(
         items=[serializers.task_to_out(t, counts[t.id]) for t in tasks],
-        total=total, page=page, page_size=page_size,
+        total=total,
+        page=page,
+        page_size=page_size,
     )
 
 
@@ -96,29 +100,43 @@ def _next_code(db: Session) -> str:
 
 
 @router.post("", response_model=schemas.TaskOut, status_code=201)
-def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db), user: models.User = WriteDep):
+def create_task(
+    payload: schemas.TaskCreate, db: Session = Depends(get_db), user: models.User = WriteDep
+):
     brand = db.scalar(select(models.Brand).where(models.Brand.name == payload.brand))
     if not brand:
         raise HTTPException(422, f"Unknown brand '{payload.brand}'")
 
     task = models.Task(
-        code=_next_code(db), name=payload.name, brand_id=brand.id, stage=payload.stage,
+        code=_next_code(db),
+        name=payload.name,
+        brand_id=brand.id,
+        stage=payload.stage,
         urgent=payload.urgent,
         currency=payload.currency,
         production_cost=payload.production_cost or payload.budget,
-        budget=payload.budget, sample_cost=payload.sample_cost,
-        tirazh_cost=payload.tirazh_cost, prepaid=payload.prepaid,
-        deadline_tt=to_utc_datetime(payload.deadline), launch_date=to_utc_datetime(payload.launch),
+        budget=payload.budget,
+        sample_cost=payload.sample_cost,
+        tirazh_cost=payload.tirazh_cost,
+        prepaid=payload.prepaid,
+        deadline_tt=to_utc_datetime(payload.deadline),
+        launch_date=to_utc_datetime(payload.launch),
     )
     if payload.brief_data:
         task.brief_data = json.dumps(payload.brief_data, ensure_ascii=False)
-    dims = (payload.dimensions or (payload.brief_data.get("dimensions") if payload.brief_data else "") or "").strip()
+    dims = (
+        payload.dimensions
+        or (payload.brief_data.get("dimensions") if payload.brief_data else "")
+        or ""
+    ).strip()
     if dims:
         task.dimensions = dims[:120]
     if payload.team:
-        members = db.scalars(
-            select(models.TeamMember).where(models.TeamMember.name.in_(payload.team))
-        ).all()
+        members = list(
+            db.scalars(
+                select(models.TeamMember).where(models.TeamMember.name.in_(payload.team))
+            ).all()
+        )
         existing = {m.name for m in members}
         for name in payload.team:
             if name not in existing:
@@ -128,7 +146,7 @@ def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db), user
         task.members = members
 
     db.add(task)
-    db.flush()                       # need task.id / fields for the card
+    db.flush()  # need task.id / fields for the card
     library.ensure_library_card(db, task)  # every new ТЗ → карточка в библиотеке (1:1)
     task_stage.record_creation(db, task, user_id=user.id)  # исходная запись истории
     db.commit()
@@ -137,7 +155,12 @@ def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db), user
 
 
 @router.patch("/{code}", response_model=schemas.TaskOut)
-def update_task(code: str, payload: schemas.TaskUpdate, db: Session = Depends(get_db), user: models.User = WriteDep):
+def update_task(
+    code: str,
+    payload: schemas.TaskUpdate,
+    db: Session = Depends(get_db),
+    user: models.User = WriteDep,
+):
     task = db.scalar(_base_query().where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
@@ -149,10 +172,18 @@ def update_task(code: str, payload: schemas.TaskUpdate, db: Session = Depends(ge
         try:
             task_stage.apply_transition(db, task, new_stage, user_id=user.id)
         except ValueError as e:
-            raise HTTPException(422, str(e))
+            raise HTTPException(422, str(e)) from e
     field_map = {"deadline": "deadline_tt", "launch": "launch_date"}
-    for key in ("deadline", "launch", "shipment_ship_date", "shipment_acceptance_date", "rc_arrival_date",
-                "sample_deadline", "production_end_date", "sample_received_date"):
+    for key in (
+        "deadline",
+        "launch",
+        "shipment_ship_date",
+        "shipment_acceptance_date",
+        "rc_arrival_date",
+        "sample_deadline",
+        "production_end_date",
+        "sample_received_date",
+    ):
         if key in data:
             data[key] = to_utc_datetime(data[key])
     if "sample_status" in data and data["sample_status"] not in ("unpaid", "paid", "prepaid"):
@@ -161,8 +192,11 @@ def update_task(code: str, payload: schemas.TaskUpdate, db: Session = Depends(ge
     # Бюджетные поля (в копейках) может менять ТОЛЬКО администратор; каждое
     # изменение пишется в журнал (audit_log) с прежним и новым значением.
     MONEY_FIELDS = {
-        "budget": "Итого бюджет", "sample_cost": "Образец", "tirazh_cost": "Тираж",
-        "prepaid": "Предоплата", "production_cost": "Себестоимость",
+        "budget": "Итого бюджет",
+        "sample_cost": "Образец",
+        "tirazh_cost": "Тираж",
+        "prepaid": "Предоплата",
+        "production_cost": "Себестоимость",
     }
     money_in_payload = [k for k in MONEY_FIELDS if k in data]
     if money_in_payload and user.role != models.Role.admin:
@@ -171,27 +205,42 @@ def update_task(code: str, payload: schemas.TaskUpdate, db: Session = Depends(ge
         old = getattr(task, key) or 0
         new = data[key] or 0
         if old != new:
-            db.add(models.AuditLog(
-                user_id=user.id, user_name=user.full_name,
-                entity_type="task", entity_code=task.code, field=MONEY_FIELDS[key],
-                old_value=f"{old // 100:,}".replace(",", " ") + " ₽",
-                new_value=f"{new // 100:,}".replace(",", " ") + " ₽",
-            ))
+            db.add(
+                models.AuditLog(
+                    user_id=user.id,
+                    user_name=user.full_name,
+                    entity_type="task",
+                    entity_code=task.code,
+                    field=MONEY_FIELDS[key],
+                    old_value=f"{old // 100:,}".replace(",", " ") + " ₽",
+                    new_value=f"{new // 100:,}".replace(",", " ") + " ₽",
+                )
+            )
 
     # Статус оплаты — ручной ввод (manager/admin); пишем в журнал.
-    PAY_LABELS = {"unpaid": "\u2014", "registry": "Отправлен в реестр",
-                  "queued": "Заведён на оплату", "prepaid": "Предоплачен", "paid": "Оплачено"}
+    PAY_LABELS = {
+        "unpaid": "\u2014",
+        "registry": "Отправлен в реестр",
+        "queued": "Заведён на оплату",
+        "prepaid": "Предоплачен",
+        "paid": "Оплачено",
+    }
     if "payment_status" in data:
         ps = data["payment_status"]
         if ps not in PAY_LABELS:
             raise HTTPException(400, "Недопустимый статус оплаты")
         if (task.payment_status or "unpaid") != ps:
-            db.add(models.AuditLog(
-                user_id=user.id, user_name=user.full_name,
-                entity_type="task", entity_code=task.code, field="Статус оплаты",
-                old_value=PAY_LABELS.get(task.payment_status or "unpaid", "—"),
-                new_value=PAY_LABELS[ps],
-            ))
+            db.add(
+                models.AuditLog(
+                    user_id=user.id,
+                    user_name=user.full_name,
+                    entity_type="task",
+                    entity_code=task.code,
+                    field="Статус оплаты",
+                    old_value=PAY_LABELS.get(task.payment_status or "unpaid", "—"),
+                    new_value=PAY_LABELS[ps],
+                )
+            )
 
     # Полный бриф (JSON): сохраняем строкой, синхронизируем размеры для SUMMARY/КП.
     if "brief_data" in data:
@@ -210,9 +259,13 @@ def update_task(code: str, payload: schemas.TaskUpdate, db: Session = Depends(ge
     # Команда проекта (ручное назначение менеджером): заменяем участников.
     if "team" in data:
         names = data.pop("team") or []
-        members = list(db.scalars(
-            select(models.TeamMember).where(models.TeamMember.name.in_(names))
-        ).all()) if names else []
+        members = (
+            list(
+                db.scalars(select(models.TeamMember).where(models.TeamMember.name.in_(names))).all()
+            )
+            if names
+            else []
+        )
         existing = {m.name for m in members}
         for nm in names:
             if nm not in existing:
@@ -230,8 +283,12 @@ def update_task(code: str, payload: schemas.TaskUpdate, db: Session = Depends(ge
 
 # ---- per-stage approval ("Согласовано" на вкладке этапа) -------------------
 @router.patch("/{code}/stage-approval", response_model=schemas.TaskOut)
-def set_stage_approval(code: str, payload: schemas.StageApprovalUpdate,
-                       db: Session = Depends(get_db), user: models.User = WriteDep):
+def set_stage_approval(
+    code: str,
+    payload: schemas.StageApprovalUpdate,
+    db: Session = Depends(get_db),
+    user: models.User = WriteDep,
+):
     task = db.scalar(_base_query().where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
@@ -241,7 +298,7 @@ def set_stage_approval(code: str, payload: schemas.StageApprovalUpdate,
             models.TaskStageApproval.stage == payload.stage,
         )
     )
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     blocked_reasons: list[str] = []
     advancing = payload.approved and payload.stage == task.stage and task.stage < models.LAST_STAGE
 
@@ -269,8 +326,11 @@ def set_stage_approval(code: str, payload: schemas.StageApprovalUpdate,
         nxt = task_stage.next_stage(task.stage)
         try:
             task_stage.apply_transition(
-                db, task, nxt,
-                user_id=user.id, comment=f"авто-переход: согласован этап {payload.stage}",
+                db,
+                task,
+                nxt,
+                user_id=user.id,
+                comment=f"авто-переход: согласован этап {payload.stage}",
             )
         except ValueError:
             blocked_reasons = task_stage.check_stage_preconditions(db, task, task.stage)
@@ -324,36 +384,55 @@ def list_comments(code: str, db: Session = Depends(get_db), _user: models.User =
     rows = db.scalars(
         select(models.Comment).where(models.Comment.task_id == task.id).order_by(models.Comment.id)
     ).all()
-    return [{
-        "id": c.id, "author": c.author_name or "—", "text": c.text,
-        "at": c.created_at.strftime("%d.%m.%y %H:%M") if c.created_at else "",
-    } for c in rows]
+    return [
+        {
+            "id": c.id,
+            "author": c.author_name or "—",
+            "text": c.text,
+            "at": c.created_at.strftime("%d.%m.%y %H:%M") if c.created_at else "",
+        }
+        for c in rows
+    ]
 
 
 @router.post("/{code}/comments", status_code=201)
-def add_comment(code: str, payload: schemas.CommentCreate,
-                db: Session = Depends(get_db), user: models.User = ReadDep):
+def add_comment(
+    code: str,
+    payload: schemas.CommentCreate,
+    db: Session = Depends(get_db),
+    user: models.User = ReadDep,
+):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
-    c = models.Comment(task_id=task.id, author_id=user.id, author_name=user.full_name, text=payload.text.strip())
+    c = models.Comment(
+        task_id=task.id, author_id=user.id, author_name=user.full_name, text=payload.text.strip()
+    )
     db.add(c)
     db.commit()
     db.refresh(c)
-    return {"id": c.id, "author": c.author_name, "text": c.text,
-            "at": c.created_at.strftime("%d.%m.%y %H:%M") if c.created_at else ""}
+    return {
+        "id": c.id,
+        "author": c.author_name,
+        "text": c.text,
+        "at": c.created_at.strftime("%d.%m.%y %H:%M") if c.created_at else "",
+    }
 
 
 # ---- согласование на этапе «Подготовка» (бренд + ЗЯ) ----------------------
 @router.post("/{code}/prep-approval", response_model=schemas.TaskOut)
-def prep_approval(code: str, payload: schemas.PrepApproval,
-                  db: Session = Depends(get_db), user: models.User = WriteDep):
+def prep_approval(
+    code: str,
+    payload: schemas.PrepApproval,
+    db: Session = Depends(get_db),
+    user: models.User = WriteDep,
+):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
     if payload.gate not in ("brand", "zya"):
         raise HTTPException(400, "gate must be 'brand' or 'zya'")
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     if payload.gate == "brand":
         task.prep_brand_approved_at = now if payload.approved else None
         task.prep_brand_approved_by = user.full_name if payload.approved else ""
@@ -363,16 +442,23 @@ def prep_approval(code: str, payload: schemas.PrepApproval,
     # «Не согласовано» с комментарием → фиксируем причину и наращиваем итерацию дизайна
     if not payload.approved and payload.comment.strip():
         gate_ru = "Бренд" if payload.gate == "brand" else "ЗЯ"
-        db.add(models.Comment(task_id=task.id, author_id=user.id, author_name=user.full_name,
-                              text=f"[{gate_ru}] Не согласовано: {payload.comment.strip()}"))
+        db.add(
+            models.Comment(
+                task_id=task.id,
+                author_id=user.id,
+                author_name=user.full_name,
+                text=f"[{gate_ru}] Не согласовано: {payload.comment.strip()}",
+            )
+        )
         task.design_iteration = (task.design_iteration or 1) + 1
     # Оба согласования получены и задача на «Согласованиях» (этап 3) → дальше (4).
     if task.prep_brand_approved_at and task.prep_zya_approved_at and task.stage == 3:
         try:
-            task_stage.apply_transition(db, task, 4, user_id=user.id,
-                                        comment="Авто-переход: оба согласования получены")
+            task_stage.apply_transition(
+                db, task, 4, user_id=user.id, comment="Авто-переход: оба согласования получены"
+            )
         except ValueError as e:
-            raise HTTPException(409, str(e))
+            raise HTTPException(409, str(e)) from e
     db.commit()
     db.refresh(task)
     return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
@@ -380,14 +466,18 @@ def prep_approval(code: str, payload: schemas.PrepApproval,
 
 # ---- согласование КП (менеджер + директор бренда) -------------------------
 @router.post("/{code}/kp-approval", response_model=schemas.TaskOut)
-def kp_approval(code: str, payload: schemas.KpApproval,
-                db: Session = Depends(get_db), user: models.User = WriteDep):
+def kp_approval(
+    code: str,
+    payload: schemas.KpApproval,
+    db: Session = Depends(get_db),
+    user: models.User = WriteDep,
+):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
     if payload.gate not in ("manager", "director", "network"):
         raise HTTPException(400, "gate must be 'manager', 'director' or 'network'")
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     if payload.gate == "manager":
         task.kp_manager_approved_at = now if payload.approved else None
         task.kp_manager_approved_by = user.full_name if payload.approved else ""
@@ -398,13 +488,22 @@ def kp_approval(code: str, payload: schemas.KpApproval,
         task.kp_network_approved_at = now if payload.approved else None
         task.kp_network_approved_by = user.full_name if payload.approved else ""
     # Все три согласования КП (финансы/бренд/сеть) и задача на «КП» (5) → в «ДС и Счёт» (6).
-    if (task.kp_manager_approved_at and task.kp_director_approved_at
-            and task.kp_network_approved_at and task.stage == 5):
+    if (
+        task.kp_manager_approved_at
+        and task.kp_director_approved_at
+        and task.kp_network_approved_at
+        and task.stage == 5
+    ):
         try:
-            task_stage.apply_transition(db, task, 6, user_id=user.id,
-                                        comment="Авто-переход: КП согласовано (финансы, бренд, сеть)")
+            task_stage.apply_transition(
+                db,
+                task,
+                6,
+                user_id=user.id,
+                comment="Авто-переход: КП согласовано (финансы, бренд, сеть)",
+            )
         except ValueError as e:
-            raise HTTPException(409, str(e))
+            raise HTTPException(409, str(e)) from e
     db.commit()
     db.refresh(task)
     return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
@@ -412,12 +511,16 @@ def kp_approval(code: str, payload: schemas.KpApproval,
 
 # ---- утверждение образца (этап «Образец и Производство») ------------------
 @router.post("/{code}/sample-approval", response_model=schemas.TaskOut)
-def sample_approval(code: str, payload: schemas.SampleApproval,
-                    db: Session = Depends(get_db), user: models.User = WriteDep):
+def sample_approval(
+    code: str,
+    payload: schemas.SampleApproval,
+    db: Session = Depends(get_db),
+    user: models.User = WriteDep,
+):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     gate = (payload.gate or "").lower()
     if gate not in ("", "qc", "brand", "network"):
         raise HTTPException(400, "gate must be 'qc', 'brand', 'network' or empty")
@@ -434,14 +537,19 @@ def sample_approval(code: str, payload: schemas.SampleApproval,
         set_gate("sample_network_approved_at", "sample_network_approved_by")
     else:
         # legacy: «утвердить образец» целиком — ставит/снимает все три гейта
-        for at, by in (("sample_qc_approved_at", "sample_qc_approved_by"),
-                       ("sample_brand_approved_at", "sample_brand_approved_by"),
-                       ("sample_network_approved_at", "sample_network_approved_by")):
+        for at, by in (
+            ("sample_qc_approved_at", "sample_qc_approved_by"),
+            ("sample_brand_approved_at", "sample_brand_approved_by"),
+            ("sample_network_approved_at", "sample_network_approved_by"),
+        ):
             set_gate(at, by)
 
     # сводный флаг «образец утверждён» = все три согласования
-    all_three = (task.sample_qc_approved_at and task.sample_brand_approved_at
-                 and task.sample_network_approved_at)
+    all_three = (
+        task.sample_qc_approved_at
+        and task.sample_brand_approved_at
+        and task.sample_network_approved_at
+    )
     if all_three:
         task.sample_approved_at = now
         task.sample_approved_by = "КК + Бренд + Сеть"
@@ -458,8 +566,12 @@ def sample_approval(code: str, payload: schemas.SampleApproval,
 
 # ---- назначение участников с контактами (почта + Telegram) ----------------
 @router.post("/{code}/team", response_model=schemas.TaskOut)
-def assign_team(code: str, payload: schemas.TeamAssign,
-                db: Session = Depends(get_db), _user: models.User = WriteDep):
+def assign_team(
+    code: str,
+    payload: schemas.TeamAssign,
+    db: Session = Depends(get_db),
+    _user: models.User = WriteDep,
+):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")

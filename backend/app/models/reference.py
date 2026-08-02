@@ -1,4 +1,5 @@
 """Справочные сущности: пользователи, группы, бренды, команда, торговые точки."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -10,8 +11,8 @@ from .base import Base, TimestampMixin
 from .enums import Role
 
 if TYPE_CHECKING:  # только для тайп-чекеров; в рантайме связи резолвятся реестром
-    from .task import Task
     from .library import Equipment
+    from .task import Task
 
 
 class User(Base, TimestampMixin):
@@ -36,7 +37,7 @@ class Group(Base, TimestampMixin):
     budget_planned: Mapped[int] = mapped_column(Integer, default=0)
     budget_spent: Mapped[int] = mapped_column(Integer, default=0)
 
-    brands: Mapped[list["Brand"]] = relationship(back_populates="group")
+    brands: Mapped[list[Brand]] = relationship(back_populates="group")
 
 
 class Brand(Base, TimestampMixin):
@@ -46,9 +47,9 @@ class Brand(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="RESTRICT"), index=True)
 
-    group: Mapped["Group"] = relationship(back_populates="brands")
-    tasks: Mapped[list["Task"]] = relationship(back_populates="brand")
-    equipment: Mapped[list["Equipment"]] = relationship(
+    group: Mapped[Group] = relationship(back_populates="brands")
+    tasks: Mapped[list[Task]] = relationship(back_populates="brand")
+    equipment: Mapped[list[Equipment]] = relationship(
         back_populates="brand", cascade="all, delete-orphan"
     )
 
@@ -65,8 +66,12 @@ class TeamMember(Base, TimestampMixin):
 
 class TaskMember(Base):
     __tablename__ = "task_members"
-    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True)
-    member_id: Mapped[int] = mapped_column(ForeignKey("team_members.id", ondelete="CASCADE"), primary_key=True)
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True
+    )
+    member_id: Mapped[int] = mapped_column(
+        ForeignKey("team_members.id", ondelete="CASCADE"), primary_key=True
+    )
 
 
 class RetailPoint(Base, TimestampMixin):

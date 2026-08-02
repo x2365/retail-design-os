@@ -4,6 +4,7 @@ All settings are read from environment variables so the same image can run
 unchanged in dev, staging and production. In production point DATABASE_URL at
 PostgreSQL; locally it falls back to SQLite so the app runs with zero setup.
 """
+
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -39,8 +40,8 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 12  # 12h
 
     # --- Uploads ------------------------------------------------------------
-    upload_dir: str = "./uploads"          # mount a volume here in production
-    max_upload_mb: int = 25                # per-file limit
+    upload_dir: str = "./uploads"  # mount a volume here in production
+    max_upload_mb: int = 25  # per-file limit
 
     # --- Pagination ---------------------------------------------------------
     default_page_size: int = 50
@@ -53,9 +54,9 @@ class Settings(BaseSettings):
     # По умолчанию выключен. Включается, когда локально запущена Ollama с
     # моделью Qwen2.5. Данные никуда не уходят — модель работает на машине.
     llm_enabled: bool = False
-    llm_base_url: str = "http://localhost:11434/v1"   # OpenAI-совместимый API Ollama
+    llm_base_url: str = "http://localhost:11434/v1"  # OpenAI-совместимый API Ollama
     llm_model: str = "qwen2.5:7b-instruct"
-    llm_api_key: str = "ollama"                        # Ollama игнорирует, но клиент требует непустое
+    llm_api_key: str = "ollama"  # Ollama игнорирует, но клиент требует непустое
     llm_timeout: int = 60
     llm_max_tool_rounds: int = 5
 

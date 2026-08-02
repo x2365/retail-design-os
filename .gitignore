@@ -6,3 +6,17 @@ __pycache__/
 venv/
 *.egg-info/
 .DS_Store
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/test_smoke_uploads/
+backend/test_uploads/
+
+# frontend (added in Part B)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/

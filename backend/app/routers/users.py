@@ -6,6 +6,7 @@
 - POST   /api/users/{id}/password — сбросить пароль пользователю (админ)
 - POST   /api/me/password         — сменить свой пароль (любой вошедший)
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -23,8 +24,8 @@ AdminDep = Depends(security.require_roles(models.Role.admin))
 def _role(value: str) -> models.Role:
     try:
         return models.Role(value)
-    except ValueError:
-        raise HTTPException(400, f"Недопустимая роль: {value}")
+    except ValueError as exc:
+        raise HTTPException(400, f"Недопустимая роль: {value}") from exc
 
 
 @router.get("/users", response_model=list[schemas.UserOut])
@@ -33,13 +34,18 @@ def list_users(db: Session = Depends(get_db), admin: models.User = AdminDep):
 
 
 @router.post("/users", response_model=schemas.UserOut, status_code=201)
-def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db), admin: models.User = AdminDep):
+def create_user(
+    payload: schemas.UserCreate, db: Session = Depends(get_db), admin: models.User = AdminDep
+):
     email = payload.email.lower().strip()
     if db.scalar(select(models.User).where(models.User.email == email)):
         raise HTTPException(409, "Пользователь с таким email уже существует")
     user = models.User(
-        email=email, full_name=payload.full_name.strip(), role=_role(payload.role),
-        hashed_password=security.hash_password(payload.password), is_active=True,
+        email=email,
+        full_name=payload.full_name.strip(),
+        role=_role(payload.role),
+        hashed_password=security.hash_password(payload.password),
+        is_active=True,
     )
     db.add(user)
     db.commit()
@@ -48,8 +54,12 @@ def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db), admi
 
 
 @router.patch("/users/{user_id}", response_model=schemas.UserOut)
-def update_user(user_id: int, payload: schemas.UserUpdate,
-                db: Session = Depends(get_db), admin: models.User = AdminDep):
+def update_user(
+    user_id: int,
+    payload: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    admin: models.User = AdminDep,
+):
     user = db.get(models.User, user_id)
     if not user:
         raise HTTPException(404, "Пользователь не найден")
@@ -67,8 +77,12 @@ def update_user(user_id: int, payload: schemas.UserUpdate,
 
 
 @router.post("/users/{user_id}/password", response_model=schemas.UserOut)
-def reset_password(user_id: int, payload: schemas.PasswordReset,
-                   db: Session = Depends(get_db), admin: models.User = AdminDep):
+def reset_password(
+    user_id: int,
+    payload: schemas.PasswordReset,
+    db: Session = Depends(get_db),
+    admin: models.User = AdminDep,
+):
     user = db.get(models.User, user_id)
     if not user:
         raise HTTPException(404, "Пользователь не найден")
@@ -79,9 +93,11 @@ def reset_password(user_id: int, payload: schemas.PasswordReset,
 
 
 @router.post("/me/password", response_model=schemas.UserOut)
-def change_my_password(payload: schemas.PasswordChange,
-                       db: Session = Depends(get_db),
-                       user: models.User = Depends(security.get_current_user)):
+def change_my_password(
+    payload: schemas.PasswordChange,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(security.get_current_user),
+):
     if not security.verify_password(payload.current_password, user.hashed_password):
         raise HTTPException(400, "Текущий пароль неверен")
     user.hashed_password = security.hash_password(payload.new_password)

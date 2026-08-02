@@ -5,6 +5,7 @@
 - POST /api/me/telegram — текущий пользователь привязывает свой Telegram chat_id
   (получить можно, написав боту; онбординг — на стороне эксплуатации).
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, HTTPException

@@ -1,4 +1,5 @@
 """Эндпоинт ассистента-копайлота (требует авторизацию, только чтение)."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
@@ -7,10 +8,10 @@ from sqlalchemy.orm import Session
 
 from .. import models, security
 from ..config import get_settings
-
-settings = get_settings()
 from ..database import get_db
 from ..services import assistant as assistant_svc
+
+settings = get_settings()
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 ReadDep = Depends(security.get_current_user)
@@ -28,6 +29,7 @@ def assistant_status(_user: models.User = ReadDep) -> dict:
 
 
 @router.post("")
-def ask_assistant(body: AssistantQuery, db: Session = Depends(get_db),
-                  _user: models.User = ReadDep) -> dict:
+def ask_assistant(
+    body: AssistantQuery, db: Session = Depends(get_db), _user: models.User = ReadDep
+) -> dict:
     return assistant_svc.run_assistant(db, body.query, body.screen, body.filters)

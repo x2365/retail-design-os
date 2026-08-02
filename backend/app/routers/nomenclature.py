@@ -1,4 +1,5 @@
 """Номенклатура / штрих-коды задачи (П3): CRUD, статусы, выгрузка в Excel для РЦ."""
+
 from __future__ import annotations
 
 import io
@@ -6,7 +7,7 @@ import io
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload, Session
+from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas, security, serializers
 from ..database import get_db
@@ -39,27 +40,41 @@ def list_nomenclature(code: str, db: Session = Depends(get_db), _user: models.Us
     return [serializers.nomenclature_to_out(n) for n in _items(db, task.id)]
 
 
-@router.post("/tasks/{code}/nomenclature", response_model=schemas.NomenclatureItemOut, status_code=201)
-def create_nomenclature(code: str, payload: schemas.NomenclatureItemCreate,
-                        db: Session = Depends(get_db), _user: models.User = WriteDep):
+@router.post(
+    "/tasks/{code}/nomenclature", response_model=schemas.NomenclatureItemOut, status_code=201
+)
+def create_nomenclature(
+    code: str,
+    payload: schemas.NomenclatureItemCreate,
+    db: Session = Depends(get_db),
+    _user: models.User = WriteDep,
+):
     task = _get_task(db, code)
     n = models.NomenclatureItem(
-        task_id=task.id, sku=payload.sku, barcode=payload.barcode,
-        name=payload.name or task.name, qty=payload.qty,
+        task_id=task.id,
+        sku=payload.sku,
+        barcode=payload.barcode,
+        name=payload.name or task.name,
+        qty=payload.qty,
     )
     db.add(n)
     db.commit()
-    n = db.scalar(
+    reloaded = db.scalar(
         select(models.NomenclatureItem)
         .options(selectinload(models.NomenclatureItem.task))
         .where(models.NomenclatureItem.id == n.id)
     )
-    return serializers.nomenclature_to_out(n)
+    assert reloaded is not None
+    return serializers.nomenclature_to_out(reloaded)
 
 
 @router.patch("/nomenclature/{item_id}", response_model=schemas.NomenclatureItemOut)
-def update_nomenclature(item_id: int, payload: schemas.NomenclatureItemUpdate,
-                        db: Session = Depends(get_db), _user: models.User = WriteDep):
+def update_nomenclature(
+    item_id: int,
+    payload: schemas.NomenclatureItemUpdate,
+    db: Session = Depends(get_db),
+    _user: models.User = WriteDep,
+):
     n = db.scalar(
         select(models.NomenclatureItem)
         .options(selectinload(models.NomenclatureItem.task))
@@ -71,8 +86,8 @@ def update_nomenclature(item_id: int, payload: schemas.NomenclatureItemUpdate,
     if "status" in data:
         try:
             n.status = models.NomenclatureStatus(data.pop("status"))
-        except ValueError:
-            raise HTTPException(422, "Недопустимый статус")
+        except ValueError as exc:
+            raise HTTPException(422, "Недопустимый статус") from exc
     for k, v in data.items():
         setattr(n, k, v)
     db.commit()
@@ -89,7 +104,9 @@ def delete_nomenclature(item_id: int, db: Session = Depends(get_db), _user: mode
     db.commit()
 
 
-@router.post("/tasks/{code}/nomenclature/send-to-rc", response_model=list[schemas.NomenclatureItemOut])
+@router.post(
+    "/tasks/{code}/nomenclature/send-to-rc", response_model=list[schemas.NomenclatureItemOut]
+)
 def send_to_rc(code: str, db: Session = Depends(get_db), _user: models.User = WriteDep):
     """Перевести все позиции задачи в статус «Направлено на РЦ»."""
     task = _get_task(db, code)
@@ -102,7 +119,9 @@ def send_to_rc(code: str, db: Session = Depends(get_db), _user: models.User = Wr
 
 
 @router.get("/tasks/{code}/nomenclature.xlsx")
-def export_nomenclature_xlsx(code: str, db: Session = Depends(get_db), _user: models.User = ReadDep):
+def export_nomenclature_xlsx(
+    code: str, db: Session = Depends(get_db), _user: models.User = ReadDep
+):
     """Excel-шаблон ШК для отправки на РЦ."""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
@@ -121,10 +140,15 @@ def export_nomenclature_xlsx(code: str, db: Session = Depends(get_db), _user: mo
         cell.font = head_font
         cell.fill = head_fill
     for n in items:
-        ws.append([
-            n.sku, n.barcode, n.name, n.qty,
-            models.NOMENCLATURE_STATUS_LABELS.get(n.status, n.status.value),
-        ])
+        ws.append(
+            [
+                n.sku,
+                n.barcode,
+                n.name,
+                n.qty,
+                models.NOMENCLATURE_STATUS_LABELS.get(n.status, n.status.value),
+            ]
+        )
     widths = [18, 18, 40, 10, 20]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[chr(64 + i)].width = w

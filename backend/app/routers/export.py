@@ -3,6 +3,7 @@
 Returns UTF-8 CSV with a BOM so Excel opens Cyrillic correctly. Streamed so
 large datasets don't buffer fully in memory.
 """
+
 from __future__ import annotations
 
 import csv
@@ -40,12 +41,35 @@ def export_budgets(db: Session = Depends(get_db), _user: models.User = ReadDep):
         .options(selectinload(models.Task.brand).selectinload(models.Brand.group))
         .order_by(models.Task.code)
     ).all()
-    rows = [["Код", "Задача", "Бренд", "Группа", "Валюта", "Образец", "Тираж", "Бюджет", "Предоплата", "Этап"]]
+    rows: list[list[object]] = [
+        [
+            "Код",
+            "Задача",
+            "Бренд",
+            "Группа",
+            "Валюта",
+            "Образец",
+            "Тираж",
+            "Бюджет",
+            "Предоплата",
+            "Этап",
+        ]
+    ]
     for t in tasks:
-        rows.append([
-            t.code, t.name, t.brand.name, t.brand.group.code, t.currency,
-            t.sample_cost, t.tirazh_cost, t.budget, t.prepaid, t.stage_name,
-        ])
+        rows.append(
+            [
+                t.code,
+                t.name,
+                t.brand.name,
+                t.brand.group.code,
+                t.currency,
+                t.sample_cost,
+                t.tirazh_cost,
+                t.budget,
+                t.prepaid,
+                t.stage_name,
+            ]
+        )
     return _csv_response(rows, "budgets.csv")
 
 
@@ -53,7 +77,9 @@ def export_budgets(db: Session = Depends(get_db), _user: models.User = ReadDep):
 def export_points(db: Session = Depends(get_db), _user: models.User = ReadDep):
     points = db.scalars(select(models.RetailPoint).order_by(models.RetailPoint.code)).all()
     counts = aggregates.point_counts(db, [p.id for p in points])
-    rows = [["Код", "Название", "Город", "Адрес", "Позиций отгружено", "Проблемных"]]
+    rows: list[list[object]] = [
+        ["Код", "Название", "Город", "Адрес", "Позиций отгружено", "Проблемных"]
+    ]
     for p in points:
         c = counts[p.id]
         rows.append([p.code, p.name, p.city, p.address, c["deliveries_total"], c["problems"]])
@@ -62,8 +88,15 @@ def export_points(db: Session = Depends(get_db), _user: models.User = ReadDep):
 
 @router.get("/deliveries.csv")
 def export_deliveries(db: Session = Depends(get_db), _user: models.User = ReadDep):
-    st = {"delivered": "Получено", "partial": "Неполный объём", "missing": "Не получено", "pending": "Ожидает"}
-    rows = [["Точка", "Город", "Задача", "Изделие", "Статус", "Получено", "Ожидается"]]
+    st = {
+        "delivered": "Получено",
+        "partial": "Неполный объём",
+        "missing": "Не получено",
+        "pending": "Ожидает",
+    }
+    rows: list[list[object]] = [
+        ["Точка", "Город", "Задача", "Изделие", "Статус", "Получено", "Ожидается"]
+    ]
     deliveries = db.scalars(
         select(models.Delivery)
         .options(
@@ -73,8 +106,15 @@ def export_deliveries(db: Session = Depends(get_db), _user: models.User = ReadDe
         .order_by(models.Delivery.retail_point_id, models.Delivery.id)
     ).all()
     for d in deliveries:
-        rows.append([
-            d.retail_point.code, d.retail_point.city, d.task.code, d.task.name,
-            st.get(d.status.value, d.status.value), d.qty_received, d.qty_expected,
-        ])
+        rows.append(
+            [
+                d.retail_point.code,
+                d.retail_point.city,
+                d.task.code,
+                d.task.name,
+                st.get(d.status.value, d.status.value),
+                d.qty_received,
+                d.qty_expected,
+            ]
+        )
     return _csv_response(rows, "deliveries.csv")

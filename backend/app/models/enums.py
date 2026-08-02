@@ -1,4 +1,5 @@
 """Перечисления домена и константы этапов (без ORM-зависимостей)."""
+
 from __future__ import annotations
 
 import enum
@@ -7,6 +8,7 @@ import enum
 class TaskStage(enum.IntEnum):
     """Производственный конвейер (BUSINESS_RULES §2). Значения 1..12 —
     числовой порядок сохранён, чтобы не ломать сортировку/Gantt/диапазоны."""
+
     BRIEF_RECEIVED = 1
     SKETCH = 2
     DESIGN_APPROVAL = 3
@@ -43,12 +45,12 @@ LAST_STAGE = int(TaskStage.CLOSED)
 
 
 class Role(str, enum.Enum):
-    admin = "admin"          # полный доступ
-    manager = "manager"      # ведёт задачи, доставки
-    brand = "brand"          # представитель бренда: просмотр + согласования
-    retailer = "retailer"    # ритейлер: просмотр + подтверждение ТТ
+    admin = "admin"  # полный доступ
+    manager = "manager"  # ведёт задачи, доставки
+    brand = "brand"  # представитель бренда: просмотр + согласования
+    retailer = "retailer"  # ритейлер: просмотр + подтверждение ТТ
     shipment_manager = "shipment_manager"  # отдел отгрузки: регионы/статусы доставок
-    viewer = "viewer"        # только чтение
+    viewer = "viewer"  # только чтение
 
 
 class ApprovalStatus(str, enum.Enum):
@@ -58,17 +60,18 @@ class ApprovalStatus(str, enum.Enum):
 
 
 class DeliveryStatus(str, enum.Enum):
-    pending = "pending"      # ещё не отгружено / ждём
+    pending = "pending"  # ещё не отгружено / ждём
     delivered = "delivered"  # получили в полном объёме (✓)
-    partial = "partial"      # неполный объём (~)
-    missing = "missing"      # не получили (✗)
+    partial = "partial"  # неполный объём (~)
+    missing = "missing"  # не получили (✗)
 
 
 class ShipmentRegion(str, enum.Enum):
     """Регион/направление отгрузки (П4)."""
-    local = "local"              # локальная доставка по умолчанию
-    rc = "rc"                    # распределительный центр (РЦ)
-    cis = "cis"                  # СНГ
+
+    local = "local"  # локальная доставка по умолчанию
+    rc = "rc"  # распределительный центр (РЦ)
+    cis = "cis"  # СНГ
     middle_east = "middle_east"  # Middle East
 
 
@@ -81,24 +84,31 @@ SHIPMENT_REGION_LABELS: dict[ShipmentRegion, str] = {
 
 
 class DocKind(str, enum.Enum):
-    brief = "brief"        # ТЗ бренда
-    kp = "kp"              # КП подрядчика
-    sketch = "sketch"      # Эскизы
-    model3d = "model3d"    # 3D-модель
-    photo = "photo"        # Фото продукта
+    brief = "brief"  # ТЗ бренда
+    kp = "kp"  # КП подрядчика
+    sketch = "sketch"  # Эскизы
+    model3d = "model3d"  # 3D-модель
+    photo = "photo"  # Фото продукта
     nomenclature = "nomenclature"  # Заполненный ШК Excel / номенклатура
-    layout = "layout"      # Раскладка ШК
-    ds = "ds"              # ДС (доп. соглашение)
-    invoice = "invoice"    # Счёт
-    waybill = "waybill"    # Накладная (отгрузка)
+    layout = "layout"  # Раскладка ШК
+    ds = "ds"  # ДС (доп. соглашение)
+    invoice = "invoice"  # Счёт
+    waybill = "waybill"  # Накладная (отгрузка)
     registry = "registry"  # Реестр (отгрузка)
     planogram = "planogram"  # Планограмма (pdf/jpg)
-    other = "other"        # Прочее
+    other = "other"  # Прочее
 
 
 __all__ = [
-    "TaskStage", "STAGE_LABELS", "STAGES", "FIRST_STAGE", "LAST_STAGE",
-    "Role", "ApprovalStatus", "DeliveryStatus", "DocKind",
-    "ShipmentRegion", "SHIPMENT_REGION_LABELS",
+    "TaskStage",
+    "STAGE_LABELS",
+    "STAGES",
+    "FIRST_STAGE",
+    "LAST_STAGE",
+    "Role",
+    "ApprovalStatus",
+    "DeliveryStatus",
+    "DocKind",
+    "ShipmentRegion",
+    "SHIPMENT_REGION_LABELS",
 ]
-

@@ -1,12 +1,20 @@
 """Задача (Task) и связанные с этапами таблицы (история, согласования)."""
+
 from __future__ import annotations
 
 import datetime as dt
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer,
-    String, Text, UniqueConstraint,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,9 +22,9 @@ from .base import Base, TimestampMixin
 from .enums import STAGE_LABELS, TaskStage
 
 if TYPE_CHECKING:
-    from .reference import Brand, TeamMember, User
     from .library import Equipment
     from .ops import Approval, Delivery, Document, Payment
+    from .reference import Brand, TeamMember, User
 
 
 class Task(Base, TimestampMixin):
@@ -49,7 +57,9 @@ class Task(Base, TimestampMixin):
     tirazh_cost: Mapped[int] = mapped_column(Integer, default=0)
     prepaid: Mapped[int] = mapped_column(Integer, default=0)
     # Статус оплаты — РУЧНОЙ ввод (позже может приходить из 1С): unpaid/partial/paid.
-    payment_status: Mapped[str] = mapped_column(String(16), default="unpaid", server_default="unpaid")
+    payment_status: Mapped[str] = mapped_column(
+        String(16), default="unpaid", server_default="unpaid"
+    )
 
     # Данные ТЗ (этап 1) — заполняет менеджер; артикул — ключ для будущей
     # автоподстановки из таблицы запусков (Я.Диск).
@@ -57,7 +67,9 @@ class Task(Base, TimestampMixin):
     dimensions: Mapped[str] = mapped_column(String(120), default="", server_default="")
     packaging_primary: Mapped[str] = mapped_column(String(160), default="", server_default="")
     packaging_secondary: Mapped[str] = mapped_column(String(160), default="", server_default="")
-    rc_arrival_date: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rc_arrival_date: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # Полный бриф/ТЗ как JSON (структура шаблона POSM): хранится строкой.
     brief_data: Mapped[str] = mapped_column(Text, default="", server_default="")
     # Карточка ШК (данные для маркировки продукции) как JSON.
@@ -67,57 +79,93 @@ class Task(Base, TimestampMixin):
 
     # Этап «Подготовка»: два согласования (бренд + коллеги ЗЯ); оба → в производство.
     prep_brand_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    prep_brand_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    prep_brand_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     design_iteration: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     prep_zya_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    prep_zya_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    prep_zya_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Этап «КП»: выбранный подрядчик + согласования (менеджер + директор бренда) → в ДС/Счёт.
     kp_contractor: Mapped[str] = mapped_column(String(160), default="", server_default="")
     kp_manager_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    kp_manager_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    kp_manager_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     kp_director_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    kp_director_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    kp_director_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     kp_network_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    kp_network_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    kp_network_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Этап «Образец и Производство»: образец + сроки производства.
-    sample_status: Mapped[str] = mapped_column(String(16), default="unpaid", server_default="unpaid")  # unpaid|paid|in_tirazh
-    sample_deadline: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sample_status: Mapped[str] = mapped_column(
+        String(16), default="unpaid", server_default="unpaid"
+    )  # unpaid|paid|in_tirazh
+    sample_deadline: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     sample_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    sample_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sample_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     sample_received: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
-    sample_received_date: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sample_received_date: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     sample_qc_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    sample_qc_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    sample_brand_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    sample_brand_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    sample_network_approved_by: Mapped[str] = mapped_column(String(150), default="", server_default="")
-    sample_network_approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    production_end_date: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sample_qc_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    sample_brand_approved_by: Mapped[str] = mapped_column(
+        String(150), default="", server_default=""
+    )
+    sample_brand_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    sample_network_approved_by: Mapped[str] = mapped_column(
+        String(150), default="", server_default=""
+    )
+    sample_network_approved_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    production_end_date: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Этап «Отгрузочные документы» (бывш. Упаковка):
     shipment_order_no: Mapped[str] = mapped_column(String(64), default="")
-    shipment_ship_date: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    shipment_acceptance_date: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    shipment_ship_date: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    shipment_acceptance_date: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
-    brand: Mapped["Brand"] = relationship(back_populates="tasks")
-    equipment: Mapped["Equipment | None"] = relationship(lazy="joined")
-    members: Mapped[list["TeamMember"]] = relationship(secondary="task_members", lazy="selectin")
-    approvals: Mapped[list["Approval"]] = relationship(back_populates="task")
-    payment: Mapped["Payment | None"] = relationship(back_populates="task", uselist=False)
-    deliveries: Mapped[list["Delivery"]] = relationship(
+    brand: Mapped[Brand] = relationship(back_populates="tasks")
+    equipment: Mapped[Equipment | None] = relationship(lazy="joined")
+    members: Mapped[list[TeamMember]] = relationship(secondary="task_members", lazy="selectin")
+    approvals: Mapped[list[Approval]] = relationship(back_populates="task")
+    payment: Mapped[Payment | None] = relationship(back_populates="task", uselist=False)
+    deliveries: Mapped[list[Delivery]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
-    documents: Mapped[list["Document"]] = relationship(
+    documents: Mapped[list[Document]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
-    stage_history: Mapped[list["TaskStageHistory"]] = relationship(
-        back_populates="task", cascade="all, delete-orphan",
+    stage_history: Mapped[list[TaskStageHistory]] = relationship(
+        back_populates="task",
+        cascade="all, delete-orphan",
         order_by="TaskStageHistory.id",
     )
-    stage_approval_rows: Mapped[list["TaskStageApproval"]] = relationship(
-        back_populates="task", cascade="all, delete-orphan",
+    stage_approval_rows: Mapped[list[TaskStageApproval]] = relationship(
+        back_populates="task",
+        cascade="all, delete-orphan",
         order_by="TaskStageApproval.stage",
     )
 
@@ -125,7 +173,7 @@ class Task(Base, TimestampMixin):
     def days_left(self) -> int:
         if not self.deadline_tt:
             return 0
-        today = dt.datetime.now(dt.timezone.utc).date()
+        today = dt.datetime.now(dt.UTC).date()
         return (self.deadline_tt.date() - today).days
 
     @property
@@ -164,8 +212,8 @@ class TaskStageHistory(Base, TimestampMixin):
     )
     comment: Mapped[str | None] = mapped_column(String(300), nullable=True)
 
-    task: Mapped["Task"] = relationship(back_populates="stage_history")
-    user: Mapped["User | None"] = relationship(lazy="joined")
+    task: Mapped[Task] = relationship(back_populates="stage_history")
+    user: Mapped[User | None] = relationship(lazy="joined")
 
 
 class TaskStageApproval(Base, TimestampMixin):
@@ -191,8 +239,8 @@ class TaskStageApproval(Base, TimestampMixin):
     comment: Mapped[str | None] = mapped_column(String(300), nullable=True)
     approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    task: Mapped["Task"] = relationship(back_populates="stage_approval_rows")
-    user: Mapped["User | None"] = relationship(lazy="joined")
+    task: Mapped[Task] = relationship(back_populates="stage_approval_rows")
+    user: Mapped[User | None] = relationship(lazy="joined")
 
 
 __all__ = ["Task", "TaskStageHistory", "TaskStageApproval"]

@@ -4,6 +4,7 @@
 - Stateless JWT bearer tokens (no server-side session store -> scales freely).
 - `get_current_user` validates the token; `require_roles(...)` enforces RBAC.
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -35,7 +36,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user: models.User) -> str:
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     payload = {
         "sub": str(user.id),
         "email": user.email,
@@ -66,8 +67,8 @@ def get_current_user(
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         user_id = int(payload["sub"])
-    except (jwt.PyJWTError, KeyError, ValueError):
-        raise _credentials_exc
+    except (jwt.PyJWTError, KeyError, ValueError) as exc:
+        raise _credentials_exc from exc
     user = db.get(models.User, user_id)
     if not user or not user.is_active:
         raise _credentials_exc
