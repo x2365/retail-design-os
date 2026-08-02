@@ -1,4 +1,4 @@
-.PHONY: install dev test lint typecheck format docker up down logs
+.PHONY: install dev test lint typecheck format front front-install front-lint front-typecheck front-build docker up down logs
 
 install:        ## install backend deps incl. dev tooling (local dev)
 	cd backend && pip install -r requirements-dev.txt
@@ -21,8 +21,20 @@ typecheck:      ## mypy (backend/app)
 format:         ## ruff format (backend)
 	ruff format backend
 
-front:          ## serve the static frontend on :5500 (talks to :8000)
-	cd frontend && python -m http.server 5500
+front-install:  ## install frontend deps
+	cd frontend && npm install
+
+front:          ## run Vite dev server on :5500 (proxies /api to :8000)
+	cd frontend && npm run dev
+
+front-lint:     ## eslint (frontend)
+	cd frontend && npm run lint
+
+front-typecheck: ## tsc --noEmit (frontend)
+	cd frontend && npm run typecheck
+
+front-build:    ## production build (frontend)
+	cd frontend && npm run build
 
 up:             ## full stack via docker (postgres + api + nginx) on :8080
 	docker compose up --build

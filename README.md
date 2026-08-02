@@ -5,19 +5,17 @@
 производственного пайплайна; система ведёт бюджеты по группам, оплаты подрядчикам,
 согласования и доставку оборудования по сети магазинов.
 
-Дашборд (фронтенд) был готов изначально — этот репозиторий добавляет к нему
-масштабируемый бэкенд и подключает фронт к API без переписывания логики рендера.
-
 ## Стек
 
-| Слой        | Технология                                            |
-|-------------|-------------------------------------------------------|
-| API         | FastAPI + Pydantic v2 (авто-доки OpenAPI на `/docs`)   |
-| ORM / БД    | SQLAlchemy 2.0; PostgreSQL (prod) / SQLite (dev)       |
-| Auth        | JWT (bearer), bcrypt, RBAC по ролям                    |
-| Сервер      | Gunicorn + Uvicorn-воркеры                              |
-| Фронт       | Статический HTML/JS за nginx (проксирует `/api`)       |
-| Оркестрация | Docker Compose (db + api + frontend)                   |
+| Слой        | Технология                                                        |
+|-------------|--------------------------------------------------------------------|
+| API         | FastAPI + Pydantic v2 (авто-доки OpenAPI на `/docs`)               |
+| ORM / БД    | SQLAlchemy 2.0; PostgreSQL (prod) / SQLite (dev)                   |
+| Auth        | JWT (bearer), bcrypt, RBAC по ролям, rate limiting на login         |
+| Сервер      | Gunicorn + Uvicorn-воркеры                                          |
+| Фронт       | React 18 + TypeScript + Vite, TanStack Query, типы из OpenAPI-схемы |
+| Оркестрация | Docker Compose (db + api + frontend), nginx отдаёт SPA + проксирует `/api` |
+| CI          | GitHub Actions — ruff/mypy/pytest (backend), eslint/tsc/build (frontend) |
 
 ## Быстрый старт
 
@@ -34,10 +32,13 @@ cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload          # API на :8000, доки на :8000/docs
 
-# в другом терминале — статический фронт:
-cd ../frontend && python -m http.server 5500   # http://localhost:5500
+# в другом терминале — фронт (Vite dev-сервер, hot reload):
+cd ../frontend
+npm install
+npm run dev                            # http://localhost:5500
 ```
-Фронт при открытии не с того же origin сам обращается к `http://localhost:8000`.
+Vite-сервер проксирует `/api/*` на `http://localhost:8000` (см. `vite.config.ts`),
+так что фронт всегда обращается к бэкенду через тот же origin, что и в проде за nginx.
 
 ### Демо-доступы
 Сидируются при первом старте (пароль = `<роль>123`):
