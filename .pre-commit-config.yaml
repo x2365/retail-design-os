@@ -19,7 +19,10 @@ repos:
     hooks:
       - id: mypy
         name: mypy (backend/app)
-        entry: bash -c 'cd backend && mypy app'
+        # Run from the repo root (pre-commit's default cwd): mypy doesn't
+        # search upward for pyproject.toml like ruff does, so `cd backend`
+        # first would silently fall back to unconfigured defaults.
+        entry: mypy backend/app
         language: system
         pass_filenames: false
         files: ^backend/app/.*\.py$

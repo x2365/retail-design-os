@@ -14,7 +14,6 @@ ignore = [
 
 [tool.mypy]
 python_version = "3.12"
-mypy_path = "backend"
 files = ["backend/app"]
 ignore_missing_imports = true
 warn_unused_ignores = true

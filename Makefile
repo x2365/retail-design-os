@@ -12,8 +12,11 @@ test:           ## run the backend test suite
 lint:           ## ruff check (backend)
 	ruff check backend
 
+# mypy (unlike ruff) doesn't search upward for pyproject.toml, so it must run
+# from the repo root — `cd backend && mypy app` would silently fall back to
+# unconfigured defaults instead of erroring.
 typecheck:      ## mypy (backend/app)
-	cd backend && mypy app
+	mypy backend/app
 
 format:         ## ruff format (backend)
 	ruff format backend
