@@ -376,7 +376,7 @@ def task_deliveries(code: str, db: Session = Depends(get_db), _user: models.User
 
 
 # ---- комментарии к задаче (с автором) -------------------------------------
-@router.get("/{code}/comments")
+@router.get("/{code}/comments", response_model=list[schemas.CommentOut])
 def list_comments(code: str, db: Session = Depends(get_db), _user: models.User = ReadDep):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
@@ -395,7 +395,7 @@ def list_comments(code: str, db: Session = Depends(get_db), _user: models.User =
     ]
 
 
-@router.post("/{code}/comments", status_code=201)
+@router.post("/{code}/comments", status_code=201, response_model=schemas.CommentOut)
 def add_comment(
     code: str,
     payload: schemas.CommentCreate,

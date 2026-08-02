@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTasks } from "../../api/queries/tasks";
+import { TaskDetailModal } from "./detail/TaskDetailModal";
 import { TaskRow } from "./TaskRow";
 import styles from "./PipelineTabs.module.css";
 
@@ -18,6 +19,7 @@ const TABS: { key: Filter; label: string }[] = [
  * (a single TASKS array filtered in memory), not three separate endpoints. */
 export function ActiveTasksPanel() {
   const [filter, setFilter] = useState<Filter>("all");
+  const [selected, setSelected] = useState<string | null>(null);
   const { data, isLoading } = useTasks({ page_size: 50 });
 
   if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>;
@@ -28,6 +30,7 @@ export function ActiveTasksPanel() {
 
   return (
     <div>
+      {selected && <TaskDetailModal code={selected} onClose={() => setSelected(null)} />}
       <div className={styles.tabs}>
         {TABS.map((t) => (
           <button
@@ -45,7 +48,7 @@ export function ActiveTasksPanel() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {tasks.map((t) => (
-            <TaskRow key={t.code} task={t} />
+            <TaskRow key={t.code} task={t} onClick={() => setSelected(t.code)} />
           ))}
         </div>
       )}

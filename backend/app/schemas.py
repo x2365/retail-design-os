@@ -79,6 +79,13 @@ class CommentCreate(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
 
 
+class CommentOut(BaseModel):
+    id: int
+    author: str
+    text: str
+    at: str
+
+
 class PrepApproval(BaseModel):
     gate: str  # "brand" | "zya"
     approved: bool = True

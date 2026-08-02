@@ -205,12 +205,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Task Deliveries
-         * @description Список ТТ по задаче со статусом (для «Распределение по ТТ»).
-         *
-         *     Статусы по факту подтягиваются из Axapta; здесь отдаём то, что есть в БД.
-         */
+        /** Task Deliveries */
         get: operations["task_deliveries_api_tasks__code__deliveries_get"];
         put?: never;
         post?: never;
@@ -1095,6 +1090,17 @@ export interface components {
         CommentCreate: {
             /** Text */
             text: string;
+        };
+        /** CommentOut */
+        CommentOut: {
+            /** Id */
+            id: number;
+            /** Author */
+            author: string;
+            /** Text */
+            text: string;
+            /** At */
+            at: string;
         };
         /** ContractorCreate */
         ContractorCreate: {
@@ -2653,7 +2659,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DeliveryOut"][];
                 };
             };
             /** @description Validation Error */
@@ -2684,7 +2690,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CommentOut"][];
                 };
             };
             /** @description Validation Error */
@@ -2719,7 +2725,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CommentOut"];
                 };
             };
             /** @description Validation Error */

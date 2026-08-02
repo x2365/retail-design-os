@@ -1,0 +1,35 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.label {
+  font-size: 12px;
+  min-width: 140px;
+}
+.by {
+  font-size: 11px;
+  color: var(--text3);
+}
+.approveBtn {
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-family: "Geologica", sans-serif;
+  cursor: pointer;
+  border: 1px solid #16a34a;
+  background: #16a34a;
+  color: #fff;
+}
+.rejectBtn {
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-family: "Geologica", sans-serif;
+  cursor: pointer;
+  border: 1px solid var(--warn);
+  background: var(--warn);
+  color: #fff;
+}

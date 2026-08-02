@@ -6,10 +6,14 @@ import styles from "./TaskCard.module.css";
 type TaskOut = components["schemas"]["TaskOut"];
 
 /** Compact card used in the Kanban board columns. */
-export function TaskCard({ task }: { task: TaskOut }) {
+export function TaskCard({ task, onClick }: { task: TaskOut; onClick?: () => void }) {
   const dlClass = task.days_left <= 7 ? styles.urgent : task.days_left <= 14 ? styles.warn : "";
   return (
-    <div className={styles.card}>
+    <div
+      className={styles.card}
+      onClick={onClick}
+      style={onClick ? { cursor: "pointer" } : undefined}
+    >
       <div className={styles.top}>
         <div className={styles.dot} style={{ background: groupColor(task.group) }} />
         <span className={styles.code}>{task.code}</span>

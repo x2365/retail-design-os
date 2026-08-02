@@ -1,10 +1,15 @@
+import { useState } from "react";
+
 import { Panel } from "../../components/Panel/Panel";
 import { useTasks } from "../../api/queries/tasks";
+import { TaskDetailModal } from "./detail/TaskDetailModal";
 import { KANBAN_COLUMNS } from "./stageBands";
 import { TaskCard } from "./TaskCard";
 import styles from "./PipelinePage.module.css";
 
 export default function PipelinePage() {
+  const [selected, setSelected] = useState<string | null>(null);
+
   // One real server-side filtered request per band (?band=dev|approval|...),
   // replacing the old app's approach of loading everything and bucketing by
   // a second, hand-maintained copy of the stage ranges.
@@ -17,6 +22,7 @@ export default function PipelinePage() {
 
   return (
     <div className={styles.board}>
+      {selected && <TaskDetailModal code={selected} onClose={() => setSelected(null)} />}
       {KANBAN_COLUMNS.map((col) => {
         const query = byBand[col.key];
         // The Kanban board is "work in flight" — closed tasks (stage 12,
@@ -35,7 +41,9 @@ export default function PipelinePage() {
               ) : tasks.length === 0 ? (
                 <p className={styles.empty}>Нет задач</p>
               ) : (
-                tasks.map((t) => <TaskCard key={t.code} task={t} />)
+                tasks.map((t) => (
+                  <TaskCard key={t.code} task={t} onClick={() => setSelected(t.code)} />
+                ))
               )}
             </div>
           </Panel>

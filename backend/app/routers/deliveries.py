@@ -181,44 +181,6 @@ def delete_point(point_id: int, db: Session = Depends(get_db), _user: models.Use
     db.commit()
 
 
-@router.get("/tasks/{code}/deliveries")
-def task_deliveries(code: str, db: Session = Depends(get_db), _user: models.User = ReadDep):
-    """Список ТТ по задаче со статусом (для «Распределение по ТТ»).
-
-    Статусы по факту подтягиваются из Axapta; здесь отдаём то, что есть в БД.
-    """
-    task = db.scalar(select(models.Task).where(models.Task.code == code))
-    if not task:
-        raise HTTPException(404, f"Task {code} not found")
-    rows = db.scalars(
-        select(models.Delivery)
-        .options(selectinload(models.Delivery.retail_point))
-        .where(models.Delivery.task_id == task.id)
-        .order_by(models.Delivery.id)
-    ).all()
-    LABELS = {
-        models.DeliveryStatus.pending: "Ожидает отгрузки",
-        models.DeliveryStatus.delivered: "Отгружено",
-        models.DeliveryStatus.partial: "Частично",
-    }
-    out = []
-    for d in rows:
-        p = d.retail_point
-        out.append(
-            {
-                "id": d.id,
-                "point_code": p.code if p else "",
-                "point_name": p.name if p else "",
-                "city": (p.city if p else "") or "",
-                "status": d.status.value,
-                "status_label": LABELS.get(d.status, d.status.value),
-                "qty_expected": d.qty_expected,
-                "qty_received": d.qty_received,
-            }
-        )
-    return out
-
-
 @router.get("/retail-points/{point_id}/deliveries", response_model=list[schemas.PointDeliveryOut])
 def point_deliveries(point_id: int, db: Session = Depends(get_db), _user: models.User = ReadDep):
     """Что отгружено в конкретную ТТ: список изделий/задач со статусом."""
