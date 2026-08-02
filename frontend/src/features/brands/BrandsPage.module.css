@@ -1,0 +1,47 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--surface2);
+  border-radius: 8px;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.name {
+  font-size: 12px;
+  font-weight: 500;
+}
+.meta {
+  font-size: 10px;
+  color: var(--text3);
+}
+.iconBtn {
+  cursor: pointer;
+  color: var(--text3);
+  background: none;
+  border: none;
+  font-size: 12px;
+}
+.iconBtn:hover {
+  color: var(--text);
+}
