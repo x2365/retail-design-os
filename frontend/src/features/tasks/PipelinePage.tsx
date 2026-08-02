@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { Panel } from "../../components/Panel/Panel";
 import { useTasks } from "../../api/queries/tasks";
@@ -8,7 +9,20 @@ import { TaskCard } from "./TaskCard";
 import styles from "./PipelinePage.module.css";
 
 export default function PipelinePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState<string | null>(null);
+
+  // Deep link from Approvals ("Перейти к задаче →" for gate-based approvals
+  // that must be resolved inside the task card, not via approve/reject).
+  useEffect(() => {
+    const open = searchParams.get("open");
+    if (open) {
+      setSelected(open);
+      searchParams.delete("open");
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // One real server-side filtered request per band (?band=dev|approval|...),
   // replacing the old app's approach of loading everything and bucketing by

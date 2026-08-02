@@ -75,6 +75,16 @@ class GroupBudgetUpdate(BaseModel):
     budget_planned: int = Field(ge=0)  # копейки
 
 
+class BudgetLogEntryOut(BaseModel):
+    id: int
+    who: str
+    task: str
+    field: str
+    old: str
+    new: str
+    at: str
+
+
 class CommentCreate(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
 
@@ -305,6 +315,8 @@ class PaymentOut(BaseModel):
     balance: str
     currency: str
     status: str
+    kp_doc_id: int | None = None
+    kp_doc_name: str | None = None
 
 
 # ---- Retail points & deliveries (ТТ) ---------------------------------------

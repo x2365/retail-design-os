@@ -1086,6 +1086,23 @@ export interface components {
             /** Group */
             group?: string | null;
         };
+        /** BudgetLogEntryOut */
+        BudgetLogEntryOut: {
+            /** Id */
+            id: number;
+            /** Who */
+            who: string;
+            /** Task */
+            task: string;
+            /** Field */
+            field: string;
+            /** Old */
+            old: string;
+            /** New */
+            new: string;
+            /** At */
+            at: string;
+        };
         /** CommentCreate */
         CommentCreate: {
             /** Text */
@@ -1473,6 +1490,35 @@ export interface components {
         PasswordReset: {
             /** New Password */
             new_password: string;
+        };
+        /** PaymentOut */
+        PaymentOut: {
+            /** Id */
+            id: string;
+            /** Brand */
+            brand: string;
+            /** Name */
+            name: string;
+            /** Contractor */
+            contractor: string;
+            /** Kp Date */
+            kp_date: string | null;
+            /** Sample */
+            sample: string;
+            /** Tirazh */
+            tirazh: string;
+            /** Prepaid */
+            prepaid: string;
+            /** Balance */
+            balance: string;
+            /** Currency */
+            currency: string;
+            /** Status */
+            status: string;
+            /** Kp Doc Id */
+            kp_doc_id?: number | null;
+            /** Kp Doc Name */
+            kp_doc_name?: string | null;
         };
         /** PaymentUpsert */
         PaymentUpsert: {
@@ -3081,7 +3127,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["BudgetLogEntryOut"][];
                 };
             };
             /** @description Validation Error */
@@ -3145,7 +3191,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PaymentOut"][];
                 };
             };
         };
@@ -3169,7 +3215,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PaymentOut"];
                 };
             };
             /** @description Validation Error */

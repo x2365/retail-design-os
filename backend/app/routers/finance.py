@@ -14,7 +14,7 @@ ReadDep = Depends(security.get_current_user)
 AdminDep = Depends(security.require_roles(models.Role.admin))
 
 
-@router.get("/budget/log")
+@router.get("/budget/log", response_model=list[schemas.BudgetLogEntryOut])
 def budget_log(limit: int = 50, db: Session = Depends(get_db), _admin: models.User = AdminDep):
     rows = db.scalars(
         select(models.AuditLog)
@@ -66,7 +66,7 @@ def update_group_budget(
     return group
 
 
-@router.get("/payments")
+@router.get("/payments", response_model=list[schemas.PaymentOut])
 def list_payments(db: Session = Depends(get_db), _user: models.User = ReadDep):
     rows = db.scalars(
         select(models.Payment)
@@ -94,7 +94,7 @@ def list_payments(db: Session = Depends(get_db), _user: models.User = ReadDep):
     return out
 
 
-@router.post("/payments", status_code=201)
+@router.post("/payments", status_code=201, response_model=schemas.PaymentOut)
 def upsert_payment(
     payload: schemas.PaymentUpsert,
     db: Session = Depends(get_db),

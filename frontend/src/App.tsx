@@ -8,7 +8,10 @@ import { RequireRole } from "./app/RequireRole";
 import { AuthProvider } from "./auth/AuthContext";
 import { ComingSoon } from "./components/ComingSoon";
 import LoginPage from "./features/auth/LoginPage";
+import ApprovalsPage from "./features/approvals/ApprovalsPage";
+import BudgetPage from "./features/budget/BudgetPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
+import PaymentsPage from "./features/payments/PaymentsPage";
 import PipelinePage from "./features/tasks/PipelinePage";
 
 export default function App() {
@@ -25,10 +28,10 @@ export default function App() {
                 <Route path="pipeline" element={<PipelinePage />} />
                 <Route path="gantt" element={<ComingSoon title="Таймлайн" />} />
                 <Route path="archive" element={<ComingSoon title="Архив задач" />} />
-                <Route path="budget" element={<ComingSoon title="Бюджеты" />} />
-                <Route path="payments" element={<ComingSoon title="Оплаты / КП" />} />
+                <Route path="budget" element={<BudgetPage />} />
+                <Route path="payments" element={<PaymentsPage />} />
                 <Route path="tt" element={<ComingSoon title="Торговые точки" />} />
-                <Route path="approvals" element={<ComingSoon title="Согласования" />} />
+                <Route path="approvals" element={<ApprovalsPage />} />
                 <Route path="brands" element={<ComingSoon title="Бренды" />} />
                 <Route path="library" element={<ComingSoon title="Библиотека" />} />
                 <Route
