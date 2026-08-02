@@ -4,6 +4,7 @@ import styles from "./Panel.module.css";
 
 interface PanelProps {
   title: string;
+  leading?: ReactNode;
   count?: number;
   countAlert?: boolean;
   actions?: ReactNode;
@@ -11,10 +12,19 @@ interface PanelProps {
   children: ReactNode;
 }
 
-export function Panel({ title, count, countAlert, actions, bodyStyle, children }: PanelProps) {
+export function Panel({
+  title,
+  leading,
+  count,
+  countAlert,
+  actions,
+  bodyStyle,
+  children,
+}: PanelProps) {
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
+        {leading}
         <div className={styles.title}>{title}</div>
         {count !== undefined && (
           <span className={[styles.count, countAlert ? styles.countAlert : ""].join(" ")}>

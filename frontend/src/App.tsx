@@ -9,6 +9,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import { ComingSoon } from "./components/ComingSoon";
 import LoginPage from "./features/auth/LoginPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
+import PipelinePage from "./features/tasks/PipelinePage";
 
 export default function App() {
   return (
@@ -21,7 +22,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
                 <Route index element={<DashboardPage />} />
-                <Route path="pipeline" element={<ComingSoon title="Воронка задач" />} />
+                <Route path="pipeline" element={<PipelinePage />} />
                 <Route path="gantt" element={<ComingSoon title="Таймлайн" />} />
                 <Route path="archive" element={<ComingSoon title="Архив задач" />} />
                 <Route path="budget" element={<ComingSoon title="Бюджеты" />} />

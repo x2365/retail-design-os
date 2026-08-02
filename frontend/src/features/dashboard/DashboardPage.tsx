@@ -3,6 +3,7 @@ import { KpiCard, KpiRow } from "../../components/KpiCard/KpiCard";
 import { useDashboardKpis } from "../../api/queries/dashboard";
 import { useApprovals } from "../../api/queries/approvals";
 import { formatMoney, kopToRub } from "../../lib/money";
+import { ActiveTasksPanel } from "../tasks/ActiveTasksPanel";
 import { ApprovalsMini } from "./ApprovalsMini";
 import { BudgetMini } from "./BudgetMini";
 import { TTMini } from "./TTMini";
@@ -66,9 +67,7 @@ export default function DashboardPage() {
 
       <div className={styles.gridMain}>
         <Panel title="АКТИВНЫЕ ЗАДАЧИ" count={k.active_tasks}>
-          <p className={styles.placeholder}>
-            Список задач появится с экраном «Воронка задач» — следующий шаг рефакторинга.
-          </p>
+          <ActiveTasksPanel />
         </Panel>
 
         <div className={styles.sideStack}>
