@@ -90,7 +90,7 @@ def update_delivery(
     delivery_id: int,
     payload: schemas.DeliveryUpdate,
     db: Session = Depends(get_db),
-    _user: models.User = ConfirmDep,
+    user: models.User = ConfirmDep,
 ):
     d = db.scalar(
         select(models.Delivery)
@@ -117,6 +117,11 @@ def update_delivery(
             raise HTTPException(422, f"Invalid region '{payload.region}'") from exc
     if payload.note is not None:
         d.note = payload.note
+    if payload.installed is not None:
+        if payload.installed and d.status != models.DeliveryStatus.delivered:
+            raise HTTPException(422, "Нельзя отметить монтаж: доставка ещё не подтверждена")
+        d.installed_at = dt.datetime.now(dt.UTC) if payload.installed else None
+        d.installed_by = user.full_name if payload.installed else ""
 
     db.commit()
     db.refresh(d)
@@ -205,6 +210,8 @@ def point_deliveries(point_id: int, db: Session = Depends(get_db), _user: models
             qty_expected=d.qty_expected,
             qty_received=d.qty_received,
             confirmed_at=d.confirmed_at.isoformat() if d.confirmed_at else None,
+            installed_at=d.installed_at.isoformat() if d.installed_at else None,
+            installed_by=d.installed_by,
         )
         for d in rows
     ]

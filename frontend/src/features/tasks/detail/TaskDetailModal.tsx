@@ -22,6 +22,7 @@ import { formatMoney, kopToRub } from "../../../lib/money";
 import forms from "../../../styles/forms.module.css";
 import { CommentsSection } from "./CommentsSection";
 import { DeliveriesList } from "./DeliveriesList";
+import { InstallationList } from "./InstallationList";
 import styles from "./TaskDetailModal.module.css";
 
 const STAGE_TAB_LABELS = [
@@ -214,11 +215,19 @@ function StageContent(props: StageContentProps) {
     );
   if (stage === 7) return <SampleStage {...props} />;
   if (stage === 8) return <ShipmentStage {...props} />;
-  if (stage === 9 || stage === 10) {
+  if (stage === 9) {
     return (
       <div>
-        <div className={styles.sectionLabel}>{stage === 9 ? "Доставка в ТТ" : "Монтаж"}</div>
+        <div className={styles.sectionLabel}>Доставка в ТТ</div>
         <DeliveriesList code={code} />
+      </div>
+    );
+  }
+  if (stage === 10) {
+    return (
+      <div>
+        <div className={styles.sectionLabel}>Монтаж в ТТ</div>
+        <InstallationList code={code} />
       </div>
     );
   }

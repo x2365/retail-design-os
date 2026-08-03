@@ -50,6 +50,8 @@ class Delivery(Base, TimestampMixin):
     qty_received: Mapped[int] = mapped_column(Integer, default=0)
     confirmed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     note: Mapped[str] = mapped_column(String(300), default="")
+    installed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    installed_by: Mapped[str] = mapped_column(String(150), default="")
 
     task: Mapped[Task] = relationship(back_populates="deliveries")
     retail_point: Mapped[RetailPoint] = relationship(lazy="joined")

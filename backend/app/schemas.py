@@ -357,6 +357,8 @@ class PointDeliveryOut(BaseModel):
     qty_expected: int
     qty_received: int
     confirmed_at: str | None = None
+    installed_at: str | None = None
+    installed_by: str = ""
 
 
 class DeliveryOut(BaseModel):
@@ -372,6 +374,8 @@ class DeliveryOut(BaseModel):
     qty_received: int
     confirmed_at: str | None = None
     note: str = ""
+    installed_at: str | None = None
+    installed_by: str = ""
 
 
 class DeliveryUpdate(BaseModel):
@@ -379,6 +383,7 @@ class DeliveryUpdate(BaseModel):
     region: str | None = None  # local|rc|cis|middle_east
     qty_received: int | None = Field(default=None, ge=0)
     note: str | None = None
+    installed: bool | None = None  # монтаж подтверждён/снят (требует status=delivered)
 
 
 # ---- Brands (CRUD) ---------------------------------------------------------

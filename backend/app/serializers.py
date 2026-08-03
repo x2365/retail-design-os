@@ -205,6 +205,8 @@ def delivery_to_out(d: models.Delivery) -> dict:
         "qty_received": d.qty_received,
         "confirmed_at": d.confirmed_at.isoformat() if d.confirmed_at else None,
         "note": d.note,
+        "installed_at": d.installed_at.isoformat() if d.installed_at else None,
+        "installed_by": d.installed_by,
     }
 
 

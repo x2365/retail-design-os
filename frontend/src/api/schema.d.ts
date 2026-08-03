@@ -1246,6 +1246,13 @@ export interface components {
              * @default
              */
             note: string;
+            /** Installed At */
+            installed_at?: string | null;
+            /**
+             * Installed By
+             * @default
+             */
+            installed_by: string;
         };
         /** DeliveryUpdate */
         DeliveryUpdate: {
@@ -1257,6 +1264,8 @@ export interface components {
             qty_received?: number | null;
             /** Note */
             note?: string | null;
+            /** Installed */
+            installed?: boolean | null;
         };
         /** DocumentOut */
         DocumentOut: {
@@ -1618,6 +1627,13 @@ export interface components {
             qty_received: number;
             /** Confirmed At */
             confirmed_at?: string | null;
+            /** Installed At */
+            installed_at?: string | null;
+            /**
+             * Installed By
+             * @default
+             */
+            installed_by: string;
         };
         /** PrepApproval */
         PrepApproval: {
