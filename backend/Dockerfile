@@ -21,5 +21,5 @@ EXPOSE 8000
 
 # Gunicorn manages a pool of Uvicorn workers — the unit of horizontal scaling.
 # Tune WEB_CONCURRENCY per CPU; run multiple replicas behind a load balancer.
-ENV WEB_CONCURRENCY=4
-CMD ["sh", "-c", "gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w ${WEB_CONCURRENCY} -b 0.0.0.0:8000 --access-logfile -"]
+ENV WEB_CONCURRENCY=4 PORT=8000
+CMD ["sh", "-c", "gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w ${WEB_CONCURRENCY} -b 0.0.0.0:${PORT} --access-logfile -"]

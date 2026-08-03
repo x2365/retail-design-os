@@ -95,6 +95,18 @@ class Settings(BaseSettings):
         return self.database_url.startswith("sqlite")
 
     @property
+    def sqlalchemy_database_url(self) -> str:
+        # Managed Postgres providers (Render, Heroku, Railway, Supabase, ...)
+        # hand out `postgres://` / plain `postgresql://` URLs; SQLAlchemy needs
+        # the psycopg3 dialect spelled out explicitly.
+        url = self.database_url
+        if url.startswith("postgres://"):
+            return "postgresql+psycopg://" + url[len("postgres://") :]
+        if url.startswith("postgresql://"):
+            return "postgresql+psycopg://" + url[len("postgresql://") :]
+        return url
+
+    @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
 
