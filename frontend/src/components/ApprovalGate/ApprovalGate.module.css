@@ -23,13 +23,7 @@
   background: #16a34a;
   color: #fff;
 }
-.rejectBtn {
-  padding: 6px 12px;
-  border-radius: 7px;
+.pendingLabel {
   font-size: 11px;
-  font-family: "Geologica", sans-serif;
-  cursor: pointer;
-  border: 1px solid var(--warn);
-  background: var(--warn);
-  color: #fff;
+  color: var(--warn);
 }

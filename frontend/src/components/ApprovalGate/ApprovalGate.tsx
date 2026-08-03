@@ -48,11 +48,9 @@ export function ApprovalGate({
   return (
     <div className={styles.row}>
       <span className={styles.label}>{label}</span>
+      <span className={styles.pendingLabel}>не согласовано</span>
       <button className={styles.approveBtn} disabled={pending} onClick={() => onSetApproved(true)}>
         Согласовано
-      </button>
-      <button className={styles.rejectBtn} disabled={pending} onClick={() => onSetApproved(false)}>
-        Не согласовано
       </button>
     </div>
   );
