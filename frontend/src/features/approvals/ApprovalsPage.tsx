@@ -31,46 +31,61 @@ export default function ApprovalsPage() {
           «Согласования», «Бюджет и КП» или «Образец».
         </p>
       ) : (
-        data.map((a) => {
-          const color = STATUS_COLOR[a.status] ?? "amber";
-          const label = STATUS_LABEL[a.status] ?? a.status;
-          return (
-            <div className={styles.item} key={a.id}>
-              <div className={styles.avatar} style={{ background: `${a.color}22`, color: a.color }}>
-                {a.avatar}
-              </div>
-              <div className={styles.info}>
-                <div className={styles.topRow}>
-                  <span className={styles.name}>{a.from_name}</span>
-                  <Badge color="blue">{a.type}</Badge>
-                  <Badge color={color}>{label}</Badge>
+        <>
+          <p className={styles.hint}>
+            Часть строк — это задачи, зависшие на внутреннем гейте этапа: решение принимается в
+            карточке задачи, здесь только ссылка на неё. Остальные можно утвердить/отклонить прямо
+            тут.
+          </p>
+          {data.map((a) => {
+            const isGate = a.id < 0;
+            const color = STATUS_COLOR[a.status] ?? "amber";
+            const label = STATUS_LABEL[a.status] ?? a.status;
+            return (
+              <div className={styles.item} key={a.id}>
+                <div
+                  className={styles.avatar}
+                  style={{ background: `${a.color}22`, color: a.color }}
+                >
+                  {a.avatar}
                 </div>
-                <div className={styles.taskLine}>{a.summary}</div>
-                {a.comment && <div className={styles.taskLine}>💬 {a.comment}</div>}
+                <div className={styles.info}>
+                  <div className={styles.topRow}>
+                    <span className={styles.name}>{a.from_name}</span>
+                    <Badge color="blue">{a.type}</Badge>
+                    {isGate ? (
+                      <Badge color="gray">гейт в карточке</Badge>
+                    ) : (
+                      <Badge color={color}>{label}</Badge>
+                    )}
+                  </div>
+                  <div className={styles.taskLine}>{a.summary}</div>
+                  {a.comment && <div className={styles.taskLine}>💬 {a.comment}</div>}
+                </div>
+                <div className={styles.actions}>
+                  {isGate ? (
+                    <Link
+                      to={`/pipeline?open=${a.task}`}
+                      className={styles.approve}
+                      style={{ textDecoration: "none" }}
+                    >
+                      Перейти к задаче →
+                    </Link>
+                  ) : a.status === "pending" ? (
+                    <>
+                      <button className={styles.approve} onClick={() => approve.mutate(a.id)}>
+                        ✓ Утвердить
+                      </button>
+                      <button className={styles.reject} onClick={() => reject.mutate(a.id)}>
+                        ✗ Отклонить
+                      </button>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div className={styles.actions}>
-                {a.id < 0 ? (
-                  <Link
-                    to={`/pipeline?open=${a.task}`}
-                    className={styles.approve}
-                    style={{ textDecoration: "none" }}
-                  >
-                    Перейти к задаче →
-                  </Link>
-                ) : a.status === "pending" ? (
-                  <>
-                    <button className={styles.approve} onClick={() => approve.mutate(a.id)}>
-                      ✓ Утвердить
-                    </button>
-                    <button className={styles.reject} onClick={() => reject.mutate(a.id)}>
-                      ✗ Отклонить
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          );
-        })
+            );
+          })}
+        </>
       )}
     </Panel>
   );
