@@ -47,7 +47,14 @@ async def lifespan(app: FastAPI):
     settings.validate_runtime()  # fail fast on insecure prod config
     os.makedirs(settings.upload_dir, exist_ok=True)
     # In production, prefer Alembic migrations over create_all.
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except IntegrityError:
+        # Same worker race as seed() below: on Postgres, create_all() issues
+        # `CREATE TYPE ... AS ENUM` for enum columns, and concurrent workers
+        # can race on it. Whoever loses just proceeds — the winner's DDL is
+        # already committed, so the schema exists either way.
+        pass
     if settings.seed_on_startup:
         with SessionLocal() as db:
             try:
