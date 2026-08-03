@@ -4,6 +4,7 @@ import { api } from "../client";
 import type { components } from "../schema";
 
 type TaskUpdate = components["schemas"]["TaskUpdate"];
+type DeliveryUpdate = components["schemas"]["DeliveryUpdate"];
 
 function invalidateTask(queryClient: ReturnType<typeof useQueryClient>, code: string) {
   queryClient.invalidateQueries({ queryKey: ["task", code] });
@@ -68,10 +69,10 @@ export function useTaskHistory(code: string) {
 export function useUpdateDelivery(code: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+    mutationFn: async ({ id, payload }: { id: number; payload: DeliveryUpdate }) => {
       const { error } = await api.PATCH("/api/deliveries/{delivery_id}", {
         params: { path: { delivery_id: id } },
-        body: { status },
+        body: payload,
       });
       if (error) throw error;
     },

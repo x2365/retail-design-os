@@ -3,14 +3,12 @@ import { Modal } from "../../components/Modal/Modal";
 import { useAuth } from "../../auth/AuthContext";
 import { canConfirmDeliveryRole } from "../../auth/roles";
 import { usePointDeliveries, useUpdatePointDelivery } from "../../api/queries/retailPoints";
+import {
+  DELIVERY_STATUS_OPTIONS as STATUS_OPTIONS,
+  impliedQtyReceived,
+} from "../../lib/deliveryStatus";
 import styles from "./PointDetailModal.module.css";
 
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "pending", label: "• Ожидает отгрузки" },
-  { value: "delivered", label: "✓ Получено" },
-  { value: "partial", label: "~ Неполный объём" },
-  { value: "missing", label: "✗ Не получено" },
-];
 const REGION_OPTIONS: { value: string; label: string }[] = [
   { value: "local", label: "Локально" },
   { value: "rc", label: "РЦ" },
@@ -109,12 +107,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                       value={d.status}
                       onChange={(e) => {
                         const status = e.target.value;
-                        const qty_received =
-                          status === "delivered"
-                            ? d.qty_expected
-                            : status === "missing" || status === "pending"
-                              ? 0
-                              : undefined;
+                        const qty_received = impliedQtyReceived(status, d.qty_expected);
                         update.mutate({ id: d.id, payload: { status, qty_received } });
                       }}
                     >

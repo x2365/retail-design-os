@@ -2,19 +2,12 @@ import { Badge } from "../../../components/Badge/Badge";
 import { canConfirmDeliveryRole } from "../../../auth/roles";
 import { useAuth } from "../../../auth/AuthContext";
 import { useTaskDeliveries, useUpdateDelivery } from "../../../api/queries/taskDetail";
-
-const STATUS_RU: Record<string, string> = {
-  pending: "Ожидает",
-  delivered: "Получено",
-  partial: "Есть брак",
-  missing: "Не получено",
-};
-const STATUS_COLOR: Record<string, "green" | "amber" | "red" | "gray"> = {
-  pending: "gray",
-  delivered: "green",
-  partial: "amber",
-  missing: "red",
-};
+import {
+  DELIVERY_STATUS_COLOR,
+  DELIVERY_STATUS_OPTIONS,
+  deliveryStatusLabel,
+  impliedQtyReceived,
+} from "../../../lib/deliveryStatus";
 
 export function DeliveriesList({ code }: { code: string }) {
   const { data, isLoading } = useTaskDeliveries(code);
@@ -34,21 +27,30 @@ export function DeliveriesList({ code }: { code: string }) {
           <span style={{ flex: 1 }}>
             {d.point_name} <span style={{ color: "var(--text3)" }}>· {d.city}</span>
           </span>
-          <Badge color={STATUS_COLOR[d.status] ?? "gray"}>{STATUS_RU[d.status] ?? d.status}</Badge>
-          {canConfirm && d.status !== "delivered" && (
-            <button
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--accent)",
-                fontSize: 11,
-                cursor: "pointer",
-              }}
+          <span style={{ color: "var(--text3)" }}>
+            {d.qty_received}/{d.qty_expected}
+          </span>
+          {canConfirm ? (
+            <select
+              value={d.status}
               disabled={update.isPending}
-              onClick={() => update.mutate({ id: d.id, status: "delivered" })}
+              onChange={(e) => {
+                const status = e.target.value;
+                const qty_received = impliedQtyReceived(status, d.qty_expected);
+                update.mutate({ id: d.id, payload: { status, qty_received } });
+              }}
+              style={{ fontSize: 11 }}
             >
-              подтвердить
-            </button>
+              {DELIVERY_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Badge color={DELIVERY_STATUS_COLOR[d.status] ?? "gray"}>
+              {deliveryStatusLabel(d.status)}
+            </Badge>
           )}
         </div>
       ))}

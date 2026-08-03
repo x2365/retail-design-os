@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { downloadFile } from "../../api/client";
 import {
@@ -26,6 +26,21 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
   const [kind, setKind] = useState(kinds[0]?.value ?? "other");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // If multiple document kinds are required at this stage (e.g. "ДС и Счёт"
+  // needs both), keep the selector pointed at whichever kind is still
+  // missing — otherwise it's easy to upload both files under the same kind
+  // without noticing, and the stage silently never becomes eligible to
+  // advance (its precondition checks each kind separately).
+  useEffect(() => {
+    if (kinds.length <= 1) return;
+    const present = new Set((data ?? []).map((d) => d.kind));
+    setKind((current) => {
+      if (!present.has(current)) return current;
+      const nextMissing = kinds.find((k) => !present.has(k.value));
+      return nextMissing ? nextMissing.value : current;
+    });
+  }, [data, kinds]);
+
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -35,6 +50,18 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
 
   return (
     <div>
+      {kinds.length > 1 && (
+        <div className={styles.checklist}>
+          {kinds.map((k) => {
+            const has = (data ?? []).some((d) => d.kind === k.value);
+            return (
+              <span key={k.value} className={has ? styles.checkDone : styles.checkMissing}>
+                {has ? "✓" : "○"} {k.label}
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div className={styles.list}>
         {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</span>}
         {(data ?? []).map((d) => (

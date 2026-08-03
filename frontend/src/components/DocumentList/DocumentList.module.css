@@ -36,3 +36,16 @@
   align-items: center;
   gap: 8px;
 }
+.checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.checkDone {
+  color: var(--accent3);
+}
+.checkMissing {
+  color: var(--text3);
+}
