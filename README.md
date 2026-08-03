@@ -2,6 +2,9 @@
 
 [![CI](https://github.com/x2365/retail-design-os/actions/workflows/ci.yml/badge.svg)](https://github.com/x2365/retail-design-os/actions/workflows/ci.yml)
 
+**Живое демо: https://retaildesign-frontend.onrender.com** (демо-доступы — ниже;
+free-тир Render засыпает после простоя, первый запрос может грузиться ~30-50 сек)
+
 Бэкенд + фронтенд для отслеживания производства POSM (подставки, корнеры, дисплеи)
 от ТЗ бренда до доставки в торговые точки (ТТ). Задачи проходят **12 этапов**
 производственного пайплайна; система ведёт бюджеты по группам, оплаты подрядчикам,
@@ -53,7 +56,10 @@ Vite-сервер проксирует `/api/*` на `http://localhost:8000` (с
 | retailer@retail.os   | retailer   | просмотр + подтверждение доставок в ТТ  |
 | viewer@retail.os     | viewer     | только чтение                           |
 
-### Вариант 3 — постоянный онлайн-URL (Render, бесплатно)
+### Вариант 3 — постоянный онлайн-URL (уже задеплоено на Render)
+
+**https://retaildesign-frontend.onrender.com** — живой инстанс, задеплоенный из
+этого репозитория через Blueprint ниже.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/x2365/retail-design-os)
 
