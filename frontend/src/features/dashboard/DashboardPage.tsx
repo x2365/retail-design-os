@@ -1,9 +1,14 @@
+import { useState } from "react";
+
+import { Button } from "../../components/Button/Button";
 import { Panel } from "../../components/Panel/Panel";
 import { KpiCard, KpiRow } from "../../components/KpiCard/KpiCard";
+import { useAuth } from "../../auth/AuthContext";
 import { useDashboardKpis } from "../../api/queries/dashboard";
 import { useApprovals } from "../../api/queries/approvals";
 import { formatMoney, kopToRub } from "../../lib/money";
 import { ActiveTasksPanel } from "../tasks/ActiveTasksPanel";
+import { TaskCreateModal } from "../tasks/TaskCreateModal";
 import { ApprovalsMini } from "./ApprovalsMini";
 import { BudgetMini } from "./BudgetMini";
 import { TTMini } from "./TTMini";
@@ -13,6 +18,8 @@ export default function DashboardPage() {
   const { data: k, isLoading } = useDashboardKpis();
   const { data: pendingApprovals } = useApprovals("pending");
   const pendingCount = pendingApprovals?.length ?? 0;
+  const { isEditor } = useAuth();
+  const [creating, setCreating] = useState(false);
 
   if (isLoading || !k) return <p style={{ color: "var(--text2)" }}>Загрузка…</p>;
 
@@ -66,9 +73,20 @@ export default function DashboardPage() {
       </KpiRow>
 
       <div className={styles.gridMain}>
-        <Panel title="АКТИВНЫЕ ЗАДАЧИ" count={k.active_tasks}>
+        <Panel
+          title="АКТИВНЫЕ ЗАДАЧИ"
+          count={k.active_tasks}
+          actions={
+            isEditor ? (
+              <Button variant="ghost" onClick={() => setCreating(true)}>
+                + Создать задачу
+              </Button>
+            ) : undefined
+          }
+        >
           <ActiveTasksPanel />
         </Panel>
+        {creating && <TaskCreateModal onClose={() => setCreating(false)} />}
 
         <div className={styles.sideStack}>
           <Panel title="ОЖИДАЮТ РЕШЕНИЯ" count={pendingCount} countAlert>
