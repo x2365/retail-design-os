@@ -487,20 +487,16 @@ def kp_approval(
     else:
         task.kp_network_approved_at = now if payload.approved else None
         task.kp_network_approved_by = user.full_name if payload.approved else ""
-    # Все три согласования КП (финансы/бренд/сеть) и задача на «КП» (5) → в «ДС и Счёт» (6).
-    if (
-        task.kp_manager_approved_at
-        and task.kp_director_approved_at
-        and task.kp_network_approved_at
-        and task.stage == 5
-    ):
+    # Согласования КП (финансы/бренд) и задача на «КП» (5) → в «Документы» (6).
+    # Сеть здесь не требуется — её согласование уже получено на этапе 3.
+    if task.kp_manager_approved_at and task.kp_director_approved_at and task.stage == 5:
         try:
             task_stage.apply_transition(
                 db,
                 task,
                 6,
                 user_id=user.id,
-                comment="Авто-переход: КП согласовано (финансы, бренд, сеть)",
+                comment="Авто-переход: КП согласовано (финансы, бренд)",
             )
         except ValueError as e:
             raise HTTPException(409, str(e)) from e

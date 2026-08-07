@@ -124,14 +124,15 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
             reasons.append("нет согласования бренда")
         if not task.prep_zya_approved_at:
             reasons.append("нет согласования сети")
-    elif s == 5:  # Бюджет и КП → согласование финансы + бренд + сеть
+    elif s == 5:  # Бюджет и КП → согласование финансы + бренд
+        # Согласование сети на этом этапе не требуется — оно уже получено
+        # раньше, на этапе 3 «Согласования» (prep_zya); дублировать его
+        # здесь было ошибкой.
         if not task.kp_manager_approved_at:
             reasons.append("нет согласования финансов")
         if not task.kp_director_approved_at:
             reasons.append("нет согласования бренда")
-        if not task.kp_network_approved_at:
-            reasons.append("нет согласования сети")
-    elif s == 6:  # ДС и Счёт → загружены ДС и счёт
+    elif s == 6:  # Документы → загружены ДС и счёт
         if not has_doc(DocKind.ds):
             reasons.append("не загружено ДС")
         if not has_doc(DocKind.invoice):

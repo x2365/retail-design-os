@@ -184,6 +184,7 @@ class TaskOut(BaseModel):
     packaging_primary: str = ""
     packaging_secondary: str = ""
     rc_arrival: str | None = None
+    equipment_kind: str | None = None
     brief_data: dict = {}
     shk_data: dict = {}
     stage_responsible: dict = {}
@@ -357,6 +358,7 @@ class PointDeliveryOut(BaseModel):
     qty_expected: int
     qty_received: int
     confirmed_at: str | None = None
+    arrival_date: str | None = None
     installed_at: str | None = None
     installed_by: str = ""
 
@@ -373,6 +375,7 @@ class DeliveryOut(BaseModel):
     qty_expected: int
     qty_received: int
     confirmed_at: str | None = None
+    arrival_date: str | None = None
     note: str = ""
     installed_at: str | None = None
     installed_by: str = ""
@@ -383,6 +386,7 @@ class DeliveryUpdate(BaseModel):
     region: str | None = None  # local|rc|cis|middle_east
     qty_received: int | None = Field(default=None, ge=0)
     note: str | None = None
+    arrival_date: dt.date | None = None  # дата прихода в ТТ (пока вводится вручную)
     installed: bool | None = None  # монтаж подтверждён/снят (требует status=delivered)
 
 

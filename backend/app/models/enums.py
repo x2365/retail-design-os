@@ -29,7 +29,7 @@ STAGE_LABELS: dict[TaskStage, str] = {
     TaskStage.DESIGN_APPROVAL: "Согласования",
     TaskStage.PRE_PRODUCTION: "SUMMARY",
     TaskStage.PRODUCTION: "Бюджет и КП",
-    TaskStage.QUALITY_CONTROL: "ДС и Счёт",
+    TaskStage.QUALITY_CONTROL: "Документы",
     TaskStage.PACKING: "Образец и Производство",
     TaskStage.READY_FOR_DELIVERY: "Готов к отгрузке",
     TaskStage.DELIVERY: "Доставка",

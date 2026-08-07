@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
+    Date,
     DateTime,
     Enum,
     ForeignKey,
@@ -50,6 +51,9 @@ class Delivery(Base, TimestampMixin):
     qty_received: Mapped[int] = mapped_column(Integer, default=0)
     confirmed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     note: Mapped[str] = mapped_column(String(300), default="")
+    # Дата прихода в ТТ — вручную (в перспективе подгружается из внешней
+    # системы "АХ", интеграции пока нет).
+    arrival_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     installed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     installed_by: Mapped[str] = mapped_column(String(150), default="")
 

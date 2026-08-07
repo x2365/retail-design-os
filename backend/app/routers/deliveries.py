@@ -117,6 +117,8 @@ def update_delivery(
             raise HTTPException(422, f"Invalid region '{payload.region}'") from exc
     if payload.note is not None:
         d.note = payload.note
+    if payload.arrival_date is not None:
+        d.arrival_date = payload.arrival_date
     if payload.installed is not None:
         if payload.installed and d.status != models.DeliveryStatus.delivered:
             raise HTTPException(422, "Нельзя отметить монтаж: доставка ещё не подтверждена")
@@ -210,6 +212,7 @@ def point_deliveries(point_id: int, db: Session = Depends(get_db), _user: models
             qty_expected=d.qty_expected,
             qty_received=d.qty_received,
             confirmed_at=d.confirmed_at.isoformat() if d.confirmed_at else None,
+            arrival_date=d.arrival_date.isoformat() if d.arrival_date else None,
             installed_at=d.installed_at.isoformat() if d.installed_at else None,
             installed_by=d.installed_by,
         )
