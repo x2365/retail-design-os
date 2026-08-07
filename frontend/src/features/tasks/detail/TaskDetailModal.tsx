@@ -511,6 +511,7 @@ function KpStage({
                 type="number"
                 className={forms.input}
                 value={budget}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setBudget(Number(e.target.value))}
               />
             </div>
@@ -520,6 +521,7 @@ function KpStage({
                 type="number"
                 className={forms.input}
                 value={sampleCost}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setSampleCost(Number(e.target.value))}
               />
             </div>
@@ -530,6 +532,7 @@ function KpStage({
               type="number"
               className={forms.input}
               value={tirazhCost}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => setTirazhCost(Number(e.target.value))}
             />
           </div>

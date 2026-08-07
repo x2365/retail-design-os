@@ -43,6 +43,7 @@ export default function BudgetPage() {
                           type="number"
                           className={styles.planInput}
                           value={draft}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) =>
                             setDrafts((d) => ({ ...d, [g.code]: Number(e.target.value) }))
                           }

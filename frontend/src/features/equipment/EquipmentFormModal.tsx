@@ -117,6 +117,7 @@ export function EquipmentFormModal({
             type="number"
             className={forms.input}
             value={budget}
+            onFocus={(e) => e.target.select()}
             onChange={(e) => setBudget(Number(e.target.value))}
           />
         </div>
@@ -126,6 +127,7 @@ export function EquipmentFormModal({
             type="number"
             className={forms.input}
             value={sample}
+            onFocus={(e) => e.target.select()}
             onChange={(e) => setSample(Number(e.target.value))}
           />
         </div>
@@ -136,6 +138,7 @@ export function EquipmentFormModal({
           type="number"
           className={forms.input}
           value={tirazh}
+          onFocus={(e) => e.target.select()}
           onChange={(e) => setTirazh(Number(e.target.value))}
         />
       </div>
