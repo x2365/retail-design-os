@@ -7,6 +7,7 @@ import {
   useEquipmentDocuments,
   useUploadEquipmentDocument,
 } from "../../api/queries/equipment";
+import forms from "../../styles/forms.module.css";
 
 const KIND_OPTIONS = [
   { value: "render", label: "Визуализация" },
@@ -81,7 +82,12 @@ export function EquipmentFilesModal({
         )}
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <select value={kind} onChange={(e) => setKind(e.target.value)} style={{ fontSize: 11 }}>
+        <select
+          className={forms.select}
+          value={kind}
+          onChange={(e) => setKind(e.target.value)}
+          style={{ width: "auto", fontSize: 11 }}
+        >
           {KIND_OPTIONS.map((k) => (
             <option key={k.value} value={k.value}>
               {k.label}

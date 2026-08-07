@@ -7,6 +7,7 @@ import {
   useUploadDocument,
 } from "../../api/queries/taskDetail";
 import { DocumentPreview } from "../DocumentPreview/DocumentPreview";
+import forms from "../../styles/forms.module.css";
 import styles from "./DocumentList.module.css";
 
 interface DocumentListProps {
@@ -88,7 +89,12 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
       {canEdit && (
         <div className={styles.uploadRow}>
           {kinds.length > 1 && (
-            <select value={kind} onChange={(e) => setKind(e.target.value)} style={{ fontSize: 11 }}>
+            <select
+              className={forms.select}
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+              style={{ width: "auto", fontSize: 11 }}
+            >
               {kinds.map((k) => (
                 <option key={k.value} value={k.value}>
                   {k.label}

@@ -8,6 +8,7 @@ import {
   deliveryStatusLabel,
   impliedQtyReceived,
 } from "../../../lib/deliveryStatus";
+import forms from "../../../styles/forms.module.css";
 
 export function DeliveriesList({ code }: { code: string }) {
   const { data, isLoading } = useTaskDeliveries(code);
@@ -32,6 +33,7 @@ export function DeliveriesList({ code }: { code: string }) {
           </span>
           {canConfirm ? (
             <input
+              className={forms.input}
               type="date"
               title="Дата прихода в ТТ"
               value={d.arrival_date ?? ""}
@@ -39,7 +41,7 @@ export function DeliveriesList({ code }: { code: string }) {
               onChange={(e) =>
                 update.mutate({ id: d.id, payload: { arrival_date: e.target.value || null } })
               }
-              style={{ fontSize: 11 }}
+              style={{ width: "auto", marginBottom: 0, padding: "4px 8px", fontSize: 11 }}
             />
           ) : (
             <span style={{ color: "var(--text3)", fontSize: 11 }} title="Дата прихода в ТТ">
@@ -48,6 +50,7 @@ export function DeliveriesList({ code }: { code: string }) {
           )}
           {canConfirm ? (
             <select
+              className={forms.select}
               value={d.status}
               disabled={update.isPending}
               onChange={(e) => {
@@ -55,7 +58,7 @@ export function DeliveriesList({ code }: { code: string }) {
                 const qty_received = impliedQtyReceived(status, d.qty_expected);
                 update.mutate({ id: d.id, payload: { status, qty_received } });
               }}
-              style={{ fontSize: 11 }}
+              style={{ width: "auto", fontSize: 11 }}
             >
               {DELIVERY_STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>

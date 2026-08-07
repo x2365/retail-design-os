@@ -96,12 +96,13 @@ export default function PaymentsPage() {
                   <td>
                     {isEditor ? (
                       <select
+                        className={forms.select}
                         value={p.payment_status}
                         disabled={updateStatus.isPending}
                         onChange={(e) =>
                           updateStatus.mutate({ code: p.id, paymentStatus: e.target.value })
                         }
-                        style={{ fontSize: 11 }}
+                        style={{ width: "auto", fontSize: 11 }}
                       >
                         {PAYMENT_STATUS_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>
