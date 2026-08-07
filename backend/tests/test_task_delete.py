@@ -70,6 +70,31 @@ def test_delete_unknown_task_is_404(client: TestClient, admin_headers: dict[str,
     assert r.status_code == 404
 
 
+def test_new_task_code_never_collides_after_a_deletion(
+    client: TestClient, admin_headers: dict[str, str], manager_headers: dict[str, str]
+):
+    """Regression: _next_code used to be COUNT(*)-based. Deleting the
+    earliest task dropped the count, so the next create reused a code that
+    still belonged to a later, non-deleted task — hitting the DB's unique
+    constraint on tasks.code and crashing with a 500."""
+    first = _create_task(client, manager_headers, name="first")
+    second = _create_task(client, manager_headers, name="second")
+    third = _create_task(client, manager_headers, name="third")
+    assert len({first, second, third}) == 3
+
+    r = client.delete(f"/api/tasks/{first}", headers=admin_headers)
+    assert r.status_code == 204
+
+    r = client.post(
+        "/api/tasks",
+        headers=manager_headers,
+        json={"name": "fourth", "brand": "Darling", "brief_data": {"product_name": "x"}},
+    )
+    assert r.status_code == 201, r.text
+    fourth = r.json()["code"]
+    assert fourth not in {first, second, third}
+
+
 def test_delete_task_keeps_library_card(
     client: TestClient, admin_headers: dict[str, str], manager_headers: dict[str, str]
 ):

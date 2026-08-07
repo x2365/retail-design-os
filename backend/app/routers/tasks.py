@@ -121,8 +121,16 @@ def get_task(code: str, db: Session = Depends(get_db), _user: models.User = Read
 
 
 def _next_code(db: Session) -> str:
-    last = db.scalar(select(func.count()).select_from(models.Task)) or 0
-    return f"RD-{40 + last + 1:03d}"
+    """Next RD-xxx code. Must be derived from the highest existing numeric
+    suffix, NOT a row count — a count-based scheme collides with an existing
+    code the moment any task has ever been deleted (count drops, but the
+    higher codes are still there), which throws a UNIQUE-constraint 500."""
+    max_n = 40
+    for code in db.scalars(select(models.Task.code)).all():
+        suffix = code.rsplit("-", 1)[-1]
+        if suffix.isdigit():
+            max_n = max(max_n, int(suffix))
+    return f"RD-{max_n + 1:03d}"
 
 
 @router.post("", response_model=schemas.TaskOut, status_code=201)
