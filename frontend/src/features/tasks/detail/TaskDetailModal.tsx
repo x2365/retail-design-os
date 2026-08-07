@@ -360,7 +360,14 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
   );
 }
 
-function PrepStage({ task, code, isEditor, canApprove, prepApproval, setError }: StageContentProps) {
+function PrepStage({
+  task,
+  code,
+  isEditor,
+  canApprove,
+  prepApproval,
+  setError,
+}: StageContentProps) {
   const both = task.prep_brand_approved && task.prep_zya_approved;
   const { data: designDocs } = useTaskDocuments(code, 2);
   const sketch = (designDocs ?? []).find((d) => d.content_type.startsWith("image/"));
