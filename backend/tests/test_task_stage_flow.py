@@ -20,9 +20,23 @@ def _create_task(client: TestClient, headers: dict[str, str], **overrides) -> st
     return r.json()["code"]
 
 
+def _upload_brief(client: TestClient, headers: dict[str, str], code: str) -> None:
+    r = client.post(
+        f"/api/tasks/{code}/documents",
+        headers=headers,
+        data={"kind": "brief", "stage": "1"},
+        files={"file": ("brief.pdf", b"%PDF", "application/pdf")},
+    )
+    assert r.status_code == 201, r.text
+
+
 def test_stage_advances_by_one_but_not_by_skip(client: TestClient, manager_headers: dict[str, str]):
     code = _create_task(client, manager_headers)
 
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
+    assert r.status_code == 422, "should be blocked without an uploaded ТЗ file"
+
+    _upload_brief(client, manager_headers, code)
     r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
     assert r.status_code == 200
     assert r.json()["stage"] == 2
@@ -57,6 +71,7 @@ def test_waybill_upload_gets_russian_kind_label(
 
 
 def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code: str) -> None:
+    _upload_brief(client, headers, code)
     client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 2})  # 1->2 (ТЗ заполнено)
     client.post(
         f"/api/tasks/{code}/documents",
@@ -115,6 +130,7 @@ def test_kp_stage_auto_advances_without_network_approval(
     alone must both unblock the manual "Далее" transition and trigger the
     stage 5->6 auto-advance."""
     code = _create_task(client, manager_headers)
+    _upload_brief(client, manager_headers, code)
     client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
     client.post(
         f"/api/tasks/{code}/documents",

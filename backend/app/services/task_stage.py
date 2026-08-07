@@ -108,7 +108,7 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
     reasons: list[str] = []
     s = int(stage)
 
-    if s == 1:  # ТЗ получено → нужно заполненное ТЗ
+    if s == 1:  # ТЗ получено → нужно заполненное ТЗ и загруженный файл ТЗ
         brief: dict = {}
         try:
             brief = _json.loads(task.brief_data) if task.brief_data else {}
@@ -116,6 +116,8 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
             brief = {}
         if not (brief.get("product_name") or task.name):
             reasons.append("не заполнено ТЗ (укажите хотя бы название продукта)")
+        if not has_doc(DocKind.brief):
+            reasons.append("не загружен файл ТЗ")
     elif s == 2:  # Разработка дизайна → нужен загруженный дизайн
         if not has_doc(DocKind.sketch, DocKind.model3d, DocKind.photo):
             reasons.append("не загружен файл дизайна")
