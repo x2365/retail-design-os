@@ -17,7 +17,7 @@ ReadDep = Depends(security.get_current_user)
 def list_groups(db: Session = Depends(get_db), _user: models.User = ReadDep):
     groups = db.scalars(select(models.Group).order_by(models.Group.code)).all()
     spent_rows = db.execute(
-        select(models.Brand.group_id, func.coalesce(func.sum(models.Task.production_cost), 0))
+        select(models.Brand.group_id, func.coalesce(func.sum(models.Task.budget), 0))
         .select_from(models.Task)
         .join(models.Brand, models.Task.brand_id == models.Brand.id)
         .group_by(models.Brand.group_id)
@@ -26,6 +26,6 @@ def list_groups(db: Session = Depends(get_db), _user: models.User = ReadDep):
     out = []
     for g in groups:
         go = schemas.GroupOut.model_validate(g)
-        go.budget_spent = int(spent.get(g.id, 0))  # реальное «освоено» = сумма себестоимости задач
+        go.budget_spent = int(spent.get(g.id, 0))  # реальное «освоено» = сумма бюджетов задач
         out.append(go)
     return out

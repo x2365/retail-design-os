@@ -254,7 +254,7 @@ function StageContent(props: StageContentProps) {
       <div>
         <Badge color="green">✓ Задача закрыта</Badge>
         <div className={styles.grid2} style={{ marginTop: 16 }}>
-          <Field label="Бюджет" value={formatMoney(kopToRub(task.production_cost))} />
+          <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
           <Field label="Статус оплаты" value={task.payment_status} />
         </div>
       </div>

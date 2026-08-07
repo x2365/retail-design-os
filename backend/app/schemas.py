@@ -316,6 +316,7 @@ class PaymentOut(BaseModel):
     balance: str
     currency: str
     status: str
+    payment_status: str
     kp_doc_id: int | None = None
     kp_doc_name: str | None = None
 

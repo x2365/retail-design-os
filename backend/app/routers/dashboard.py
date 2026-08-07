@@ -39,8 +39,9 @@ def kpis(db: Session = Depends(get_db), _user: models.User = Depends(security.ge
     )
     tt_unconfirmed = aggregates.tt_unconfirmed_total(db)
     budget_total = db.scalar(select(func.coalesce(func.sum(models.Group.budget_planned), 0))) or 0
-    # «Освоено» = суммарная себестоимость задач (реальные данные, а не засеянное число).
-    budget_spent = db.scalar(select(func.coalesce(func.sum(models.Task.production_cost), 0))) or 0
+    # «Освоено» = суммарный бюджет задач (поле, которое реально редактируется на
+    # этапе «Бюджет и КП»), а не production_cost — тот не имеет UI и остаётся 0.
+    budget_spent = db.scalar(select(func.coalesce(func.sum(models.Task.budget), 0))) or 0
     brands_count = db.scalar(select(func.count()).select_from(models.Brand)) or 0
     groups_count = db.scalar(select(func.count()).select_from(models.Group)) or 0
     points_total = db.scalar(select(func.count()).select_from(models.RetailPoint)) or 0

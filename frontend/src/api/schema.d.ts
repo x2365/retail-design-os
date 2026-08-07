@@ -1553,6 +1553,8 @@ export interface components {
             currency: string;
             /** Status */
             status: string;
+            /** Payment Status */
+            payment_status: string;
             /** Kp Doc Id */
             kp_doc_id?: number | null;
             /** Kp Doc Name */

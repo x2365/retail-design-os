@@ -29,6 +29,15 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {isEditor && (
+        <div className={styles.topActions}>
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            + Создать задачу
+          </Button>
+        </div>
+      )}
+      {creating && <TaskCreateModal onClose={() => setCreating(false)} />}
+
       <KpiRow>
         <KpiCard
           accent="blue"
@@ -73,20 +82,9 @@ export default function DashboardPage() {
       </KpiRow>
 
       <div className={styles.gridMain}>
-        <Panel
-          title="АКТИВНЫЕ ЗАДАЧИ"
-          count={k.active_tasks}
-          actions={
-            isEditor ? (
-              <Button variant="ghost" onClick={() => setCreating(true)}>
-                + Создать задачу
-              </Button>
-            ) : undefined
-          }
-        >
+        <Panel title="АКТИВНЫЕ ЗАДАЧИ" count={k.active_tasks}>
           <ActiveTasksPanel />
         </Panel>
-        {creating && <TaskCreateModal onClose={() => setCreating(false)} />}
 
         <div className={styles.sideStack}>
           <Panel title="ОЖИДАЮТ РЕШЕНИЯ" count={pendingCount} countAlert>

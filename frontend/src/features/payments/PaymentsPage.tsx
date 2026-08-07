@@ -5,13 +5,21 @@ import { Button } from "../../components/Button/Button";
 import { Panel } from "../../components/Panel/Panel";
 import { useAuth } from "../../auth/AuthContext";
 import { apiErrorMessage, downloadFile } from "../../api/client";
-import { usePayments, useUpsertPayment } from "../../api/queries/payments";
+import { usePayments, useUpdatePaymentStatus, useUpsertPayment } from "../../api/queries/payments";
 import forms from "../../styles/forms.module.css";
 import styles from "./PaymentsPage.module.css";
 
+const PAYMENT_STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "unpaid", label: "Авто (по факту оплаты)" },
+  { value: "registry", label: "Отправлен в реестр" },
+  { value: "queued", label: "Заведён на оплату" },
+  { value: "prepaid", label: "Предоплачен" },
+  { value: "paid", label: "Оплачено" },
+];
+
 function statusColor(status: string): "green" | "amber" | "blue" {
-  if (status.includes("полностью")) return "green";
-  if (status.includes("Предоплата")) return "amber";
+  if (status.includes("Оплачено")) return "green";
+  if (status.includes("Предоплат")) return "amber";
   return "blue";
 }
 
@@ -19,6 +27,7 @@ export default function PaymentsPage() {
   const { data, isLoading } = usePayments();
   const { isEditor } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
+  const updateStatus = useUpdatePaymentStatus();
 
   return (
     <div>
@@ -85,7 +94,24 @@ export default function PaymentsPage() {
                     {p.balance}
                   </td>
                   <td>
-                    <Badge color={statusColor(p.status)}>{p.status}</Badge>
+                    {isEditor ? (
+                      <select
+                        value={p.payment_status}
+                        disabled={updateStatus.isPending}
+                        onChange={(e) =>
+                          updateStatus.mutate({ code: p.id, paymentStatus: e.target.value })
+                        }
+                        style={{ fontSize: 11 }}
+                      >
+                        {PAYMENT_STATUS_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Badge color={statusColor(p.status)}>{p.status}</Badge>
+                    )}
                   </td>
                 </tr>
               ))}

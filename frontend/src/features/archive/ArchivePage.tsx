@@ -113,7 +113,7 @@ export default function ArchivePage() {
                     borderBottom: "1px solid var(--border)",
                   }}
                 >
-                  {formatMoney(kopToRub(t.production_cost))}
+                  {formatMoney(kopToRub(t.budget))}
                 </td>
               </tr>
             ))}

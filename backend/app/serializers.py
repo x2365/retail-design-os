@@ -156,12 +156,16 @@ def payment_to_out(p: models.Payment) -> dict:
     }
     if ps in PS_LABELS:
         status = PS_LABELS[ps]
+        payment_status = ps
     elif total > 0 and prepaid >= total:
         status = "Оплачено"
+        payment_status = "unpaid"
     elif prepaid > 0:
         status = "Предоплачен"
+        payment_status = "unpaid"
     else:
         status = "Ожидает оплаты"
+        payment_status = "unpaid"
     return {
         "id": t.code,
         "brand": t.brand.name,
@@ -174,6 +178,7 @@ def payment_to_out(p: models.Payment) -> dict:
         "balance": _fmt_money_kop(balance, cur),
         "currency": cur,
         "status": status,
+        "payment_status": payment_status,
     }
 
 

@@ -26,3 +26,21 @@ export function useUpsertPayment() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payments"] }),
   });
 }
+
+export function useUpdatePaymentStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ code, paymentStatus }: { code: string; paymentStatus: string }) => {
+      const { error } = await api.PATCH("/api/tasks/{code}", {
+        params: { path: { code } },
+        body: { payment_status: paymentStatus },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
