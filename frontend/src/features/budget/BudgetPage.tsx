@@ -79,6 +79,15 @@ export default function BudgetPage() {
   );
 }
 
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  task: "Задача",
+  group: "Группа",
+  brand: "Бренд",
+  equipment: "Изделие",
+  retail_point: "Точка",
+  document: "Документ",
+};
+
 function BudgetLog() {
   const { data, isLoading } = useBudgetLog();
   const [open, setOpen] = useState(false);
@@ -86,7 +95,7 @@ function BudgetLog() {
 
   return (
     <Panel
-      title={`ЖУРНАЛ ИЗМЕНЕНИЙ БЮДЖЕТА (${rows.length})`}
+      title={`ЖУРНАЛ ИЗМЕНЕНИЙ (${rows.length})`}
       actions={
         <button
           onClick={() => setOpen((o) => !o)}
@@ -107,7 +116,8 @@ function BudgetLog() {
               <tr>
                 <th>Когда</th>
                 <th>Кто</th>
-                <th>Задача</th>
+                <th>Объект</th>
+                <th>Код</th>
                 <th>Поле</th>
                 <th>Было</th>
                 <th>Стало</th>
@@ -118,11 +128,16 @@ function BudgetLog() {
                 <tr key={r.id}>
                   <td style={{ color: "var(--text3)" }}>{r.at}</td>
                   <td>{r.who}</td>
+                  <td style={{ color: "var(--text3)", fontSize: 11 }}>
+                    {ENTITY_TYPE_LABELS[r.entity_type] ?? r.entity_type}
+                  </td>
                   <td>
                     <Badge color="gray">{r.task}</Badge>
                   </td>
                   <td>{r.field}</td>
-                  <td style={{ color: "var(--text3)" }}>{r.old}</td>
+                  <td style={{ color: r.field === "Удаление" ? "var(--danger)" : "var(--text3)" }}>
+                    {r.old}
+                  </td>
                   <td>
                     <b>{r.new}</b>
                   </td>

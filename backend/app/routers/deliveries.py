@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 from .. import models, schemas, security, serializers
 from ..config import get_settings
 from ..database import get_db
+from ..services import audit
 
 router = APIRouter(tags=["retail"])
 settings = get_settings()
@@ -170,7 +171,7 @@ def update_point(
 
 
 @router.delete("/retail-points/{point_id}", status_code=204)
-def delete_point(point_id: int, db: Session = Depends(get_db), _user: models.User = ManageDep):
+def delete_point(point_id: int, db: Session = Depends(get_db), user: models.User = ManageDep):
     p = db.get(models.RetailPoint, point_id)
     if not p:
         raise HTTPException(404, "Точка не найдена")
@@ -184,6 +185,9 @@ def delete_point(point_id: int, db: Session = Depends(get_db), _user: models.Use
     )
     if cnt:
         raise HTTPException(409, f"Нельзя удалить: в точку есть отгрузки ({cnt}).")
+    audit.log_deletion(
+        db, user, entity_type="retail_point", entity_code=p.code, description=f"{p.code} · {p.name}"
+    )
     db.delete(p)
     db.commit()
 

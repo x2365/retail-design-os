@@ -11,6 +11,11 @@ function invalidateTask(queryClient: ReturnType<typeof useQueryClient>, code: st
   queryClient.invalidateQueries({ queryKey: ["task", code] });
   queryClient.invalidateQueries({ queryKey: ["tasks"] });
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  // group budget_planned/spent (dashboard sidebar + Budget page) is derived
+  // from SUM(Task.budget) server-side — any task money/close change can
+  // move it, so it must be invalidated alongside the task itself, not just
+  // on the dedicated group-plan mutation.
+  queryClient.invalidateQueries({ queryKey: ["groups"] });
 }
 
 export function useTask(code: string) {
@@ -51,6 +56,8 @@ export function useDeleteTask(code: string) {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["budget", "log"] });
     },
   });
 }

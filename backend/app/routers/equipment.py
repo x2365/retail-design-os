@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from .. import aggregates, models, schemas, security, serializers
 from ..database import get_db
-from ..services import library, task_stage
+from ..services import audit, library, task_stage
 from ..timeutils import to_utc_datetime
 
 router = APIRouter(prefix="/equipment", tags=["equipment"])
@@ -247,7 +247,7 @@ def card_detail(eq_id: int, db: Session = Depends(get_db), _user: models.User = 
 
 
 @router.delete("/{eq_id}", status_code=204)
-def delete_equipment(eq_id: int, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def delete_equipment(eq_id: int, db: Session = Depends(get_db), user: models.User = WriteDep):
     e = db.get(models.Equipment, eq_id)
     if not e:
         raise HTTPException(404, "Оборудование не найдено")
@@ -268,6 +268,13 @@ def delete_equipment(eq_id: int, db: Session = Depends(get_db), _user: models.Us
             f"Нельзя удалить: на изделии есть запущенные задачи ({active_task_count}). "
             "Переведите его в архив вместо удаления.",
         )
+    audit.log_deletion(
+        db,
+        user,
+        entity_type="equipment",
+        entity_code=str(eq_id),
+        description=f"{e.name} ({e.brand.name})",
+    )
     db.delete(e)  # cascades documents (ondelete=CASCADE)
     db.commit()
 

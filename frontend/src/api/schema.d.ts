@@ -444,7 +444,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Budget Log */
+        /**
+         * Budget Log
+         * @description Общий журнал изменений: бюджетные правки + удаления по всем экранам
+         *     (задачи, бренды, изделия, точки, документы) — один и тот же audit_log,
+         *     показанный в одном месте, а не только «бюджетные» записи.
+         */
         get: operations["budget_log_api_budget_log_get"];
         put?: never;
         post?: never;
@@ -1151,6 +1156,8 @@ export interface components {
             id: number;
             /** Who */
             who: string;
+            /** Entity Type */
+            entity_type: string;
             /** Task */
             task: string;
             /** Field */

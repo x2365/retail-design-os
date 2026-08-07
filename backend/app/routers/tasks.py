@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, selectinload
 from .. import aggregates, models, schemas, security, serializers
 from ..config import get_settings
 from ..database import get_db
-from ..services import library, task_stage
+from ..services import audit, library, task_stage
 from ..timeutils import to_utc_datetime
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -189,7 +189,7 @@ def create_task(
 
 
 @router.delete("/{code}", status_code=204)
-def delete_task(code: str, db: Session = Depends(get_db), _user: models.User = AdminDep):
+def delete_task(code: str, db: Session = Depends(get_db), user: models.User = AdminDep):
     """Безвозвратно удаляет задачу и всё связанное: оплату, доставки, документы,
     комментарии, номенклатуру, согласования, историю этапов. Carточка
     библиотеки (Equipment), если задача была запущена оттуда, не удаляется —
@@ -202,6 +202,13 @@ def delete_task(code: str, db: Session = Depends(get_db), _user: models.User = A
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
+    audit.log_deletion(
+        db,
+        user,
+        entity_type="task",
+        entity_code=task.code,
+        description=f"{task.code} · {task.name}",
+    )
     db.execute(delete(models.Comment).where(models.Comment.task_id == task.id))
     db.execute(delete(models.NomenclatureItem).where(models.NomenclatureItem.task_id == task.id))
     db.execute(delete(models.Payment).where(models.Payment.task_id == task.id))

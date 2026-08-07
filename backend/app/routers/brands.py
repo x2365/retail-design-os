@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas, security
 from ..database import get_db
+from ..services import audit
 
 router = APIRouter(prefix="/brands", tags=["brands"])
 ReadDep = Depends(security.get_current_user)
@@ -96,7 +97,7 @@ def update_brand(
 
 
 @router.delete("/{brand_id}", status_code=204)
-def delete_brand(brand_id: int, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def delete_brand(brand_id: int, db: Session = Depends(get_db), user: models.User = WriteDep):
     brand = db.get(models.Brand, brand_id)
     if not brand:
         raise HTTPException(404, "Бренд не найден")
@@ -117,5 +118,8 @@ def delete_brand(brand_id: int, db: Session = Depends(get_db), _user: models.Use
             f"Нельзя удалить: у бренда есть задачи ({task_count}), включая архивные/закрытые. "
             "У задачи всегда должен быть бренд — перенести их на другой бренд сейчас нельзя.",
         )
+    audit.log_deletion(
+        db, user, entity_type="brand", entity_code=brand.name, description=f"Бренд «{brand.name}»"
+    )
     db.delete(brand)  # cascades equipment
     db.commit()

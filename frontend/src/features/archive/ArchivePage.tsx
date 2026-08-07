@@ -2,13 +2,27 @@ import { useMemo, useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
 import { Panel } from "../../components/Panel/Panel";
+import { useAuth } from "../../auth/AuthContext";
+import { apiErrorMessage } from "../../api/client";
 import { useTasks } from "../../api/queries/tasks";
+import { useDeleteTask } from "../../api/queries/taskDetail";
+import type { components } from "../../api/schema";
 import { formatMoney, kopToRub } from "../../lib/money";
 import forms from "../../styles/forms.module.css";
 import { TaskDetailModal } from "../tasks/detail/TaskDetailModal";
 
+type Task = components["schemas"]["TaskOut"];
+
+const cellStyle: React.CSSProperties = {
+  padding: "9px 10px",
+  fontSize: 12,
+  borderBottom: "1px solid var(--border)",
+};
+
 export default function ArchivePage() {
   const { data, isLoading } = useTasks({ page_size: 200 });
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -42,7 +56,7 @@ export default function ArchivePage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              {["Код", "Название", "Бренд", "Группа", "Дедлайн", "Бюджет"].map((h) => (
+              {["Код", "Название", "Бренд", "Группа", "Дедлайн", "Бюджет", ""].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -60,66 +74,70 @@ export default function ArchivePage() {
           </thead>
           <tbody>
             {closed.map((t) => (
-              <tr key={t.code} style={{ cursor: "pointer" }} onClick={() => setSelected(t.code)}>
-                <td
-                  style={{
-                    padding: "9px 10px",
-                    fontSize: 12,
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  <Badge color="gray">{t.code}</Badge>
-                </td>
-                <td
-                  style={{
-                    padding: "9px 10px",
-                    fontSize: 12,
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  {t.name}
-                </td>
-                <td
-                  style={{
-                    padding: "9px 10px",
-                    fontSize: 12,
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  {t.brand}
-                </td>
-                <td
-                  style={{
-                    padding: "9px 10px",
-                    fontSize: 12,
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  Гр.{t.group}
-                </td>
-                <td
-                  style={{
-                    padding: "9px 10px",
-                    fontSize: 12,
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  {t.deadline ?? "—"}
-                </td>
-                <td
-                  style={{
-                    padding: "9px 10px",
-                    fontSize: 12,
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  {formatMoney(kopToRub(t.budget))}
-                </td>
-              </tr>
+              <ArchiveRow
+                key={t.code}
+                task={t}
+                isAdmin={isAdmin}
+                onOpen={() => setSelected(t.code)}
+              />
             ))}
           </tbody>
         </table>
       )}
     </Panel>
+  );
+}
+
+function ArchiveRow({
+  task,
+  isAdmin,
+  onOpen,
+}: {
+  task: Task;
+  isAdmin: boolean;
+  onOpen: () => void;
+}) {
+  const deleteTask = useDeleteTask(task.code);
+  const [error, setError] = useState("");
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm(`Удалить задачу ${task.code} безвозвратно?`)) return;
+    setError("");
+    try {
+      await deleteTask.mutateAsync();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Не удалось удалить задачу"));
+    }
+  }
+
+  return (
+    <tr style={{ cursor: "pointer" }} onClick={onOpen}>
+      <td style={cellStyle}>
+        <Badge color="gray">{task.code}</Badge>
+      </td>
+      <td style={cellStyle}>{task.name}</td>
+      <td style={cellStyle}>{task.brand}</td>
+      <td style={cellStyle}>Гр.{task.group}</td>
+      <td style={cellStyle}>{task.deadline ?? "—"}</td>
+      <td style={cellStyle}>{formatMoney(kopToRub(task.budget))}</td>
+      <td style={cellStyle}>
+        {isAdmin && (
+          <button
+            onClick={handleDelete}
+            disabled={deleteTask.isPending}
+            title={error || "Удалить задачу"}
+            style={{
+              background: "none",
+              border: "none",
+              color: error ? "var(--danger)" : "var(--text3)",
+              cursor: "pointer",
+            }}
+          >
+            🗑
+          </button>
+        )}
+      </td>
+    </tr>
   );
 }

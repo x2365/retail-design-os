@@ -78,6 +78,7 @@ class GroupBudgetUpdate(BaseModel):
 class BudgetLogEntryOut(BaseModel):
     id: int
     who: str
+    entity_type: str
     task: str
     field: str
     old: str

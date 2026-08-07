@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session, selectinload
 from .. import models, schemas, security
 from ..config import get_settings
 from ..database import get_db
+from ..services import audit
 
 router = APIRouter(tags=["documents"])
 settings = get_settings()
@@ -274,10 +275,18 @@ def download_document(doc_id: int, db: Session = Depends(get_db), _user: models.
 
 
 @router.delete("/documents/{doc_id}", status_code=204)
-def delete_document(doc_id: int, db: Session = Depends(get_db), _user: models.User = WriteDep):
+def delete_document(doc_id: int, db: Session = Depends(get_db), user: models.User = WriteDep):
     doc = db.get(models.Document, doc_id)
     if not doc:
         raise HTTPException(404, "Документ не найден")
+    owner_code = doc.task.code if doc.task else f"eq-{doc.equipment_id}"
+    audit.log_deletion(
+        db,
+        user,
+        entity_type="document",
+        entity_code=owner_code,
+        description=f"Файл: {doc.filename}",
+    )
     path = os.path.join(settings.upload_dir, doc.storage_name)
     if os.path.exists(path):
         os.remove(path)

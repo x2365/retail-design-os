@@ -16,16 +16,17 @@ AdminDep = Depends(security.require_roles(models.Role.admin))
 
 @router.get("/budget/log", response_model=list[schemas.BudgetLogEntryOut])
 def budget_log(limit: int = 50, db: Session = Depends(get_db), _admin: models.User = AdminDep):
+    """Общий журнал изменений: бюджетные правки + удаления по всем экранам
+    (задачи, бренды, изделия, точки, документы) — один и тот же audit_log,
+    показанный в одном месте, а не только «бюджетные» записи."""
     rows = db.scalars(
-        select(models.AuditLog)
-        .where(models.AuditLog.entity_type.in_(["task", "group"]))
-        .order_by(models.AuditLog.id.desc())
-        .limit(min(limit, 200))
+        select(models.AuditLog).order_by(models.AuditLog.id.desc()).limit(min(limit, 200))
     ).all()
     return [
         {
             "id": r.id,
             "who": r.user_name,
+            "entity_type": r.entity_type,
             "task": r.entity_code,
             "field": r.field,
             "old": r.old_value,
