@@ -53,14 +53,23 @@ export function apiErrorMessage(error: unknown, fallback = "Ошибка зап�
 /** Triggers a browser download for an authenticated file endpoint (CSV/XLSX
  * exports, document downloads) that isn't part of the typed JSON API. */
 export async function downloadFile(path: string, filename: string): Promise<void> {
-  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-  const res = await fetch(path, { headers });
-  if (!res.ok) throw new Error(`Не удалось скачать файл (${res.status})`);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
+  const url = await fetchAuthedBlobUrl(path);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/** Fetches an authenticated file endpoint and returns an object URL — for
+ * rendering (e.g. `<img src>` previews of uploaded documents), not
+ * downloading. A bare `<img src="/api/...">` can't carry the Bearer token,
+ * so the image has to be fetched as a blob first. Caller owns the URL and
+ * must revoke it when done (e.g. in a useEffect cleanup). */
+export async function fetchAuthedBlobUrl(path: string): Promise<string> {
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(path, { headers });
+  if (!res.ok) throw new Error(`Не удалось загрузить файл (${res.status})`);
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
 }

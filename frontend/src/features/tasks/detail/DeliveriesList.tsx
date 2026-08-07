@@ -31,6 +31,22 @@ export function DeliveriesList({ code }: { code: string }) {
             {d.qty_received}/{d.qty_expected}
           </span>
           {canConfirm ? (
+            <input
+              type="date"
+              title="Дата прихода в ТТ"
+              value={d.arrival_date ?? ""}
+              disabled={update.isPending}
+              onChange={(e) =>
+                update.mutate({ id: d.id, payload: { arrival_date: e.target.value || null } })
+              }
+              style={{ fontSize: 11 }}
+            />
+          ) : (
+            <span style={{ color: "var(--text3)", fontSize: 11 }} title="Дата прихода в ТТ">
+              {d.arrival_date ?? "—"}
+            </span>
+          )}
+          {canConfirm ? (
             <select
               value={d.status}
               disabled={update.isPending}

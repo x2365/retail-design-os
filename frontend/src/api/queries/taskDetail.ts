@@ -5,6 +5,7 @@ import type { components } from "../schema";
 
 type TaskUpdate = components["schemas"]["TaskUpdate"];
 type DeliveryUpdate = components["schemas"]["DeliveryUpdate"];
+type ContractorCreate = components["schemas"]["ContractorCreate"];
 
 function invalidateTask(queryClient: ReturnType<typeof useQueryClient>, code: string) {
   queryClient.invalidateQueries({ queryKey: ["task", code] });
@@ -240,6 +241,18 @@ export function useContractors() {
       if (error) throw error;
       return data;
     },
+  });
+}
+
+export function useCreateContractor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: ContractorCreate) => {
+      const { data, error } = await api.POST("/api/contractors", { body: payload });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contractors"] }),
   });
 }
 

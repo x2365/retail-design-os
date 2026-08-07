@@ -1241,6 +1241,8 @@ export interface components {
             qty_received: number;
             /** Confirmed At */
             confirmed_at?: string | null;
+            /** Arrival Date */
+            arrival_date?: string | null;
             /**
              * Note
              * @default
@@ -1264,6 +1266,8 @@ export interface components {
             qty_received?: number | null;
             /** Note */
             note?: string | null;
+            /** Arrival Date */
+            arrival_date?: string | null;
             /** Installed */
             installed?: boolean | null;
         };
@@ -1627,6 +1631,8 @@ export interface components {
             qty_received: number;
             /** Confirmed At */
             confirmed_at?: string | null;
+            /** Arrival Date */
+            arrival_date?: string | null;
             /** Installed At */
             installed_at?: string | null;
             /**
@@ -1973,6 +1979,8 @@ export interface components {
             packaging_secondary: string;
             /** Rc Arrival */
             rc_arrival?: string | null;
+            /** Equipment Kind */
+            equipment_kind?: string | null;
             /**
              * Brief Data
              * @default {}

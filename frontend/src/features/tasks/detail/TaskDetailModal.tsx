@@ -4,18 +4,20 @@ import { ApprovalGate } from "../../../components/ApprovalGate/ApprovalGate";
 import { Badge } from "../../../components/Badge/Badge";
 import { Button } from "../../../components/Button/Button";
 import { DocumentList } from "../../../components/DocumentList/DocumentList";
+import { DocumentPreview } from "../../../components/DocumentPreview/DocumentPreview";
 import { Modal } from "../../../components/Modal/Modal";
 import { useAuth } from "../../../auth/AuthContext";
 import { apiErrorMessage } from "../../../api/client";
 import {
-  useAddNomenclature,
+  useAddComment,
   useContractors,
+  useCreateContractor,
   useKpApproval,
-  useNomenclature,
   usePrepApproval,
   useSampleApproval,
   useSetStageApproval,
   useTask,
+  useTaskDocuments,
   useUpdateTask,
 } from "../../../api/queries/taskDetail";
 import { formatMoney, kopToRub } from "../../../lib/money";
@@ -31,7 +33,7 @@ const STAGE_TAB_LABELS = [
   "Согласования",
   "Summary",
   "Бюджет и КП",
-  "ДС и Счёт",
+  "Документы",
   "Образец",
   "Отгрузка",
   "Доставка",
@@ -92,6 +94,12 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
     }
   }
 
+  // "Монтаж" (10) applies only to corner-изделия. Задачи без привязки к
+  // изделию (equipment_kind == null, например созданные вручную) по
+  // умолчанию показывают этап как обычно — скрываем только когда точно
+  // знаем, что изделие не corner.
+  const showInstallStage = task.equipment_kind == null || task.equipment_kind === "corner";
+
   return (
     <Modal
       title={`${task.code} · ${task.name}`}
@@ -105,6 +113,7 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       <div className={styles.stages}>
         {STAGE_TAB_LABELS.map((label, i) => {
           const s = i + 1;
+          if (s === 10 && !showInstallStage) return null;
           const cls =
             s === viewedStage
               ? styles.stageActive
@@ -201,7 +210,7 @@ function StageContent(props: StageContentProps) {
   if (stage === 6)
     return (
       <div>
-        <div className={styles.sectionLabel}>ДС и Счёт</div>
+        <div className={styles.sectionLabel}>Документы</div>
         <DocumentList
           code={code}
           stage={6}
@@ -224,6 +233,14 @@ function StageContent(props: StageContentProps) {
     );
   }
   if (stage === 10) {
+    const showInstallStage = task.equipment_kind == null || task.equipment_kind === "corner";
+    if (!showInstallStage) {
+      return (
+        <p style={{ fontSize: 12, color: "var(--text3)" }}>
+          Монтаж не требуется для этого типа изделия.
+        </p>
+      );
+    }
     return (
       <div>
         <div className={styles.sectionLabel}>Монтаж в ТТ</div>
@@ -264,7 +281,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
     return (
       <div className={styles.grid2}>
         <Field label="Артикул" value={task.article} />
-        <Field label="Размеры" value={task.dimensions} />
+        <Field label="Размеры, мм" value={task.dimensions} />
         <Field label="Первичная упаковка" value={task.packaging_primary} />
       </div>
     );
@@ -282,7 +299,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
           />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Размеры</label>
+          <label className={forms.label}>Размеры, мм</label>
           <input
             className={forms.input}
             value={dimensions}
@@ -314,8 +331,10 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
   );
 }
 
-function PrepStage({ task, isEditor, prepApproval, setError }: StageContentProps) {
+function PrepStage({ task, code, isEditor, prepApproval, setError }: StageContentProps) {
   const both = task.prep_brand_approved && task.prep_zya_approved;
+  const { data: designDocs } = useTaskDocuments(code, 2);
+  const sketch = (designDocs ?? []).find((d) => d.content_type.startsWith("image/"));
 
   function setGate(gate: "brand" | "zya") {
     return (approved: boolean) => {
@@ -329,6 +348,12 @@ function PrepStage({ task, isEditor, prepApproval, setError }: StageContentProps
 
   return (
     <div>
+      {sketch && (
+        <div style={{ marginBottom: 12 }}>
+          <div className={styles.sectionLabel}>Эскиз</div>
+          <DocumentPreview downloadUrl={sketch.download_url} filename={sketch.filename} />
+        </div>
+      )}
       <div className={styles.sectionLabel}>Согласование (оба → SUMMARY)</div>
       <ApprovalGate
         label="Бренд"
@@ -380,11 +405,14 @@ function KpStage({
   setError,
 }: StageContentProps) {
   const { data: contractors } = useContractors();
+  const createContractor = useCreateContractor();
+  const [addingContractor, setAddingContractor] = useState(false);
+  const [newContractorName, setNewContractorName] = useState("");
   const [budget, setBudget] = useState(kopToRub(task.budget));
   const [sampleCost, setSampleCost] = useState(kopToRub(task.sample_cost));
   const [tirazhCost, setTirazhCost] = useState(kopToRub(task.tirazh_cost));
 
-  function setGate(gate: "manager" | "director" | "network") {
+  function setGate(gate: "manager" | "director") {
     return (approved: boolean) => {
       setError("");
       kpApproval.mutate(
@@ -420,22 +448,59 @@ function KpStage({
       <div className={forms.row}>
         <label className={forms.label}>Подрядчик</label>
         {isEditor ? (
-          <select
-            className={forms.select}
-            value={task.kp_contractor}
-            onChange={(e) => saveContractor(e.target.value)}
-          >
-            <option value="">—</option>
-            {(contractors ?? []).map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <select
+              className={forms.select}
+              value={task.kp_contractor}
+              onChange={(e) => saveContractor(e.target.value)}
+            >
+              <option value="">—</option>
+              {(contractors ?? []).map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <Button variant="ghost" onClick={() => setAddingContractor((o) => !o)}>
+              + Новый
+            </Button>
+          </div>
         ) : (
           <div className={styles.fieldValue}>{task.kp_contractor || "—"}</div>
         )}
       </div>
+      {addingContractor && (
+        <div className={forms.row} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <div style={{ flex: 1 }}>
+            <label className={forms.label}>Название подрядчика</label>
+            <input
+              className={forms.input}
+              value={newContractorName}
+              onChange={(e) => setNewContractorName(e.target.value)}
+            />
+          </div>
+          <Button
+            variant="ghost"
+            disabled={createContractor.isPending || !newContractorName.trim()}
+            onClick={() => {
+              setError("");
+              createContractor.mutate(
+                { name: newContractorName, contact: "", details: {} },
+                {
+                  onSuccess: (c) => {
+                    setNewContractorName("");
+                    setAddingContractor(false);
+                    if (c) saveContractor(c.name);
+                  },
+                  onError: (e) => setError(apiErrorMessage(e, "Не удалось добавить подрядчика")),
+                },
+              );
+            }}
+          >
+            Добавить
+          </Button>
+        </div>
+      )}
 
       {canMoney ? (
         <div>
@@ -479,7 +544,7 @@ function KpStage({
         </div>
       )}
 
-      <div className={styles.sectionLabel}>Согласование КП (все три → ДС и Счёт)</div>
+      <div className={styles.sectionLabel}>Согласование КП (оба → Документы)</div>
       <ApprovalGate
         label="Финансы"
         approved={task.kp_manager_approved}
@@ -495,14 +560,6 @@ function KpStage({
         canEdit={isEditor}
         pending={kpApproval.isPending}
         onSetApproved={setGate("director")}
-      />
-      <ApprovalGate
-        label="Сеть"
-        approved={task.kp_network_approved}
-        by={task.kp_network_by}
-        canEdit={isEditor}
-        pending={kpApproval.isPending}
-        onSetApproved={setGate("network")}
       />
 
       <div style={{ marginTop: 12 }}>
@@ -568,7 +625,7 @@ function SampleStage({
 
       <div className={styles.sectionLabel}>Согласование образца</div>
       <ApprovalGate
-        label="ОТК"
+        label="RD"
         approved={task.sample_qc_approved}
         by={task.sample_qc_by}
         canEdit={isEditor}
@@ -607,10 +664,8 @@ function SampleStage({
 
 function ShipmentStage({ task, code, isEditor, updateTask, setError }: StageContentProps) {
   const [orderNo, setOrderNo] = useState(task.shipment_order_no);
-  const { data: items } = useNomenclature(code);
-  const addItem = useAddNomenclature(code);
-  const [newName, setNewName] = useState("");
-  const [newQty, setNewQty] = useState(0);
+  const addComment = useAddComment(code);
+  const [requested, setRequested] = useState(false);
 
   async function saveOrderNo() {
     try {
@@ -620,64 +675,37 @@ function ShipmentStage({ task, code, isEditor, updateTask, setError }: StageCont
     }
   }
 
+  function requestOrderNo() {
+    setError("");
+    addComment.mutate("Запрошен номер отгрузки у менеджера.", {
+      onSuccess: () => setRequested(true),
+      onError: (e) => setError(apiErrorMessage(e, "Не удалось отправить запрос")),
+    });
+  }
+
   return (
     <div>
       <div className={forms.row}>
         <label className={forms.label}>Номер отгрузки</label>
         {isEditor ? (
-          <input
-            className={forms.input}
-            value={orderNo}
-            onChange={(e) => setOrderNo(e.target.value)}
-            onBlur={saveOrderNo}
-          />
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              className={forms.input}
+              value={orderNo}
+              onChange={(e) => setOrderNo(e.target.value)}
+              onBlur={saveOrderNo}
+            />
+            <Button variant="ghost" disabled={addComment.isPending} onClick={requestOrderNo}>
+              Запросить
+            </Button>
+            {requested && (
+              <span style={{ fontSize: 11, color: "var(--accent3)" }}>✓ запрос отправлен</span>
+            )}
+          </div>
         ) : (
           <div className={styles.fieldValue}>{orderNo || "—"}</div>
         )}
       </div>
-
-      <div className={styles.sectionLabel}>Номенклатура / ШК</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
-        {(items ?? []).map((n) => (
-          <div key={n.id} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-            <span style={{ flex: 1 }}>{n.name || n.sku || n.barcode}</span>
-            <span style={{ color: "var(--text3)" }}>{n.qty} шт</span>
-            <Badge color="gray">{n.status_label}</Badge>
-          </div>
-        ))}
-        {(items ?? []).length === 0 && (
-          <span style={{ fontSize: 12, color: "var(--text3)" }}>Позиций пока нет</span>
-        )}
-      </div>
-      {isEditor && (
-        <div style={{ display: "flex", gap: 8 }}>
-          <input
-            className={forms.input}
-            placeholder="Название позиции"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-          />
-          <input
-            className={forms.input}
-            type="number"
-            style={{ width: 90 }}
-            value={newQty}
-            onChange={(e) => setNewQty(Number(e.target.value))}
-          />
-          <Button
-            variant="ghost"
-            disabled={addItem.isPending || !newName.trim()}
-            onClick={() => {
-              addItem.mutate(
-                { name: newName, qty: newQty },
-                { onSuccess: () => (setNewName(""), setNewQty(0)) },
-              );
-            }}
-          >
-            + Добавить
-          </Button>
-        </div>
-      )}
 
       <div style={{ marginTop: 12 }}>
         <div className={styles.sectionLabel}>Отгрузочные документы</div>
