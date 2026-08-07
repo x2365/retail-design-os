@@ -6,6 +6,7 @@ import {
   useTaskDocuments,
   useUploadDocument,
 } from "../../api/queries/taskDetail";
+import { DocumentPreview } from "../DocumentPreview/DocumentPreview";
 import styles from "./DocumentList.module.css";
 
 interface DocumentListProps {
@@ -66,6 +67,9 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
         {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</span>}
         {(data ?? []).map((d) => (
           <div className={styles.item} key={d.id}>
+            {d.content_type.startsWith("image/") && (
+              <DocumentPreview downloadUrl={d.download_url} filename={d.filename} size="thumb" />
+            )}
             <a className={styles.link} onClick={() => downloadFile(d.download_url, d.filename)}>
               📎 {d.filename}
             </a>
