@@ -26,3 +26,17 @@ export function canConfirmDeliveryRole(role: string): boolean {
     role === "admin" || role === "manager" || role === "retailer" || role === "shipment_manager"
   );
 }
+
+/** Who owns which approval gate (prep-/kp-/sample-approval) — mirrors
+ * _check_gate_role in routers/tasks.py. admin/manager may always decide any
+ * gate; "brand" only its brand sign-off, "retailer" only the retail-chain
+ * sign-off ("zya"/"network" are the same real-world actor at different
+ * stages). Gate `""` (sample-approval's legacy "approve all three at once")
+ * is manager/admin-only. */
+export function canApproveGate(role: string | undefined, gate: string): boolean {
+  if (!role) return false;
+  if (role === "admin" || role === "manager") return true;
+  if (role === "brand") return gate === "brand" || gate === "director";
+  if (role === "retailer") return gate === "zya" || gate === "network";
+  return false;
+}

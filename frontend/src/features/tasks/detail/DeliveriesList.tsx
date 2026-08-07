@@ -1,7 +1,15 @@
+import { useState } from "react";
+
 import { Badge } from "../../../components/Badge/Badge";
-import { canConfirmDeliveryRole } from "../../../auth/roles";
+import { Button } from "../../../components/Button/Button";
+import { canConfirmDeliveryRole, isEditorRole } from "../../../auth/roles";
 import { useAuth } from "../../../auth/AuthContext";
-import { useTaskDeliveries, useUpdateDelivery } from "../../../api/queries/taskDetail";
+import { apiErrorMessage } from "../../../api/client";
+import {
+  useDistributeTask,
+  useTaskDeliveries,
+  useUpdateDelivery,
+} from "../../../api/queries/taskDetail";
 import {
   DELIVERY_STATUS_COLOR,
   DELIVERY_STATUS_OPTIONS,
@@ -13,13 +21,49 @@ import forms from "../../../styles/forms.module.css";
 export function DeliveriesList({ code }: { code: string }) {
   const { data, isLoading } = useTaskDeliveries(code);
   const update = useUpdateDelivery(code);
+  const distribute = useDistributeTask(code);
   const { user } = useAuth();
   const canConfirm = user ? canConfirmDeliveryRole(user.role) : false;
+  const canDistribute = user ? isEditorRole(user.role) : false;
+  const [count, setCount] = useState(30);
+  const [error, setError] = useState("");
 
   if (isLoading) return <p style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</p>;
   const rows = data ?? [];
-  if (rows.length === 0)
-    return <p style={{ fontSize: 12, color: "var(--text3)" }}>Нет доставок по ТТ</p>;
+
+  async function handleDistribute() {
+    setError("");
+    try {
+      await distribute.mutateAsync(count);
+    } catch (e) {
+      setError(apiErrorMessage(e, "Не удалось распределить по ТТ"));
+    }
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div>
+        <p style={{ fontSize: 12, color: "var(--text3)" }}>Нет доставок по ТТ</p>
+        {canDistribute && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+            <input
+              className={forms.input}
+              type="number"
+              min={1}
+              value={count}
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setCount(Number(e.target.value))}
+              style={{ width: 70, marginBottom: 0, padding: "6px 8px", fontSize: 12 }}
+            />
+            <Button variant="ghost" disabled={distribute.isPending} onClick={handleDistribute}>
+              Распределить по ТТ
+            </Button>
+            {error && <span style={{ fontSize: 11, color: "var(--danger)" }}>{error}</span>}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

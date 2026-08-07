@@ -7,11 +7,13 @@ import { DocumentList } from "../../../components/DocumentList/DocumentList";
 import { DocumentPreview } from "../../../components/DocumentPreview/DocumentPreview";
 import { Modal } from "../../../components/Modal/Modal";
 import { useAuth } from "../../../auth/AuthContext";
+import { canApproveGate } from "../../../auth/roles";
 import { apiErrorMessage } from "../../../api/client";
 import {
   useAddComment,
   useContractors,
   useCreateContractor,
+  useDeleteTask,
   useKpApproval,
   usePrepApproval,
   useSampleApproval,
@@ -61,6 +63,7 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
   const kpApproval = useKpApproval(code);
   const sampleApproval = useSampleApproval(code);
   const setStageApproval = useSetStageApproval(code);
+  const deleteTask = useDeleteTask(code);
 
   useEffect(() => {
     if (task && viewedStage === null) setViewedStage(task.stage);
@@ -94,6 +97,23 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
     }
   }
 
+  async function handleDelete() {
+    if (
+      !confirm(
+        `Удалить задачу ${task!.code} безвозвратно? Это удалит всю историю, документы, оплату и комментарии.`,
+      )
+    ) {
+      return;
+    }
+    setError("");
+    try {
+      await deleteTask.mutateAsync();
+      onClose();
+    } catch (e) {
+      setError(apiErrorMessage(e, "Не удалось удалить задачу"));
+    }
+  }
+
   // "Монтаж" (10) applies only to corner-изделия. Задачи без привязки к
   // изделию (equipment_kind == null, например созданные вручную) по
   // умолчанию показывают этап как обычно — скрываем только когда точно
@@ -107,6 +127,13 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
         <>
           {task.brand} · Группа {task.group} · {task.urgent && <Badge color="red">Срочно</Badge>}
         </>
+      }
+      headerExtra={
+        user?.role === "admin" ? (
+          <Button variant="ghost" disabled={deleteTask.isPending} onClick={handleDelete}>
+            🗑 Удалить
+          </Button>
+        ) : undefined
       }
       onClose={onClose}
     >
@@ -138,6 +165,7 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
         code={code}
         isEditor={isEditor}
         canMoney={user?.role === "admin"}
+        canApprove={(gate) => canApproveGate(user?.role, gate)}
         prepApproval={prepApproval}
         kpApproval={kpApproval}
         sampleApproval={sampleApproval}
@@ -176,6 +204,7 @@ interface StageContentProps {
   code: string;
   isEditor: boolean;
   canMoney: boolean;
+  canApprove: (gate: string) => boolean;
   prepApproval: ReturnType<typeof usePrepApproval>;
   kpApproval: ReturnType<typeof useKpApproval>;
   sampleApproval: ReturnType<typeof useSampleApproval>;
@@ -331,7 +360,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
   );
 }
 
-function PrepStage({ task, code, isEditor, prepApproval, setError }: StageContentProps) {
+function PrepStage({ task, code, isEditor, canApprove, prepApproval, setError }: StageContentProps) {
   const both = task.prep_brand_approved && task.prep_zya_approved;
   const { data: designDocs } = useTaskDocuments(code, 2);
   const sketch = (designDocs ?? []).find((d) => d.content_type.startsWith("image/"));
@@ -359,7 +388,7 @@ function PrepStage({ task, code, isEditor, prepApproval, setError }: StageConten
         label="Бренд"
         approved={task.prep_brand_approved}
         by={task.prep_brand_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("brand")}
         pending={prepApproval.isPending}
         onSetApproved={setGate("brand")}
       />
@@ -367,7 +396,7 @@ function PrepStage({ task, code, isEditor, prepApproval, setError }: StageConten
         label="Сеть"
         approved={task.prep_zya_approved}
         by={task.prep_zya_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("zya")}
         pending={prepApproval.isPending}
         onSetApproved={setGate("zya")}
       />
@@ -400,6 +429,7 @@ function KpStage({
   code,
   isEditor,
   canMoney,
+  canApprove,
   kpApproval,
   updateTask,
   setError,
@@ -552,7 +582,7 @@ function KpStage({
         label="Финансы"
         approved={task.kp_manager_approved}
         by={task.kp_manager_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("manager")}
         pending={kpApproval.isPending}
         onSetApproved={setGate("manager")}
       />
@@ -560,7 +590,7 @@ function KpStage({
         label="Бренд"
         approved={task.kp_director_approved}
         by={task.kp_director_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("director")}
         pending={kpApproval.isPending}
         onSetApproved={setGate("director")}
       />
@@ -582,6 +612,7 @@ function SampleStage({
   task,
   code,
   isEditor,
+  canApprove,
   sampleApproval,
   updateTask,
   setError,
@@ -631,7 +662,7 @@ function SampleStage({
         label="RD"
         approved={task.sample_qc_approved}
         by={task.sample_qc_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("qc")}
         pending={sampleApproval.isPending}
         onSetApproved={setGate("qc")}
       />
@@ -639,7 +670,7 @@ function SampleStage({
         label="Бренд"
         approved={task.sample_brand_approved}
         by={task.sample_brand_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("brand")}
         pending={sampleApproval.isPending}
         onSetApproved={setGate("brand")}
       />
@@ -647,7 +678,7 @@ function SampleStage({
         label="Сеть"
         approved={task.sample_network_approved}
         by={task.sample_network_by}
-        canEdit={isEditor}
+        canEdit={isEditor || canApprove("network")}
         pending={sampleApproval.isPending}
         onSetApproved={setGate("network")}
       />

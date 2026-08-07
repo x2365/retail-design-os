@@ -16,8 +16,6 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from ..models import (
-    Approval,
-    ApprovalStatus,
     Delivery,
     DeliveryStatus,
     Payment,
@@ -147,9 +145,17 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
 
 
 def check_close_preconditions(db: Session, task) -> list[str]:
-    """Предусловия закрытия задачи (этап CLOSED) по BUSINESS_RULES:
-    все поставки доставлены + есть оплата + все согласования согласованы.
-    Возвращает список невыполненных условий (пустой = можно закрывать).
+    """Предусловия закрытия задачи (этап CLOSED): все поставки доставлены +
+    есть оплата. Возвращает список невыполненных условий (пустой = можно
+    закрывать).
+
+    Согласования (бренд/сеть/финансы/КК) здесь НЕ проверяются отдельно — это
+    уже сделано `check_stage_preconditions` на выходе с этапов 3/5/7:
+    задача физически не может дойти до 12, не пройдя через них. Отдельная
+    таблица `Approval` (общая, не 1:1 с задачей) — это другой, отдельный
+    объект («ОЖИДАЮТ РЕШЕНИЯ» inbox), в неё никогда не пишутся строки,
+    привязанные к конкретной задаче, так что проверка "все approved" по ней
+    была вечно пустой и ничего не проверяла.
     """
     from sqlalchemy import func
     from sqlalchemy import select as _select
@@ -169,14 +175,6 @@ def check_close_preconditions(db: Session, task) -> list[str]:
     )
     if not has_payment:
         reasons.append("нет оплаты (Payment)")
-
-    not_approved = db.scalar(
-        _select(func.count())
-        .select_from(Approval)
-        .where(Approval.task_id == task.id, Approval.status != ApprovalStatus.approved)
-    )
-    if not_approved:
-        reasons.append(f"есть несогласованные согласования ({not_approved})")
 
     return reasons
 

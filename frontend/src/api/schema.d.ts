@@ -157,7 +157,19 @@ export interface paths {
         get: operations["get_task_api_tasks__code__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Task
+         * @description Безвозвратно удаляет задачу и всё связанное: оплату, доставки, документы,
+         *     комментарии, номенклатуру, согласования, историю этапов. Carточка
+         *     библиотеки (Equipment), если задача была запущена оттуда, не удаляется —
+         *     у неё своя жизнь (times_produced, другие проекты).
+         *
+         *     Comment/NomenclatureItem/Payment/Approval удаляются здесь явно (bulk
+         *     delete), а не через ORM-каскад: у SQLite (локально/тесты) FK-констрейнты
+         *     не включены, а Comment/NomenclatureItem не имеют relationship на Task
+         *     вовсе — полагаться на DB-level ondelete здесь нельзя.
+         */
+        delete: operations["delete_task_api_tasks__code__delete"];
         options?: never;
         head?: never;
         /** Update Task */
@@ -209,6 +221,28 @@ export interface paths {
         get: operations["task_deliveries_api_tasks__code__deliveries_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{code}/distribute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Distribute Task
+         * @description Раздать задачу по торговым точкам (создать Delivery per точка). Без
+         *     этого шага задача может закрыться, ни разу не отгрузившись ни в одну
+         *     ТТ — «не все ТТ доставлены» проверяет только СУЩЕСТВУЮЩИЕ Delivery.
+         */
+        post: operations["distribute_task_api_tasks__code__distribute_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1270,6 +1304,26 @@ export interface components {
             arrival_date?: string | null;
             /** Installed */
             installed?: boolean | null;
+        };
+        /**
+         * DistributeRequest
+         * @description Раздать задачу по торговым точкам — создаёт по одной Delivery на
+         *     точку. Явный список точек — приоритетнее; иначе берутся первые `count`
+         *     точек каталога (по коду).
+         */
+        DistributeRequest: {
+            /** Point Ids */
+            point_ids?: number[] | null;
+            /**
+             * Count
+             * @default 30
+             */
+            count: number;
+            /**
+             * Qty Expected
+             * @default 1
+             */
+            qty_expected: number;
         };
         /** DocumentOut */
         DocumentOut: {
@@ -2638,6 +2692,35 @@ export interface operations {
             };
         };
     };
+    delete_task_api_tasks__code__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_task_api_tasks__code__patch: {
         parameters: {
             query?: never;
@@ -2752,6 +2835,41 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    distribute_task_api_tasks__code__distribute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistributeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

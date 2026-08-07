@@ -6,7 +6,7 @@ import datetime as dt
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from .. import aggregates, models, schemas, security, serializers
@@ -29,6 +29,32 @@ STAGE_BANDS = {
 ReadDep = Depends(security.get_current_user)
 # only managers/admins may write
 WriteDep = Depends(security.require_roles(models.Role.manager))
+# deleting a task is irreversible (wipes its whole history) — admin only
+AdminDep = Depends(security.require_roles(models.Role.admin))
+# prep/kp/sample gate decisions: each gate has its own real-world approver
+# (see Role docstrings in models/enums.py) — manager/admin may always decide
+# any gate; brand/retailer are further restricted to their own gate below.
+ApproveDep = Depends(
+    security.require_roles(models.Role.manager, models.Role.brand, models.Role.retailer)
+)
+
+# Which role owns which gate literal, across prep-/kp-/sample-approval. "zya"
+# and "network" are both the retail-chain's sign-off (same real-world actor,
+# different stage); "director" is the brand's budget sign-off on the KP.
+_BRAND_GATES = {"brand", "director"}
+_RETAILER_GATES = {"zya", "network"}
+
+
+def _check_gate_role(user: models.User, gate: str) -> None:
+    if user.role in (models.Role.manager, models.Role.admin):
+        return
+    if user.role == models.Role.brand and gate in _BRAND_GATES:
+        return
+    if user.role == models.Role.retailer and gate in _RETAILER_GATES:
+        return
+    raise HTTPException(
+        403, f"Роль «{user.role.value}» не может согласовывать гейт «{gate or 'все сразу'}»"
+    )
 
 
 def _base_query():
@@ -152,6 +178,28 @@ def create_task(
     db.commit()
     task = db.scalar(_base_query().where(models.Task.id == task.id))
     return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
+
+
+@router.delete("/{code}", status_code=204)
+def delete_task(code: str, db: Session = Depends(get_db), _user: models.User = AdminDep):
+    """Безвозвратно удаляет задачу и всё связанное: оплату, доставки, документы,
+    комментарии, номенклатуру, согласования, историю этапов. Carточка
+    библиотеки (Equipment), если задача была запущена оттуда, не удаляется —
+    у неё своя жизнь (times_produced, другие проекты).
+
+    Comment/NomenclatureItem/Payment/Approval удаляются здесь явно (bulk
+    delete), а не через ORM-каскад: у SQLite (локально/тесты) FK-констрейнты
+    не включены, а Comment/NomenclatureItem не имеют relationship на Task
+    вовсе — полагаться на DB-level ondelete здесь нельзя."""
+    task = db.scalar(select(models.Task).where(models.Task.code == code))
+    if not task:
+        raise HTTPException(404, f"Task {code} not found")
+    db.execute(delete(models.Comment).where(models.Comment.task_id == task.id))
+    db.execute(delete(models.NomenclatureItem).where(models.NomenclatureItem.task_id == task.id))
+    db.execute(delete(models.Payment).where(models.Payment.task_id == task.id))
+    db.execute(delete(models.Approval).where(models.Approval.task_id == task.id))
+    db.delete(task)
+    db.commit()
 
 
 @router.patch("/{code}", response_model=schemas.TaskOut)
@@ -375,6 +423,56 @@ def task_deliveries(code: str, db: Session = Depends(get_db), _user: models.User
     return [serializers.delivery_to_out(d) for d in rows]
 
 
+@router.post("/{code}/distribute", response_model=list[schemas.DeliveryOut], status_code=201)
+def distribute_task(
+    code: str,
+    payload: schemas.DistributeRequest,
+    db: Session = Depends(get_db),
+    _user: models.User = WriteDep,
+):
+    """Раздать задачу по торговым точкам (создать Delivery per точка). Без
+    этого шага задача может закрыться, ни разу не отгрузившись ни в одну
+    ТТ — «не все ТТ доставлены» проверяет только СУЩЕСТВУЮЩИЕ Delivery."""
+    task = db.scalar(select(models.Task).where(models.Task.code == code))
+    if not task:
+        raise HTTPException(404, f"Task {code} not found")
+    already = db.scalar(
+        select(func.count()).select_from(models.Delivery).where(models.Delivery.task_id == task.id)
+    )
+    if already:
+        raise HTTPException(409, f"Задача уже распределена по ТТ ({already})")
+
+    if payload.point_ids:
+        points = db.scalars(
+            select(models.RetailPoint).where(models.RetailPoint.id.in_(payload.point_ids))
+        ).all()
+        missing = set(payload.point_ids) - {p.id for p in points}
+        if missing:
+            raise HTTPException(404, f"Точки не найдены: {sorted(missing)}")
+    else:
+        points = db.scalars(
+            select(models.RetailPoint).order_by(models.RetailPoint.code).limit(payload.count)
+        ).all()
+        if not points:
+            raise HTTPException(409, "В каталоге нет торговых точек")
+
+    for p in points:
+        db.add(
+            models.Delivery(
+                task_id=task.id, retail_point_id=p.id, qty_expected=payload.qty_expected
+            )
+        )
+    db.commit()
+
+    rows = db.scalars(
+        select(models.Delivery)
+        .options(selectinload(models.Delivery.task), selectinload(models.Delivery.retail_point))
+        .where(models.Delivery.task_id == task.id)
+        .order_by(models.Delivery.id)
+    ).all()
+    return [serializers.delivery_to_out(d) for d in rows]
+
+
 # ---- комментарии к задаче (с автором) -------------------------------------
 @router.get("/{code}/comments", response_model=list[schemas.CommentOut])
 def list_comments(code: str, db: Session = Depends(get_db), _user: models.User = ReadDep):
@@ -425,13 +523,14 @@ def prep_approval(
     code: str,
     payload: schemas.PrepApproval,
     db: Session = Depends(get_db),
-    user: models.User = WriteDep,
+    user: models.User = ApproveDep,
 ):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
     if payload.gate not in ("brand", "zya"):
         raise HTTPException(400, "gate must be 'brand' or 'zya'")
+    _check_gate_role(user, payload.gate)
     now = dt.datetime.now(dt.UTC)
     if payload.gate == "brand":
         task.prep_brand_approved_at = now if payload.approved else None
@@ -470,13 +569,14 @@ def kp_approval(
     code: str,
     payload: schemas.KpApproval,
     db: Session = Depends(get_db),
-    user: models.User = WriteDep,
+    user: models.User = ApproveDep,
 ):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
         raise HTTPException(404, f"Task {code} not found")
     if payload.gate not in ("manager", "director", "network"):
         raise HTTPException(400, "gate must be 'manager', 'director' or 'network'")
+    _check_gate_role(user, payload.gate)
     now = dt.datetime.now(dt.UTC)
     if payload.gate == "manager":
         task.kp_manager_approved_at = now if payload.approved else None
@@ -511,7 +611,7 @@ def sample_approval(
     code: str,
     payload: schemas.SampleApproval,
     db: Session = Depends(get_db),
-    user: models.User = WriteDep,
+    user: models.User = ApproveDep,
 ):
     task = db.scalar(select(models.Task).where(models.Task.code == code))
     if not task:
@@ -520,6 +620,9 @@ def sample_approval(
     gate = (payload.gate or "").lower()
     if gate not in ("", "qc", "brand", "network"):
         raise HTTPException(400, "gate must be 'qc', 'brand', 'network' or empty")
+    # empty gate = legacy "approve all three at once" — only the full
+    # manager/admin owner of the sample stage may do that in one shot.
+    _check_gate_role(user, gate)
 
     def set_gate(attr_at, attr_by):
         setattr(task, attr_at, now if payload.approved else None)

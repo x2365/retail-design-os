@@ -391,6 +391,16 @@ class DeliveryUpdate(BaseModel):
     installed: bool | None = None  # монтаж подтверждён/снят (требует status=delivered)
 
 
+class DistributeRequest(BaseModel):
+    """Раздать задачу по торговым точкам — создаёт по одной Delivery на
+    точку. Явный список точек — приоритетнее; иначе берутся первые `count`
+    точек каталога (по коду)."""
+
+    point_ids: list[int] | None = None
+    count: int = Field(default=30, ge=1, le=500)
+    qty_expected: int = Field(default=1, ge=1)
+
+
 # ---- Brands (CRUD) ---------------------------------------------------------
 class BrandOut(BaseModel):
     id: int

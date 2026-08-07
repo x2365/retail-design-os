@@ -39,6 +39,22 @@ export function useUpdateTask(code: string) {
   });
 }
 
+export function useDeleteTask(code: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await api.DELETE("/api/tasks/{code}", { params: { path: { code } } });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["task", code] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+    },
+  });
+}
+
 export function useSetStageApproval(code: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -91,6 +107,21 @@ export function useTaskDeliveries(code: string) {
       if (error) throw error;
       return data;
     },
+  });
+}
+
+export function useDistributeTask(code: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (count: number) => {
+      const { data, error } = await api.POST("/api/tasks/{code}/distribute", {
+        params: { path: { code } },
+        body: { count, qty_expected: 1 },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["task", code, "deliveries"] }),
   });
 }
 
