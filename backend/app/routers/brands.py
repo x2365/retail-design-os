@@ -100,6 +100,11 @@ def delete_brand(brand_id: int, db: Session = Depends(get_db), _user: models.Use
     brand = db.get(models.Brand, brand_id)
     if not brand:
         raise HTTPException(404, "Бренд не найден")
+    # Task.brand_id is NOT NULL with ondelete=RESTRICT (unlike equipment_id,
+    # which is nullable + SET NULL) — a task keeps its brand forever, closed
+    # or not, so this counts every task regardless of stage. There is no
+    # "close them first" workaround: the FK physically blocks the DELETE
+    # while any task row still points here.
     task_count = (
         db.scalar(
             select(func.count()).select_from(models.Task).where(models.Task.brand_id == brand_id)
@@ -109,7 +114,8 @@ def delete_brand(brand_id: int, db: Session = Depends(get_db), _user: models.Use
     if task_count:
         raise HTTPException(
             409,
-            f"Нельзя удалить: у бренда есть задачи ({task_count}). Сначала закройте/перенесите их.",
+            f"Нельзя удалить: у бренда есть задачи ({task_count}), включая архивные/закрытые. "
+            "У задачи всегда должен быть бренд — перенести их на другой бренд сейчас нельзя.",
         )
     db.delete(brand)  # cascades equipment
     db.commit()
