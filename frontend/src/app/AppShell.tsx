@@ -41,12 +41,13 @@ export default function AppShell() {
                   key={item.to}
                   to={item.to}
                   end={item.to === "/"}
+                  title={item.label}
                   className={({ isActive }) =>
                     [styles.navItem, isActive ? styles.navItemActive : ""].filter(Boolean).join(" ")
                   }
                 >
                   <span className={styles.navIcon}>{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className={styles.navText}>{item.label}</span>
                 </NavLink>
               ))}
             </div>

@@ -118,7 +118,9 @@
 /* ─── MAIN CONTENT ─────────────────────────── */
 .main {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -146,4 +148,66 @@
 .content {
   padding: 28px 28px 96px;
   flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* ─── NARROW VIEWPORTS (landscape phones etc.) ──
+   Sidebar collapses to an icon-only rail — the fixed 240px sidebar alone
+   ate ~28% of a landscape-iPhone-width viewport. Text labels hide, icons +
+   title tooltips remain; everything is still reachable, just denser. */
+@media (max-width: 960px) {
+  .sidebar {
+    width: 56px;
+    padding: 12px 0;
+  }
+  .logo {
+    padding: 0 0 12px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .logoMark {
+    font-size: 0;
+  }
+  .logoMark::before {
+    content: "R";
+    font-size: 15px;
+  }
+  .logoSub {
+    display: none;
+  }
+  .navSection {
+    padding: 0 6px;
+  }
+  .navLabel {
+    display: none;
+  }
+  .navItem {
+    justify-content: center;
+    padding: 10px 0;
+  }
+  .navIcon {
+    font-size: 17px;
+  }
+  .navText {
+    display: none;
+  }
+  .sidebarFooter {
+    padding: 12px 6px;
+  }
+  .userCard {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .userInfo {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 14px;
+    height: 46px;
+  }
+  .content {
+    padding: 14px 14px 72px;
+  }
 }

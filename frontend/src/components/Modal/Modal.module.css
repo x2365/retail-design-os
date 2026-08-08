@@ -29,6 +29,12 @@
     transform: none;
   }
 }
+@media (max-height: 500px) {
+  .modal {
+    max-height: 94vh;
+    padding: 16px;
+  }
+}
 .header {
   display: flex;
   align-items: flex-start;
