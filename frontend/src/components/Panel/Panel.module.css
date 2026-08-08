@@ -10,6 +10,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 .title {
   font-family: "Unbounded", sans-serif;
@@ -39,4 +41,10 @@
 }
 .body {
   padding: 16px 20px;
+  /* .panel's overflow: hidden (for rounded corners) silently clips anything
+     wider than the panel — a table whose last column won't wrap (action
+     buttons etc.) can end up wider than the panel with no scrollbar and no
+     visible sign text was cut. Scroll it here, inside the body, before the
+     outer clip ever needs to kick in. */
+  overflow-x: auto;
 }
