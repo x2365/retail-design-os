@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ApprovalGate } from "../../../components/ApprovalGate/ApprovalGate";
 import { Badge } from "../../../components/Badge/Badge";
@@ -64,9 +64,25 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
   const sampleApproval = useSampleApproval(code);
   const setStageApproval = useSetStageApproval(code);
   const deleteTask = useDeleteTask(code);
+  const prevTaskStageRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (task && viewedStage === null) setViewedStage(task.stage);
+    if (!task) return;
+    if (viewedStage === null) {
+      setViewedStage(task.stage);
+    } else if (
+      prevTaskStageRef.current !== null &&
+      prevTaskStageRef.current !== task.stage &&
+      viewedStage === prevTaskStageRef.current
+    ) {
+      // The stage being viewed just auto-advanced server-side out from under
+      // it (e.g. approving both КП gates jumps 5->6 with no button click) —
+      // follow it. Otherwise "Далее" silently targets task.stage+1, skipping
+      // the tab the user never saw, and fails that tab's own precondition
+      // check instead ("Документы не завершён" while looking at "КП").
+      setViewedStage(task.stage);
+    }
+    prevTaskStageRef.current = task.stage;
   }, [task, viewedStage]);
 
   if (isLoading || !task || viewedStage === null) {
