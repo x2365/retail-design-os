@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Badge } from "../../../components/Badge/Badge";
 import { Button } from "../../../components/Button/Button";
+import { NumberInput } from "../../../components/NumberInput/NumberInput";
 import { canConfirmDeliveryRole, isEditorRole } from "../../../auth/roles";
 import { useAuth } from "../../../auth/AuthContext";
 import { apiErrorMessage } from "../../../api/client";
@@ -46,13 +47,11 @@ export function DeliveriesList({ code }: { code: string }) {
         <p style={{ fontSize: 12, color: "var(--text3)" }}>Нет доставок по ТТ</p>
         {canDistribute && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-            <input
+            <NumberInput
               className={forms.input}
-              type="number"
               min={1}
               value={count}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => setCount(Number(e.target.value))}
+              onChange={setCount}
               style={{ width: 70, marginBottom: 0, padding: "6px 8px", fontSize: 12 }}
             />
             <Button variant="ghost" disabled={distribute.isPending} onClick={handleDistribute}>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Badge } from "../../components/Badge/Badge";
 import { Button } from "../../components/Button/Button";
 import { KpiCard } from "../../components/KpiCard/KpiCard";
+import { NumberInput } from "../../components/NumberInput/NumberInput";
 import { Panel } from "../../components/Panel/Panel";
 import { useAuth } from "../../auth/AuthContext";
 import { useGroups } from "../../api/queries/groups";
@@ -39,14 +40,10 @@ export default function BudgetPage() {
                   delta={
                     isAdmin ? (
                       <div className={styles.editRow}>
-                        <input
-                          type="number"
+                        <NumberInput
                           className={styles.planInput}
                           value={draft}
-                          onFocus={(e) => e.target.select()}
-                          onChange={(e) =>
-                            setDrafts((d) => ({ ...d, [g.code]: Number(e.target.value) }))
-                          }
+                          onChange={(n) => setDrafts((d) => ({ ...d, [g.code]: n }))}
                         />
                         <Button
                           variant="primary"

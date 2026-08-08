@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Button } from "../../components/Button/Button";
 import { Modal } from "../../components/Modal/Modal";
+import { NumberInput } from "../../components/NumberInput/NumberInput";
 import { apiErrorMessage } from "../../api/client";
 import { useBrands } from "../../api/queries/brands";
 import { useCreateEquipment, useUpdateEquipment } from "../../api/queries/equipment";
@@ -113,34 +114,16 @@ export function EquipmentFormModal({
       <div className={forms.grid2}>
         <div className={forms.row}>
           <label className={forms.label}>Бюджет, ₽</label>
-          <input
-            type="number"
-            className={forms.input}
-            value={budget}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setBudget(Number(e.target.value))}
-          />
+          <NumberInput className={forms.input} value={budget} onChange={setBudget} />
         </div>
         <div className={forms.row}>
           <label className={forms.label}>Образец, ₽</label>
-          <input
-            type="number"
-            className={forms.input}
-            value={sample}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setSample(Number(e.target.value))}
-          />
+          <NumberInput className={forms.input} value={sample} onChange={setSample} />
         </div>
       </div>
       <div className={forms.row}>
         <label className={forms.label}>Тираж, ₽</label>
-        <input
-          type="number"
-          className={forms.input}
-          value={tirazh}
-          onFocus={(e) => e.target.select()}
-          onChange={(e) => setTirazh(Number(e.target.value))}
-        />
+        <NumberInput className={forms.input} value={tirazh} onChange={setTirazh} />
       </div>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={pending || !name.trim()} onClick={submit}>

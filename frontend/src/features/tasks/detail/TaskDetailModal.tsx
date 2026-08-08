@@ -6,6 +6,7 @@ import { Button } from "../../../components/Button/Button";
 import { DocumentList } from "../../../components/DocumentList/DocumentList";
 import { DocumentPreview } from "../../../components/DocumentPreview/DocumentPreview";
 import { Modal } from "../../../components/Modal/Modal";
+import { NumberInput } from "../../../components/NumberInput/NumberInput";
 import { useAuth } from "../../../auth/AuthContext";
 import { canApproveGate } from "../../../auth/roles";
 import { apiErrorMessage } from "../../../api/client";
@@ -560,34 +561,16 @@ function KpStage({
           <div className={forms.grid2}>
             <div className={forms.row}>
               <label className={forms.label}>Бюджет, ₽</label>
-              <input
-                type="number"
-                className={forms.input}
-                value={budget}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => setBudget(Number(e.target.value))}
-              />
+              <NumberInput className={forms.input} value={budget} onChange={setBudget} />
             </div>
             <div className={forms.row}>
               <label className={forms.label}>Образец, ₽</label>
-              <input
-                type="number"
-                className={forms.input}
-                value={sampleCost}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => setSampleCost(Number(e.target.value))}
-              />
+              <NumberInput className={forms.input} value={sampleCost} onChange={setSampleCost} />
             </div>
           </div>
           <div className={forms.row}>
             <label className={forms.label}>Тираж, ₽</label>
-            <input
-              type="number"
-              className={forms.input}
-              value={tirazhCost}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => setTirazhCost(Number(e.target.value))}
-            />
+            <NumberInput className={forms.input} value={tirazhCost} onChange={setTirazhCost} />
           </div>
           <Button variant="ghost" disabled={updateTask.isPending} onClick={saveFinance}>
             Сохранить финансы
