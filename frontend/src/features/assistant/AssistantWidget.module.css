@@ -2,22 +2,45 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: white;
-  border: none;
-  font-size: 20px;
+  border: 2px solid var(--gold);
+  font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 4px 20px rgba(100, 112, 245, 0.5),
+    0 0 0 4px var(--gold-soft);
   z-index: 90;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+  animation: assistantFabPulse 3s ease-in-out infinite;
 }
 .fab:hover {
-  opacity: 0.9;
+  transform: scale(1.06);
+  box-shadow:
+    0 6px 28px rgba(100, 112, 245, 0.65),
+    0 0 0 6px var(--gold-soft);
+}
+
+@keyframes assistantFabPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 20px rgba(100, 112, 245, 0.5),
+      0 0 0 4px var(--gold-soft);
+  }
+  50% {
+    box-shadow:
+      0 4px 26px rgba(100, 112, 245, 0.75),
+      0 0 0 7px var(--gold-soft);
+  }
 }
 
 .panel {
@@ -27,9 +50,11 @@
   width: 360px;
   max-height: 70vh;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px var(--gold-soft);
   z-index: 90;
   display: flex;
   flex-direction: column;
@@ -38,6 +63,7 @@
 .header {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--gold-soft), transparent 70%);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -46,6 +72,9 @@
   font-family: "Unbounded", sans-serif;
   font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 .close {
   margin-left: auto;
