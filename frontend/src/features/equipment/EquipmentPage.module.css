@@ -12,8 +12,11 @@
 .card {
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 14px;
   background: var(--surface2);
+  overflow: hidden;
+}
+.cardBody {
+  padding: 14px;
 }
 .archived {
   opacity: 0.55;

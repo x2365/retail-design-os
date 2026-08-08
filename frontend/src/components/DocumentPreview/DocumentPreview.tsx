@@ -10,8 +10,9 @@ export function DocumentPreview({
   downloadUrl: string;
   filename: string;
   /** "large" — featured preview (e.g. the sketch on «Согласования»).
-   * "thumb" — small inline thumbnail for a file-list row. */
-  size?: "large" | "thumb";
+   * "thumb" — inline thumbnail for a file-list row.
+   * "cover" — full-width banner (e.g. equipment card cover photo). */
+  size?: "large" | "thumb" | "cover";
 }) {
   const [src, setSrc] = useState<string | null>(null);
 
@@ -37,9 +38,9 @@ export function DocumentPreview({
       return (
         <span
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 6,
+            width: 96,
+            height: 96,
+            borderRadius: 8,
             background: "var(--surface3)",
             display: "inline-block",
           }}
@@ -50,7 +51,36 @@ export function DocumentPreview({
       <img
         src={src}
         alt={filename}
-        style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6, display: "block" }}
+        style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 8, display: "block" }}
+      />
+    );
+  }
+
+  if (size === "cover") {
+    if (!src) {
+      return (
+        <span
+          style={{
+            width: "100%",
+            height: 160,
+            borderRadius: "10px 10px 0 0",
+            background: "var(--surface3)",
+            display: "block",
+          }}
+        />
+      );
+    }
+    return (
+      <img
+        src={src}
+        alt={filename}
+        style={{
+          width: "100%",
+          height: 160,
+          objectFit: "cover",
+          borderRadius: "10px 10px 0 0",
+          display: "block",
+        }}
       />
     );
   }

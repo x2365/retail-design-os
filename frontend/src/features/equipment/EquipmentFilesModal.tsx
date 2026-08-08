@@ -10,7 +10,8 @@ import {
 import forms from "../../styles/forms.module.css";
 
 const KIND_OPTIONS = [
-  { value: "render", label: "Визуализация" },
+  { value: "photo", label: "Фото" },
+  { value: "model3d", label: "Визуализация" },
   { value: "brief", label: "ТЗ" },
   { value: "ds", label: "ДС" },
   { value: "invoice", label: "Счёт" },
@@ -30,7 +31,7 @@ export function EquipmentFilesModal({
   const { data, isLoading } = useEquipmentDocuments(id);
   const upload = useUploadEquipmentDocument(id);
   const del = useDeleteEquipmentDocument(id);
-  const [kind, setKind] = useState("render");
+  const [kind, setKind] = useState("photo");
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

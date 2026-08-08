@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Badge } from "../../components/Badge/Badge";
 import { Button } from "../../components/Button/Button";
+import { DocumentPreview } from "../../components/DocumentPreview/DocumentPreview";
 import { Panel } from "../../components/Panel/Panel";
 import { useAuth } from "../../auth/AuthContext";
 import { apiErrorMessage } from "../../api/client";
@@ -109,64 +110,73 @@ export default function EquipmentPage() {
                     className={[styles.card, e.is_active ? "" : styles.archived].join(" ")}
                     key={e.id}
                   >
-                    <div className={styles.topRow}>
-                      <Badge color="blue">{KIND_LABELS[e.kind] ?? e.kind}</Badge>
-                      {!e.is_active && <Badge color="gray">архив</Badge>}
-                      <span className={styles.produced}>в производстве {e.times_produced}×</span>
-                    </div>
-                    <div className={styles.name}>{e.name}</div>
-                    <div className={styles.meta}>
-                      {e.dimensions || "—"}
-                      {e.description ? ` · ${e.description}` : ""}
-                    </div>
-                    <div className={styles.budget}>
-                      Бюджет:{" "}
-                      <b style={{ color: "var(--text)" }}>
-                        {formatMoneyShort(kopToRub(e.est_budget))} ₽
-                      </b>
-                    </div>
-                    <div className={styles.actions}>
-                      <Button variant="ghost" onClick={() => setFiles(e)}>
-                        📁 Файлы
-                      </Button>
-                      {isEditor && e.is_active && (
-                        <Button
-                          variant="primary"
-                          disabled={produce.isPending}
-                          onClick={() => handleProduce(e)}
-                        >
-                          В производство →
+                    {e.cover_document_id != null && (
+                      <DocumentPreview
+                        downloadUrl={`/api/documents/${e.cover_document_id}/download`}
+                        filename={e.name}
+                        size="cover"
+                      />
+                    )}
+                    <div className={styles.cardBody}>
+                      <div className={styles.topRow}>
+                        <Badge color="blue">{KIND_LABELS[e.kind] ?? e.kind}</Badge>
+                        {!e.is_active && <Badge color="gray">архив</Badge>}
+                        <span className={styles.produced}>в производстве {e.times_produced}×</span>
+                      </div>
+                      <div className={styles.name}>{e.name}</div>
+                      <div className={styles.meta}>
+                        {e.dimensions || "—"}
+                        {e.description ? ` · ${e.description}` : ""}
+                      </div>
+                      <div className={styles.budget}>
+                        Бюджет:{" "}
+                        <b style={{ color: "var(--text)" }}>
+                          {formatMoneyShort(kopToRub(e.est_budget))} ₽
+                        </b>
+                      </div>
+                      <div className={styles.actions}>
+                        <Button variant="ghost" onClick={() => setFiles(e)}>
+                          📁 Файлы
                         </Button>
-                      )}
-                      {isEditor && (
-                        <>
-                          <Button variant="ghost" onClick={() => setEditing(e)}>
-                            ✎
-                          </Button>
+                        {isEditor && e.is_active && (
                           <Button
-                            variant="ghost"
-                            onClick={() =>
-                              updateEq.mutate({ id: e.id, payload: { is_active: !e.is_active } })
-                            }
+                            variant="primary"
+                            disabled={produce.isPending}
+                            onClick={() => handleProduce(e)}
                           >
-                            {e.is_active ? "В архив" : "Из архива"}
+                            В производство →
                           </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => {
-                              setError("");
-                              if (confirm(`Удалить «${e.name}» из библиотеки?`)) {
-                                deleteEq.mutate(e.id, {
-                                  onError: (err) =>
-                                    setError(apiErrorMessage(err, "Не удалось удалить изделие")),
-                                });
+                        )}
+                        {isEditor && (
+                          <>
+                            <Button variant="ghost" onClick={() => setEditing(e)}>
+                              ✎
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                updateEq.mutate({ id: e.id, payload: { is_active: !e.is_active } })
                               }
-                            }}
-                          >
-                            ✕
-                          </Button>
-                        </>
-                      )}
+                            >
+                              {e.is_active ? "В архив" : "Из архива"}
+                            </Button>
+                            <Button
+                              variant="danger"
+                              onClick={() => {
+                                setError("");
+                                if (confirm(`Удалить «${e.name}» из библиотеки?`)) {
+                                  deleteEq.mutate(e.id, {
+                                    onError: (err) =>
+                                      setError(apiErrorMessage(err, "Не удалось удалить изделие")),
+                                  });
+                                }
+                              }}
+                            >
+                              ✕
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
