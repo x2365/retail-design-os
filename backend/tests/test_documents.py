@@ -45,3 +45,24 @@ def test_uploaded_document_can_be_downloaded_and_deleted(
     assert client.delete(f"/api/documents/{doc_id}", headers=viewer_headers).status_code == 403
 
     assert client.delete(f"/api/documents/{doc_id}", headers=manager_headers).status_code == 204
+
+    # the document row is gone entirely (not just the file) after delete
+    r = client.get(f"/api/documents/{doc_id}/download", headers=manager_headers)
+    assert r.status_code == 404
+
+
+def test_download_cyrillic_filename_content_disposition(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    code = _create_task(client, manager_headers)
+    upload = client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "brief", "stage": "1"},
+        files={"file": ("тз_эскиз.pdf", b"%PDF", "application/pdf")},
+    )
+    doc_id = upload.json()["id"]
+
+    dl = client.get(f"/api/documents/{doc_id}/download", headers=manager_headers)
+    assert dl.status_code == 200
+    assert "filename*=UTF-8''" in dl.headers["content-disposition"]

@@ -29,6 +29,18 @@ services:
         value: /tmp/uploads
       - key: WEB_CONCURRENCY
         value: "2"
+      # Render's free tier has no persistent disk — UPLOAD_DIR above is wiped
+      # on every restart/redeploy. Set these four (Cloudflare R2, S3-compatible,
+      # free up to 10GB) in the Render dashboard to store uploads durably
+      # instead; sync: false keeps the actual secret values out of git.
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
 
   - type: web
     name: retaildesign-frontend

@@ -1,9 +1,9 @@
 """Document management: upload / list / download / delete files per task.
 
-Files are stored on disk under settings.upload_dir with a uuid-based name to
-avoid collisions and path-traversal; the original filename is kept in the DB
-for display. In production mount upload_dir on durable storage (or swap the
-read/write helpers for S3 / object storage).
+Files get a uuid-based storage name to avoid collisions and path-traversal;
+the original filename is kept in the DB for display. Actual bytes go through
+app.storage (local disk for dev/tests, Cloudflare R2 in production — see
+that module for why local disk alone isn't safe to rely on in production).
 """
 
 from __future__ import annotations
@@ -11,9 +11,9 @@ from __future__ import annotations
 import os
 import re
 import uuid
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -21,6 +21,7 @@ from .. import models, schemas, security
 from ..config import get_settings
 from ..database import get_db
 from ..services import audit
+from ..storage import storage
 
 router = APIRouter(tags=["documents"])
 settings = get_settings()
@@ -111,7 +112,7 @@ def _to_out(d: models.Document) -> dict:
 
 
 def _validate_and_store(file: UploadFile, data: bytes, kind: str):
-    """Общая валидация типа/размера/имени + сохранение на диск. Возвращает
+    """Общая валидация типа/размера/имени + сохранение в storage. Возвращает
     (doc_kind, clean_name, storage_name)."""
     try:
         doc_kind = models.DocKind(kind)
@@ -127,10 +128,8 @@ def _validate_and_store(file: UploadFile, data: bytes, kind: str):
     if ("." + ext) not in ALLOWED_EXTENSIONS:
         allowed = ", ".join(sorted(e.lstrip(".") for e in ALLOWED_EXTENSIONS))
         raise HTTPException(415, f"Недопустимый тип файла. Разрешены: {allowed}")
-    os.makedirs(settings.upload_dir, exist_ok=True)
     storage_name = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
-    with open(os.path.join(settings.upload_dir, storage_name), "wb") as fh:
-        fh.write(data)
+    storage.save(storage_name, data, file.content_type or "application/octet-stream")
     return doc_kind, clean_name, storage_name
 
 
@@ -261,16 +260,16 @@ def download_document(doc_id: int, db: Session = Depends(get_db), _user: models.
     doc = db.get(models.Document, doc_id)
     if not doc:
         raise HTTPException(404, "Документ не найден")
-    base = os.path.realpath(settings.upload_dir)
-    path = os.path.realpath(os.path.join(base, doc.storage_name))
-    # Defence in depth: never serve a file outside the upload directory.
-    if not (path == base or path.startswith(base + os.sep)) or not os.path.isfile(path):
+    data = storage.read(doc.storage_name)
+    if data is None:
         raise HTTPException(410, "Файл отсутствует в хранилище")
-    return FileResponse(
-        path,
+    return Response(
+        content=data,
         media_type=doc.content_type,
-        filename=doc.filename,
-        headers={"Cache-Control": "no-store, max-age=0"},
+        headers={
+            "Cache-Control": "no-store, max-age=0",
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(doc.filename)}",
+        },
     )
 
 
@@ -287,8 +286,6 @@ def delete_document(doc_id: int, db: Session = Depends(get_db), user: models.Use
         entity_code=owner_code,
         description=f"Файл: {doc.filename}",
     )
-    path = os.path.join(settings.upload_dir, doc.storage_name)
-    if os.path.exists(path):
-        os.remove(path)
+    storage.delete(doc.storage_name)
     db.delete(doc)
     db.commit()

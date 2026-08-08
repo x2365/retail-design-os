@@ -43,8 +43,15 @@ class Settings(BaseSettings):
     login_rate_limit: str = "5/minute"
 
     # --- Uploads ------------------------------------------------------------
-    upload_dir: str = "./uploads"  # mount a volume here in production
+    # Local disk by default (zero setup for dev/tests). Set all four r2_*
+    # values to switch to Cloudflare R2 — required in production, since
+    # Render's free-tier filesystem is ephemeral and wipes /tmp on restart.
+    upload_dir: str = "./uploads"
     max_upload_mb: int = 25  # per-file limit
+    r2_account_id: str = ""
+    r2_access_key_id: str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket_name: str = ""
 
     # --- Pagination ---------------------------------------------------------
     default_page_size: int = 50
@@ -93,6 +100,15 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
+
+    @property
+    def r2_enabled(self) -> bool:
+        return bool(
+            self.r2_account_id
+            and self.r2_access_key_id
+            and self.r2_secret_access_key
+            and self.r2_bucket_name
+        )
 
     @property
     def sqlalchemy_database_url(self) -> str:
