@@ -41,6 +41,12 @@ services:
         sync: false
       - key: R2_BUCKET_NAME
         sync: false
+      # POST /api/internal/1c/payment-status — receiving side of a future 1С
+      # push (no real 1С connected). generateValue so the endpoint works
+      # out of the box for demoing; the value is visible in the Render
+      # dashboard for whoever needs to call it.
+      - key: ONEC_SERVICE_TOKEN
+        generateValue: true
 
   - type: web
     name: retaildesign-frontend

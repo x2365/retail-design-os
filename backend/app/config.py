@@ -73,6 +73,11 @@ class Settings(BaseSettings):
     # --- Reminders / notifications -----------------------------------------
     # Токен для защищённого запуска обхода напоминаний (cron → эндпоинт).
     reminders_service_token: str = ""
+
+    # --- External integrations (1С и т.п.) ----------------------------------
+    # Токен для входящего вебхука статуса оплаты из 1С
+    # (POST /api/internal/1c/payment-status). Пусто = эндпоинт выключен (403).
+    onec_service_token: str = ""
     # Email (если заданы host+from — канал email включён):
     smtp_host: str = ""
     smtp_port: int = 587

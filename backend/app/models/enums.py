@@ -43,6 +43,17 @@ STAGES: list[str] = [STAGE_LABELS[s] for s in TaskStage]
 FIRST_STAGE = int(TaskStage.BRIEF_RECEIVED)
 LAST_STAGE = int(TaskStage.CLOSED)
 
+# Task.payment_status is a free string column, not an enum type — this is
+# the single source of truth for valid values + labels, shared by the manual
+# PATCH /tasks/{code} path and the 1С webhook (routers/integrations.py).
+PAYMENT_STATUS_LABELS: dict[str, str] = {
+    "unpaid": "—",
+    "registry": "Отправлен в реестр",
+    "queued": "Заведён на оплату",
+    "prepaid": "Предоплачен",
+    "paid": "Оплачено",
+}
+
 
 class Role(str, enum.Enum):
     admin = "admin"  # полный доступ
@@ -105,6 +116,7 @@ __all__ = [
     "STAGES",
     "FIRST_STAGE",
     "LAST_STAGE",
+    "PAYMENT_STATUS_LABELS",
     "Role",
     "ApprovalStatus",
     "DeliveryStatus",

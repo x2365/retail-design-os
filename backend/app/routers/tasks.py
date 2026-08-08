@@ -280,17 +280,12 @@ def update_task(
                 )
             )
 
-    # Статус оплаты — ручной ввод (manager/admin); пишем в журнал.
-    PAY_LABELS = {
-        "unpaid": "\u2014",
-        "registry": "Отправлен в реестр",
-        "queued": "Заведён на оплату",
-        "prepaid": "Предоплачен",
-        "paid": "Оплачено",
-    }
+    # Статус оплаты — ручной ввод (manager/admin); пишем в журнал. Тот же
+    # payment_status может прийти и автоматически от 1С — см.
+    # routers/integrations.py, которая пишет тем же PAYMENT_STATUS_LABELS.
     if "payment_status" in data:
         ps = data["payment_status"]
-        if ps not in PAY_LABELS:
+        if ps not in models.PAYMENT_STATUS_LABELS:
             raise HTTPException(400, "Недопустимый статус оплаты")
         if (task.payment_status or "unpaid") != ps:
             db.add(
@@ -300,8 +295,10 @@ def update_task(
                     entity_type="task",
                     entity_code=task.code,
                     field="Статус оплаты",
-                    old_value=PAY_LABELS.get(task.payment_status or "unpaid", "—"),
-                    new_value=PAY_LABELS[ps],
+                    old_value=models.PAYMENT_STATUS_LABELS.get(
+                        task.payment_status or "unpaid", "\u2014"
+                    ),
+                    new_value=models.PAYMENT_STATUS_LABELS[ps],
                 )
             )
 

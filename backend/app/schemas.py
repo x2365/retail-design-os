@@ -285,6 +285,12 @@ class TaskUpdate(BaseModel):
     shipment_acceptance_date: dt.date | None = None
 
 
+# ---- External integrations (1С и т.п.) -------------------------------------
+class OneCPaymentStatusUpdate(BaseModel):
+    task: str  # код задачи (RD-xxx)
+    status: str  # unpaid|registry|queued|prepaid|paid
+
+
 # ---- Approvals -------------------------------------------------------------
 class ApprovalOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

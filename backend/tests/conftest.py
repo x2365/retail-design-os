@@ -23,6 +23,7 @@ os.environ["JWT_SECRET"] = "test-secret"
 os.environ.setdefault("UPLOAD_DIR", str(pathlib.Path(__file__).parent / "test_uploads"))
 os.environ["ENVIRONMENT"] = "development"
 os.environ["SEED_ON_STARTUP"] = "true"
+os.environ["ONEC_SERVICE_TOKEN"] = "test-1c-token"
 
 if _TEST_DB.exists():
     _TEST_DB.unlink()

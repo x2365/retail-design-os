@@ -20,6 +20,7 @@ from .contractor import Contractor
 from .enums import (
     FIRST_STAGE,
     LAST_STAGE,
+    PAYMENT_STATUS_LABELS,
     SHIPMENT_REGION_LABELS,
     STAGE_LABELS,
     STAGES,
@@ -51,6 +52,7 @@ __all__ = [
     "STAGES",
     "FIRST_STAGE",
     "LAST_STAGE",
+    "PAYMENT_STATUS_LABELS",
     "Role",
     "ApprovalStatus",
     "DeliveryStatus",
