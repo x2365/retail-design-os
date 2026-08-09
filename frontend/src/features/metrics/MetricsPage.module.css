@@ -1,0 +1,53 @@
+.intro {
+  font-size: 12px;
+  color: var(--text2);
+  max-width: 720px;
+  margin-bottom: 18px;
+}
+.intro code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.barList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.barRow {
+  display: grid;
+  grid-template-columns: 110px 1fr 28px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.barLabel {
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barTrack {
+  min-width: 0;
+}
+.barValue {
+  text-align: right;
+  color: var(--text3);
+  font-size: 11px;
+}

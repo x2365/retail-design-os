@@ -20,6 +20,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { to: "/", icon: "◈", label: "Дашборд" },
       { to: "/pipeline", icon: "⬡", label: "Воронка задач" },
+      { to: "/metrics", icon: "▥", label: "Метрики" },
       { to: "/gantt", icon: "▤", label: "Таймлайн" },
       { to: "/archive", icon: "🗄", label: "Архив задач" },
     ],
@@ -49,6 +50,7 @@ export const NAV_SECTIONS: NavSection[] = [
 export const ROUTE_TITLES: Record<string, string> = {
   "/": "Дашборд",
   "/pipeline": "Воронка задач",
+  "/metrics": "Метрики",
   "/gantt": "Таймлайн",
   "/archive": "Архив задач",
   "/budget": "Бюджеты",

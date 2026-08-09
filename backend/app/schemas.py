@@ -552,6 +552,20 @@ class DashboardKpis(BaseModel):
     on_time_rate: int | None = None
 
 
+# ---- Flow-метрики процесса (Lead Time / Throughput / WIP / Rework) --------
+class ThroughputWeekOut(BaseModel):
+    week: str  # начало недели, "dd.mm"
+    count: int
+
+
+class MetricsOut(BaseModel):
+    wip_by_stage: dict[int, int]
+    lead_time_avg_days: float | None
+    throughput_by_week: list[ThroughputWeekOut]
+    rework_rate: float
+    total_transitions: int
+
+
 # ---- Assistant copilot -------------------------------------------------------
 class AssistantStatusOut(BaseModel):
     enabled: bool

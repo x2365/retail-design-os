@@ -787,6 +787,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Metrics */
+        get: operations["metrics_api_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tasks/{code}/nomenclature": {
         parameters: {
             query?: never;
@@ -857,6 +874,29 @@ export interface paths {
         get: operations["export_nomenclature_xlsx_api_tasks__code__nomenclature_xlsx_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/1c/payment-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Onec Payment Status
+         * @description 1С пушит сюда фактический статус оплаты по задаче — тот же
+         *     payment_status, что редактируется вручную на «Оплаты / КП»
+         *     (routers/tasks.py:update_task), но без пользовательской сессии и с
+         *     отдельной пометкой в журнале (кто внёс изменение — «1С», не менеджер).
+         */
+        post: operations["onec_payment_status_api_internal_1c_payment_status_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1501,6 +1541,21 @@ export interface components {
              */
             approved: boolean;
         };
+        /** MetricsOut */
+        MetricsOut: {
+            /** Wip By Stage */
+            wip_by_stage: {
+                [key: string]: number;
+            };
+            /** Lead Time Avg Days */
+            lead_time_avg_days: number | null;
+            /** Throughput By Week */
+            throughput_by_week: components["schemas"]["ThroughputWeekOut"][];
+            /** Rework Rate */
+            rework_rate: number;
+            /** Total Transitions */
+            total_transitions: number;
+        };
         /** NomenclatureItemCreate */
         NomenclatureItemCreate: {
             /**
@@ -1555,6 +1610,13 @@ export interface components {
             qty?: number | null;
             /** Status */
             status?: string | null;
+        };
+        /** OneCPaymentStatusUpdate */
+        OneCPaymentStatusUpdate: {
+            /** Task */
+            task: string;
+            /** Status */
+            status: string;
         };
         /** Page[RetailPointOut] */
         Page_RetailPointOut_: {
@@ -2293,6 +2355,13 @@ export interface components {
              * @default
              */
             chat_id: string;
+        };
+        /** ThroughputWeekOut */
+        ThroughputWeekOut: {
+            /** Week */
+            week: string;
+            /** Count */
+            count: number;
         };
         /** Token */
         Token: {
@@ -4069,6 +4138,26 @@ export interface operations {
             };
         };
     };
+    metrics_api_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricsOut"];
+                };
+            };
+        };
+    };
     list_nomenclature_api_tasks__code__nomenclature_get: {
         parameters: {
             query?: never;
@@ -4248,6 +4337,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    onec_payment_status_api_internal_1c_payment_status_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-service-token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OneCPaymentStatusUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
                 };
             };
             /** @description Validation Error */
