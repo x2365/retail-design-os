@@ -22,20 +22,30 @@ def kpis(db: Session = Depends(get_db), _user: models.User = Depends(security.ge
     soon = today + dt.timedelta(days=14)
 
     active = (
-        db.scalar(select(func.count()).select_from(models.Task).where(models.Task.stage < 12)) or 0
+        db.scalar(
+            select(func.count())
+            .select_from(models.Task)
+            .where(models.Task.stage < models.LAST_STAGE)
+        )
+        or 0
     )
     due_soon = (
         db.scalar(
             select(func.count())
             .select_from(models.Task)
-            .where(models.Task.stage < 12)
+            .where(models.Task.stage < models.LAST_STAGE)
             .where(models.Task.deadline_tt.is_not(None))
             .where(models.Task.deadline_tt <= soon)
         )
         or 0
     )
     completed = (
-        db.scalar(select(func.count()).select_from(models.Task).where(models.Task.stage == 12)) or 0
+        db.scalar(
+            select(func.count())
+            .select_from(models.Task)
+            .where(models.Task.stage == models.LAST_STAGE)
+        )
+        or 0
     )
     tt_unconfirmed = aggregates.tt_unconfirmed_total(db)
     budget_total = db.scalar(select(func.coalesce(func.sum(models.Group.budget_planned), 0))) or 0
@@ -52,7 +62,10 @@ def kpis(db: Session = Depends(get_db), _user: models.User = Depends(security.ge
         rows = db.execute(
             select(models.Task.deadline_tt, func.max(models.TaskStageHistory.created_at))
             .join(models.TaskStageHistory, models.TaskStageHistory.task_id == models.Task.id)
-            .where(models.Task.stage == 12, models.TaskStageHistory.to_stage == 12)
+            .where(
+                models.Task.stage == models.LAST_STAGE,
+                models.TaskStageHistory.to_stage == models.LAST_STAGE,
+            )
             .group_by(models.Task.id)
         ).all()
         done = [(dl, cl) for dl, cl in rows if dl is not None and cl is not None]
@@ -80,5 +93,5 @@ def kpis(db: Session = Depends(get_db), _user: models.User = Depends(security.ge
 
 @router.get("/meta")
 def meta():
-    """Static reference: the 12-stage pipeline labels."""
+    """Static reference: the pipeline stage labels."""
     return {"stages": models.STAGES}

@@ -39,7 +39,7 @@ def test_delete_equipment_blocked_when_produced(
 def test_delete_equipment_allowed_when_task_closed(
     client: TestClient, manager_headers: dict[str, str], db: Session
 ):
-    """A closed task ("Закрыт", stage 12) is a finished production run, not
+    """A closed task ("Закрыт") is a finished production run, not
     something "запущенное" (running) — it must not block deletion the way a
     live task does."""
     eq_id = _create_equipment(client, manager_headers)

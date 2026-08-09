@@ -2,23 +2,8 @@ import { KpiCard, KpiRow } from "../../components/KpiCard/KpiCard";
 import { Panel } from "../../components/Panel/Panel";
 import { ProgressBar } from "../../components/ProgressBar/ProgressBar";
 import { useMetrics } from "../../api/queries/metrics";
+import { STAGE_LABELS } from "../../lib/stages";
 import styles from "./MetricsPage.module.css";
-
-// Короткие ярлыки этапов 1..11 (12 — «Закрыт», в WIP не входит по смыслу
-// метрики — WIP это то, что ещё не сделано).
-const STAGE_LABELS: Record<number, string> = {
-  1: "ТЗ",
-  2: "Дизайн",
-  3: "Согласования",
-  4: "Summary",
-  5: "Бюджет и КП",
-  6: "Документы",
-  7: "Образец",
-  8: "Отгрузка",
-  9: "Доставка",
-  10: "Монтаж",
-  11: "Распределение",
-};
 
 export default function MetricsPage() {
   const { data, isLoading } = useMetrics();

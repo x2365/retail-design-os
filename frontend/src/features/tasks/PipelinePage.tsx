@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 
 import { Panel } from "../../components/Panel/Panel";
 import { useTasks } from "../../api/queries/tasks";
+import { LAST_STAGE } from "../../lib/stages";
 import { TaskDetailModal } from "./detail/TaskDetailModal";
 import { KANBAN_COLUMNS } from "./stageBands";
 import { TaskCard } from "./TaskCard";
@@ -41,7 +42,7 @@ export default function PipelinePage() {
         const query = byBand[col.key];
         // The Kanban board is "work in flight" — closed tasks (stage 12,
         // included in the backend's "logistics" band) belong in Archive.
-        const tasks = (query.data?.items ?? []).filter((t) => t.stage < 12);
+        const tasks = (query.data?.items ?? []).filter((t) => t.stage < LAST_STAGE);
         return (
           <Panel
             key={col.key}

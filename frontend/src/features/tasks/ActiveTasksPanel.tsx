@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTasks } from "../../api/queries/tasks";
+import { LAST_STAGE, STAGE_BANDS } from "../../lib/stages";
 import { TaskDetailModal } from "./detail/TaskDetailModal";
 import { TaskRow } from "./TaskRow";
 import styles from "./PipelineTabs.module.css";
@@ -24,9 +25,10 @@ export function ActiveTasksPanel() {
 
   if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>;
 
-  let tasks = (data?.items ?? []).filter((t) => t.stage < 12); // closed -> Archive
+  let tasks = (data?.items ?? []).filter((t) => t.stage < LAST_STAGE); // closed -> Archive
   if (filter === "urgent") tasks = tasks.filter((t) => t.urgent);
-  if (filter === "approval") tasks = tasks.filter((t) => t.stage >= 3 && t.stage <= 6);
+  if (filter === "approval")
+    tasks = tasks.filter((t) => (STAGE_BANDS.approval as readonly number[]).includes(t.stage));
 
   return (
     <div>

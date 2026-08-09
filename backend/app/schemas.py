@@ -156,7 +156,7 @@ class TaskOut(BaseModel):
     brand: str
     group: str
     created_at: str | None = None
-    stage: int = Field(ge=1, le=12)
+    stage: int = Field(ge=1, le=10)
     urgent: bool = False
     currency: str = "RUB"
     production_cost: int = Field(default=0, ge=0)
@@ -220,7 +220,7 @@ class TaskOut(BaseModel):
 
 
 class StageApprovalUpdate(BaseModel):
-    stage: int = Field(ge=1, le=12)
+    stage: int = Field(ge=1, le=10)
     approved: bool
 
 
@@ -238,7 +238,7 @@ class StageHistoryOut(BaseModel):
 class TaskCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     brand: str
-    stage: int = Field(default=1, ge=1, le=12)
+    stage: int = Field(default=1, ge=1, le=10)
     urgent: bool = False
     currency: str = "RUB"
     production_cost: int = Field(default=0, ge=0)
@@ -255,7 +255,7 @@ class TaskCreate(BaseModel):
 
 class TaskUpdate(BaseModel):
     name: str | None = None
-    stage: int | None = Field(default=None, ge=1, le=12)
+    stage: int | None = Field(default=None, ge=1, le=10)
     urgent: bool | None = None
     production_cost: int | None = Field(default=None, ge=0)
     budget: int | None = Field(default=None, ge=0)

@@ -8,6 +8,7 @@ import { useTasks } from "../../api/queries/tasks";
 import { useDeleteTask } from "../../api/queries/taskDetail";
 import type { components } from "../../api/schema";
 import { formatMoney, kopToRub } from "../../lib/money";
+import { LAST_STAGE } from "../../lib/stages";
 import forms from "../../styles/forms.module.css";
 import { TaskDetailModal } from "../tasks/detail/TaskDetailModal";
 
@@ -27,7 +28,7 @@ export default function ArchivePage() {
   const [selected, setSelected] = useState<string | null>(null);
 
   const closed = useMemo(() => {
-    let rows = (data?.items ?? []).filter((t) => t.stage >= 12);
+    let rows = (data?.items ?? []).filter((t) => t.stage >= LAST_STAGE);
     const q = search.trim().toLowerCase();
     if (q) {
       rows = rows.filter((t) =>

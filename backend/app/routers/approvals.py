@@ -19,16 +19,16 @@ DecideDep = Depends(
 def _derived_approvals(db: Session) -> list[dict]:
     """Согласования, ожидающие решения, выводим из задач на этапах-гейтах.
 
-    Этап 3 «Согласования», 5 «Бюджет и КП», 7 «Образец» — пока гейты не закрыты,
+    Этап 3 «Согласования», 4 «Бюджет и КП», 6 «Образец» — пока гейты не закрыты,
     задача висит в очереди и ведёт в карточку (решение принимается там).
     """
     out: list[dict] = []
     tasks = db.scalars(
         select(models.Task)
-        .where(models.Task.stage.in_([3, 5, 7]))
+        .where(models.Task.stage.in_([3, 4, 6]))
         .order_by(models.Task.deadline_tt.is_(None), models.Task.deadline_tt)
     ).all()
-    COLORS = {3: "#06d6a0", 5: "#f59e0b", 7: "#8b5cf6"}
+    COLORS = {3: "#06d6a0", 4: "#f59e0b", 6: "#8b5cf6"}
     for t in tasks:
         brand = t.brand.name if t.brand else ""
         if t.stage == 3:
@@ -36,12 +36,12 @@ def _derived_approvals(db: Session) -> list[dict]:
                 continue
             type_ = "Согласование"
             role = "Бренд / Сеть"
-        elif t.stage == 5:
+        elif t.stage == 4:
             if t.kp_manager_approved_at and t.kp_director_approved_at and t.kp_network_approved_at:
                 continue
             type_ = "КП"
             role = "Финансы / Бренд / Сеть"
-        else:  # stage 7
+        else:  # stage 6
             if (
                 t.sample_qc_approved_at
                 and t.sample_brand_approved_at

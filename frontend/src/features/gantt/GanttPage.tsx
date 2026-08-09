@@ -4,6 +4,7 @@ import { Panel } from "../../components/Panel/Panel";
 import { useTasks } from "../../api/queries/tasks";
 import type { components } from "../../api/schema";
 import { parseRuDate } from "../../lib/dates";
+import { LAST_STAGE, bandOf } from "../../lib/stages";
 import { TaskDetailModal } from "../tasks/detail/TaskDetailModal";
 import styles from "./GanttPage.module.css";
 
@@ -12,9 +13,10 @@ type TaskOut = components["schemas"]["TaskOut"];
 const DAY_MS = 86_400_000;
 
 function barColor(stage: number): string {
-  if (stage >= 8) return "var(--accent3)"; // логистика
-  if (stage >= 4) return "var(--accent)"; // согласование/производство
-  return "var(--accent2)"; // разработка
+  const band = bandOf(stage);
+  if (band === "logistics") return "var(--accent3)";
+  if (band === "dev") return "var(--accent2)";
+  return "var(--accent)"; // approval/production
 }
 
 /** Timeline built from each task's real created_at -> deadline range —
@@ -29,7 +31,7 @@ export default function GanttPage() {
   const rows = useMemo(() => {
     const withDates: { task: TaskOut; start: number; end: number }[] = [];
     for (const t of data?.items ?? []) {
-      if (t.stage >= 12 || !t.created_at) continue;
+      if (t.stage >= LAST_STAGE || !t.created_at) continue;
       const start = new Date(t.created_at).getTime();
       const end = parseRuDate(t.deadline);
       if (Number.isFinite(start) && end !== null && end > start) {

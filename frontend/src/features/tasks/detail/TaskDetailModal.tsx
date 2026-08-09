@@ -24,26 +24,21 @@ import {
   useUpdateTask,
 } from "../../../api/queries/taskDetail";
 import { formatMoney, kopToRub } from "../../../lib/money";
+import {
+  FINAL_APPROVAL_STAGE,
+  INSTALL_STAGE,
+  LAST_STAGE,
+  STAGE_TAB_LABELS,
+  TOTAL_STAGES,
+  nextStageFor,
+  prevStageFor,
+  showsInstallStage,
+} from "../../../lib/stages";
 import forms from "../../../styles/forms.module.css";
 import { CommentsSection } from "./CommentsSection";
 import { DeliveriesList } from "./DeliveriesList";
 import { InstallationList } from "./InstallationList";
 import styles from "./TaskDetailModal.module.css";
-
-const STAGE_TAB_LABELS = [
-  "ТЗ",
-  "Дизайн",
-  "Согласования",
-  "Summary",
-  "Бюджет и КП",
-  "Документы",
-  "Образец",
-  "Отгрузка",
-  "Доставка",
-  "Монтаж",
-  "Распределение",
-  "Закрыт",
-];
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -96,9 +91,10 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
 
   async function advance() {
     setError("");
+    const next = nextStageFor(task!.stage, task!.equipment_kind);
     try {
-      await updateTask.mutateAsync({ stage: task!.stage + 1 });
-      setViewedStage(task!.stage + 1);
+      await updateTask.mutateAsync({ stage: next });
+      setViewedStage(next);
     } catch (e) {
       setError(apiErrorMessage(e, "Не удалось перейти на следующий этап"));
     }
@@ -106,9 +102,10 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
 
   async function revert() {
     setError("");
+    const prev = prevStageFor(task!.stage, task!.equipment_kind);
     try {
-      await updateTask.mutateAsync({ stage: task!.stage - 1 });
-      setViewedStage(task!.stage - 1);
+      await updateTask.mutateAsync({ stage: prev });
+      setViewedStage(prev);
     } catch (e) {
       setError(apiErrorMessage(e, "Не удалось вернуться на предыдущий этап"));
     }
@@ -131,12 +128,6 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
     }
   }
 
-  // "Монтаж" (10) applies only to corner-изделия. Задачи без привязки к
-  // изделию (equipment_kind == null, например созданные вручную) по
-  // умолчанию показывают этап как обычно — скрываем только когда точно
-  // знаем, что изделие не corner.
-  const showInstallStage = task.equipment_kind == null || task.equipment_kind === "corner";
-
   return (
     <Modal
       title={`${task.code} · ${task.name}`}
@@ -155,9 +146,9 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       onClose={onClose}
     >
       <div className={styles.stages}>
-        {STAGE_TAB_LABELS.map((label, i) => {
-          const s = i + 1;
-          if (s === 10 && !showInstallStage) return null;
+        {Array.from({ length: TOTAL_STAGES }, (_, i) => i + 1).map((s) => {
+          const label = STAGE_TAB_LABELS[s];
+          if (!showsInstallStage(task.equipment_kind) && s === INSTALL_STAGE) return null;
           const cls =
             s === viewedStage
               ? styles.stageActive
@@ -200,7 +191,7 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
             ← На предыдущий этап
           </Button>
         )}
-        {isEditor && task.stage < 12 && (
+        {isEditor && task.stage < LAST_STAGE && (
           <Button variant="primary" disabled={updateTask.isPending} onClick={advance}>
             Далее →
           </Button>
@@ -250,16 +241,28 @@ function StageContent(props: StageContentProps) {
         />
       </div>
     );
-  if (stage === 3) return <PrepStage {...props} />;
-  if (stage === 4) return <SummaryStage {...props} />;
-  if (stage === 5) return <KpStage {...props} />;
-  if (stage === 6)
+  if (stage === 3)
+    return (
+      <div>
+        <PrepStage {...props} />
+        <details style={{ marginTop: 16 }}>
+          <summary className={styles.sectionLabel} style={{ cursor: "pointer" }}>
+            Summary
+          </summary>
+          <div style={{ marginTop: 8 }}>
+            <SummaryStage {...props} />
+          </div>
+        </details>
+      </div>
+    );
+  if (stage === 4) return <KpStage {...props} />;
+  if (stage === 5)
     return (
       <div>
         <div className={styles.sectionLabel}>Документы</div>
         <DocumentList
           code={code}
-          stage={6}
+          stage={5}
           canEdit={isEditor}
           kinds={[
             { value: "ds", label: "ДС" },
@@ -268,19 +271,19 @@ function StageContent(props: StageContentProps) {
         />
       </div>
     );
-  if (stage === 7) return <SampleStage {...props} />;
-  if (stage === 8) return <ShipmentStage {...props} />;
-  if (stage === 9) {
+  if (stage === 6) return <SampleStage {...props} />;
+  if (stage === 7)
     return (
       <div>
-        <div className={styles.sectionLabel}>Доставка в ТТ</div>
-        <DeliveriesList code={code} />
+        <ShipmentStage {...props} />
+        <div style={{ marginTop: 16 }}>
+          <div className={styles.sectionLabel}>Доставка в ТТ</div>
+          <DeliveriesList code={code} />
+        </div>
       </div>
     );
-  }
-  if (stage === 10) {
-    const showInstallStage = task.equipment_kind == null || task.equipment_kind === "corner";
-    if (!showInstallStage) {
+  if (stage === INSTALL_STAGE) {
+    if (!showsInstallStage(task.equipment_kind)) {
       return (
         <p style={{ fontSize: 12, color: "var(--text3)" }}>
           Монтаж не требуется для этого типа изделия.
@@ -294,8 +297,8 @@ function StageContent(props: StageContentProps) {
       </div>
     );
   }
-  if (stage === 11) return <FinalStage {...props} />;
-  if (stage === 12) {
+  if (stage === FINAL_APPROVAL_STAGE) return <FinalStage {...props} />;
+  if (stage === LAST_STAGE) {
     return (
       <div>
         <Badge color="green">✓ Задача закрыта</Badge>
@@ -407,7 +410,7 @@ function PrepStage({
           <DocumentPreview downloadUrl={sketch.download_url} filename={sketch.filename} />
         </div>
       )}
-      <div className={styles.sectionLabel}>Согласование (оба → SUMMARY)</div>
+      <div className={styles.sectionLabel}>Согласование (оба → Бюджет и КП)</div>
       <ApprovalGate
         label="Бренд"
         approved={task.prep_brand_approved}
@@ -605,7 +608,7 @@ function KpStage({
         <div className={styles.sectionLabel}>Файл КП</div>
         <DocumentList
           code={code}
-          stage={5}
+          stage={4}
           canEdit={isEditor}
           kinds={[{ value: "kp", label: "КП" }]}
         />
@@ -693,7 +696,7 @@ function SampleStage({
         <div className={styles.sectionLabel}>Фото образца</div>
         <DocumentList
           code={code}
-          stage={7}
+          stage={6}
           canEdit={isEditor}
           kinds={[{ value: "photo", label: "Фото" }]}
         />
@@ -751,7 +754,7 @@ function ShipmentStage({ task, code, isEditor, updateTask, setError }: StageCont
         <div className={styles.sectionLabel}>Отгрузочные документы</div>
         <DocumentList
           code={code}
-          stage={8}
+          stage={7}
           canEdit={isEditor}
           kinds={[
             { value: "waybill", label: "Накладная" },
@@ -767,7 +770,10 @@ function FinalStage({ code, task, isEditor, setStageApproval, setError }: StageC
   async function checkReady() {
     setError("");
     try {
-      const result = await setStageApproval.mutateAsync({ stage: 11, approved: true });
+      const result = await setStageApproval.mutateAsync({
+        stage: FINAL_APPROVAL_STAGE,
+        approved: true,
+      });
       if (result.blocked_reasons.length > 0) {
         setError("Нельзя закрыть: " + result.blocked_reasons.join("; "));
       }

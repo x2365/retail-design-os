@@ -25,16 +25,14 @@ log = logging.getLogger("reminders")
 STAGE_ROLE: dict[int, models.Role] = {
     1: models.Role.manager,  # ТЗ получено
     2: models.Role.manager,  # Эскизирование
-    3: models.Role.brand,  # Согласование дизайна
-    4: models.Role.manager,  # Подготовка к производству
-    5: models.Role.manager,  # Производство
-    6: models.Role.manager,  # Контроль качества
-    7: models.Role.manager,  # Упаковка
-    8: models.Role.shipment_manager,  # Готов к отгрузке
-    9: models.Role.shipment_manager,  # Доставка
-    10: models.Role.retailer,  # Монтаж
-    11: models.Role.manager,  # Финальное согласование
-    # 12 CLOSED — без напоминаний
+    3: models.Role.brand,  # Согласования (+ Summary)
+    4: models.Role.manager,  # Бюджет и КП
+    5: models.Role.manager,  # Документы
+    6: models.Role.manager,  # Образец и Производство
+    7: models.Role.shipment_manager,  # Отгрузка
+    8: models.Role.retailer,  # Монтаж
+    9: models.Role.manager,  # Распределение по ТТ
+    # 10 CLOSED — без напоминаний
 }
 
 # Пороги SLA (дни).

@@ -127,7 +127,7 @@ class Document(Base, TimestampMixin):
     kind: Mapped[DocKind] = mapped_column(Enum(DocKind), default=DocKind.other)
     stage: Mapped[int | None] = mapped_column(
         Integer, nullable=True, index=True
-    )  # 1..12 (tab it belongs to)
+    )  # 1..10 (tab it belongs to)
     filename: Mapped[str] = mapped_column(String(255))  # original name shown to user
     storage_name: Mapped[str] = mapped_column(String(255))  # uuid-based name on disk
     content_type: Mapped[str] = mapped_column(String(120), default="application/octet-stream")

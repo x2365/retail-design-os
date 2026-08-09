@@ -2,12 +2,11 @@ import { Badge } from "../../components/Badge/Badge";
 import { ProgressBar } from "../../components/ProgressBar/ProgressBar";
 import { StageBadge } from "../../components/StageBadge/StageBadge";
 import { groupColor } from "../../lib/colors";
+import { TOTAL_STAGES } from "../../lib/stages";
 import type { components } from "../../api/schema";
 import styles from "./TaskRow.module.css";
 
 type TaskOut = components["schemas"]["TaskOut"];
-
-const TOTAL_STAGES = 12; // TaskStage enum length (backend/app/models/enums.py)
 
 /** Full-detail row used in the Dashboard's "Активные задачи" panel — same
  * content as the old app's renderTasks() card (stage-pipeline dots +

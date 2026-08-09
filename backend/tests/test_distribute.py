@@ -92,12 +92,12 @@ def test_close_gate_now_real_after_distribute(client: TestClient, manager_header
             "status": "",
         },
     )
-    # walk to stage 11 the same way test_task_stage_flow's _advance_through_all_gates does
+    # walk to stage 9 the same way test_task_stage_flow's _advance_through_all_gates does
     from tests.test_task_stage_flow import _advance_through_all_gates
 
     _advance_through_all_gates(client, manager_headers, code)
 
-    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 12})
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 422
     assert "не все ТТ доставлены" in r.json()["detail"]
 
@@ -107,6 +107,6 @@ def test_close_gate_now_real_after_distribute(client: TestClient, manager_header
             f"/api/deliveries/{d['id']}", headers=manager_headers, json={"status": "delivered"}
         )
 
-    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 12})
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 200, r.text
-    assert r.json()["stage"] == 12
+    assert r.json()["stage"] == 10

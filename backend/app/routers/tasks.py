@@ -20,9 +20,9 @@ settings = get_settings()
 
 STAGE_BANDS = {
     "dev": [1, 2],
-    "approval": [3, 4, 5, 6],
-    "production": [7, 8],
-    "logistics": [9, 10, 11, 12],
+    "approval": [3, 4, 5],
+    "production": [6],
+    "logistics": [7, 8, 9, 10],
 }
 
 # any authenticated user may read
@@ -366,7 +366,7 @@ def set_stage_approval(
     # внутренние согласования карточки. Если не пройдены — не ставим «✓» и не двигаем.
     if advancing:
         pre = task_stage.check_stage_preconditions(db, task, task.stage)
-        nxt = task_stage.next_stage(task.stage)
+        nxt = task_stage.next_stage(task.stage, task)
         if nxt == models.LAST_STAGE:
             pre = pre + task_stage.check_close_preconditions(db, task)
         if pre:
@@ -383,7 +383,7 @@ def set_stage_approval(
     row.approved_at = now if payload.approved else None
     # Workflow rule: approving the task's CURRENT stage advances it to the next.
     if advancing:
-        nxt = task_stage.next_stage(task.stage)
+        nxt = task_stage.next_stage(task.stage, task)
         try:
             task_stage.apply_transition(
                 db,
@@ -562,7 +562,8 @@ def prep_approval(
             )
         )
         task.design_iteration = (task.design_iteration or 1) + 1
-    # Оба согласования получены и задача на «Согласованиях» (этап 3) → дальше (4).
+    # Оба согласования получены и задача на «Согласованиях» (этап 3) → дальше,
+    # на «Бюджет и КП» (4).
     if task.prep_brand_approved_at and task.prep_zya_approved_at and task.stage == 3:
         try:
             task_stage.apply_transition(
@@ -599,14 +600,14 @@ def kp_approval(
     else:
         task.kp_network_approved_at = now if payload.approved else None
         task.kp_network_approved_by = user.full_name if payload.approved else ""
-    # Согласования КП (финансы/бренд) и задача на «КП» (5) → в «Документы» (6).
+    # Согласования КП (финансы/бренд) и задача на «Бюджет и КП» (4) → в «Документы» (5).
     # Сеть здесь не требуется — её согласование уже получено на этапе 3.
-    if task.kp_manager_approved_at and task.kp_director_approved_at and task.stage == 5:
+    if task.kp_manager_approved_at and task.kp_director_approved_at and task.stage == 4:
         try:
             task_stage.apply_transition(
                 db,
                 task,
-                6,
+                5,
                 user_id=user.id,
                 comment="Авто-переход: КП согласовано (финансы, бренд)",
             )

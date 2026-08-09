@@ -32,11 +32,11 @@ def test_metrics_reflect_wip_lead_time_and_rework(
     closed_code = _create_task(client, manager_headers)
     _advance_through_all_gates(client, manager_headers, closed_code)
     r = client.get(f"/api/tasks/{closed_code}", headers=manager_headers)
-    assert r.json()["stage"] == 11
+    assert r.json()["stage"] == 9
 
-    r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 10})
+    r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 7})
     assert r.status_code == 200, r.text
-    r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 11})
+    r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 9})
     assert r.status_code == 200, r.text
 
     client.post(
@@ -53,7 +53,7 @@ def test_metrics_reflect_wip_lead_time_and_rework(
             "status": "",
         },
     )
-    r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 12})
+    r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 200, r.text
 
     m = client.get("/api/metrics", headers=manager_headers)
@@ -61,7 +61,7 @@ def test_metrics_reflect_wip_lead_time_and_rework(
     body = m.json()
 
     assert body["wip_by_stage"]["3"] >= 1
-    assert "12" not in body["wip_by_stage"]  # closed tasks aren't WIP
+    assert "10" not in body["wip_by_stage"]  # closed tasks aren't WIP
 
     assert body["lead_time_avg_days"] is not None
     assert body["lead_time_avg_days"] >= 0
@@ -70,7 +70,7 @@ def test_metrics_reflect_wip_lead_time_and_rework(
     assert len(body["throughput_by_week"]) == 8
 
     assert body["total_transitions"] >= 1
-    assert body["rework_rate"] > 0  # the 11->10 revert must show up
+    assert body["rework_rate"] > 0  # the 9->7 revert must show up
 
 
 def test_metrics_requires_auth(client: TestClient):

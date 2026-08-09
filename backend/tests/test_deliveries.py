@@ -1,6 +1,7 @@
 """Delivery installation tracking (PATCH /deliveries/{id} `installed` flag).
 
-Stage 9 "Доставка" and stage 10 "Монтаж" are distinct real-world events:
+Stage 7 "Отгрузка" (delivery arriving) and stage 8 "Монтаж" are distinct
+real-world events:
 goods can arrive at a retail point before anyone has actually installed
 them. Installation may only be recorded once the delivery itself is
 confirmed (`status == delivered`)."""

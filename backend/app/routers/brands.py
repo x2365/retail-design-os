@@ -20,7 +20,7 @@ def _to_out(db: Session, b: models.Brand) -> dict:
         db.scalar(
             select(func.count())
             .select_from(models.Task)
-            .where(models.Task.brand_id == b.id, models.Task.stage < 12)
+            .where(models.Task.brand_id == b.id, models.Task.stage < models.LAST_STAGE)
         )
         or 0
     )

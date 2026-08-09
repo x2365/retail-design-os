@@ -1,9 +1,13 @@
 """Машина переходов между этапами Task (BUSINESS_RULES §2).
 
 Правила (согласовано):
-- Вперёд — только на следующий этап (current + 1). Перескок запрещён.
-- Назад — на любой предыдущий этап (revert разрешён).
-- Исключений из последовательности нет.
+- Вперёд — только на следующий этап (current + 1). Перескок запрещён — с
+  одним исключением: этап INSTALLATION ("Монтаж") применяется только к
+  corner-оборудованию, и для остальных задач перепрыгивается автоматически
+  (см. `_wants_install`/`validate_transition`).
+- Назад — на любой предыдущий этап (revert разрешён), включая пропущенный
+  INSTALLATION — это осознанно не блокируется, чтобы менеджер мог откатить
+  ошибку на любой шаг назад без спецкейсов.
 - Предусловия этапа CLOSED (все Deliveries=DELIVERED, есть Payment, все
   обязательные Approvals) проверяются в `check_close_preconditions` и
   применяются в `apply_transition` при переходе на CLOSED.
@@ -25,6 +29,7 @@ from ..models import (
 
 FIRST = int(TaskStage.BRIEF_RECEIVED)
 LAST = int(TaskStage.CLOSED)
+INSTALL_STAGE = int(TaskStage.INSTALLATION)
 
 
 def label(stage: int) -> str:
@@ -39,24 +44,54 @@ def validate_stage_value(stage: int) -> TaskStage:
     return TaskStage(stage)
 
 
-def validate_transition(current: int, target: int) -> None:
+def _wants_install(task) -> bool:
+    """Монтаж применяется только к corner-оборудованию. Задачи без привязки
+    к изделию (equipment_id пуст) по умолчанию считаются требующими монтаж —
+    скрываем/пропускаем этап только когда точно знаем, что изделие не corner."""
+    kind = task.equipment.kind if task.equipment else None
+    return kind is None or kind == "corner"
+
+
+def validate_transition(current: int, target: int, *, task=None) -> None:
     """Разрешает: target == current (no-op), target == current+1 (вперёд на 1),
-    target < current (возврат). Запрещает: перескок вперёд > 1 этап."""
+    target < current (возврат, любая дистанция). Запрещает: перескок вперёд
+    > 1 этап — с исключением: не-corner задача на этапе current==INSTALL_STAGE-1
+    может перепрыгнуть сразу на INSTALL_STAGE+1, минуя "Монтаж". Явный target
+    == INSTALL_STAGE для не-corner задачи отклоняется отдельно."""
     validate_stage_value(current)
     validate_stage_value(target)
     if target == current:
         return
-    if target > current and target != current + 1:
-        raise ValueError(
-            f"Нельзя перескочить с этапа {current} ({label(current)}) сразу на "
-            f"{target} ({label(target)}). Двигайтесь последовательно (по одному)."
+    if target > current:
+        skip_install = (
+            task is not None
+            and current == INSTALL_STAGE - 1
+            and target == INSTALL_STAGE + 1
+            and not _wants_install(task)
         )
+        if skip_install:
+            return
+        if target == INSTALL_STAGE and task is not None and not _wants_install(task):
+            kind = task.equipment.kind if task.equipment else "—"
+            raise ValueError(
+                f"Этап «{label(INSTALL_STAGE)}» не применяется к изделию типа «{kind}» "
+                "(только corner). Перейдите сразу на «Распределение по ТТ»."
+            )
+        if target != current + 1:
+            raise ValueError(
+                f"Нельзя перескочить с этапа {current} ({label(current)}) сразу на "
+                f"{target} ({label(target)}). Двигайтесь последовательно (по одному)."
+            )
     # target == current+1 (вперёд) или target < current (возврат) — разрешено.
 
 
-def next_stage(current: int) -> int:
-    """Следующий этап (для автоперехода после согласования). Не выходит за LAST."""
-    return min(current + 1, LAST)
+def next_stage(current: int, task=None) -> int:
+    """Следующий этап (для автоперехода после согласования). Не выходит за
+    LAST; пропускает INSTALL_STAGE для не-corner задач."""
+    n = min(current + 1, LAST)
+    if n == INSTALL_STAGE and task is not None and not _wants_install(task):
+        n = min(n + 1, LAST)
+    return n
 
 
 def record_transition(
@@ -124,7 +159,7 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
             reasons.append("нет согласования бренда")
         if not task.prep_zya_approved_at:
             reasons.append("нет согласования сети")
-    elif s == 5:  # Бюджет и КП → согласование финансы + бренд
+    elif s == 4:  # Бюджет и КП → согласование финансы + бренд
         # Согласование сети на этом этапе не требуется — оно уже получено
         # раньше, на этапе 3 «Согласования» (prep_zya); дублировать его
         # здесь было ошибкой.
@@ -132,15 +167,16 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
             reasons.append("нет согласования финансов")
         if not task.kp_director_approved_at:
             reasons.append("нет согласования бренда")
-    elif s == 6:  # Документы → загружены ДС и счёт
+    elif s == 5:  # Документы → загружены ДС и счёт
         if not has_doc(DocKind.ds):
             reasons.append("не загружено ДС")
         if not has_doc(DocKind.invoice):
             reasons.append("не загружен счёт")
-    elif s == 7:  # Образец и Производство → образец утверждён
+    elif s == 6:  # Образец и Производство → образец утверждён
         if not task.sample_approved_at:
             reasons.append("образец не утверждён")
-    # этапы 4 (SUMMARY), 8–11 — без жёстких внутренних гейтов на этом шаге
+    # этапы 7 (Отгрузка), 8 (Монтаж), 9 (Распределение) — без жёстких
+    # внутренних гейтов на этом шаге
     return reasons
 
 
@@ -193,7 +229,7 @@ def apply_transition(
     Переход на CLOSED дополнительно проверяет предусловия закрытия.
     No-op, если target == текущему этапу.
     """
-    validate_transition(task.stage, target)
+    validate_transition(task.stage, target, task=task)
     if target == task.stage:
         return
     # Движение вперёд — проверяем внутренние согласования покидаемого этапа.

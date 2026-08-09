@@ -179,8 +179,8 @@ async def upload_document(
     user: models.User = WriteDep,
 ):
     task = _get_task(db, code)
-    if stage is not None and not (1 <= stage <= 12):
-        raise HTTPException(422, "stage must be 1..12")
+    if stage is not None and not (models.FIRST_STAGE <= stage <= models.LAST_STAGE):
+        raise HTTPException(422, f"stage must be {models.FIRST_STAGE}..{models.LAST_STAGE}")
     data = await file.read()
     doc_kind, clean_name, storage_name = _validate_and_store(file, data, kind)
     doc = models.Document(

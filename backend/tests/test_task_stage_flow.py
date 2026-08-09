@@ -1,6 +1,6 @@
-"""The 12-stage state machine: forward-by-one, revert, gated auto-advance,
-and the CLOSED preconditions (all deliveries in, a payment exists, all
-approvals resolved)."""
+"""The 10-stage state machine: forward-by-one, revert, gated auto-advance,
+the corner-only INSTALLATION skip, and the CLOSED preconditions (all
+deliveries in, a payment exists, all approvals resolved)."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def test_stage_advances_by_one_but_not_by_skip(client: TestClient, manager_heade
     assert r.status_code == 200
     assert r.json()["stage"] == 2
 
-    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 5})
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 4})
     assert r.status_code == 422
 
 
@@ -70,7 +70,10 @@ def test_waybill_upload_gets_russian_kind_label(
     assert r.json()["kind_label"] == "Накладная"
 
 
-def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code: str) -> None:
+def _advance_to_shipping(client: TestClient, headers: dict[str, str], code: str) -> None:
+    """Walks a task through gates 1-6, landing it at stage 7 ("Отгрузка"),
+    the first ungated stage — shared by the corner-skip tests and the
+    full close-out flow below."""
     _upload_brief(client, headers, code)
     client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 2})  # 1->2 (ТЗ заполнено)
     client.post(
@@ -87,8 +90,7 @@ def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code
     )
     client.post(
         f"/api/tasks/{code}/prep-approval", headers=headers, json={"gate": "zya", "approved": True}
-    )
-    client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 5})  # 4->5 (авто 3->4 выше)
+    )  # авто 3->4 (Бюджет и КП)
     client.post(
         f"/api/tasks/{code}/kp-approval",
         headers=headers,
@@ -103,32 +105,37 @@ def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code
         f"/api/tasks/{code}/kp-approval",
         headers=headers,
         json={"gate": "network", "approved": True},
-    )
+    )  # авто 4->5 (Документы)
     client.post(
         f"/api/tasks/{code}/documents",
         headers=headers,
-        data={"kind": "ds", "stage": "6"},
+        data={"kind": "ds", "stage": "5"},
         files={"file": ("ds.pdf", b"%PDF", "application/pdf")},
     )
     client.post(
         f"/api/tasks/{code}/documents",
         headers=headers,
-        data={"kind": "invoice", "stage": "6"},
+        data={"kind": "invoice", "stage": "5"},
         files={"file": ("inv.pdf", b"%PDF", "application/pdf")},
     )
-    client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 7})  # 6->7 (ДС+счёт)
+    client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 6})  # 5->6 (ДС+счёт)
     client.post(f"/api/tasks/{code}/sample-approval", headers=headers, json={"approved": True})
-    for s in range(8, 12):
-        client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": s})  # 7->8...10->11
+    client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 7})  # 6->7 (образец)
+
+
+def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code: str) -> None:
+    _advance_to_shipping(client, headers, code)
+    for s in range(8, 10):
+        client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": s})  # 7->8->9
 
 
 def test_kp_stage_auto_advances_without_network_approval(
     client: TestClient, manager_headers: dict[str, str]
 ):
     """Network approval belongs to stage 3 (prep_zya) — requiring it again on
-    stage 5 (kp_network) was a duplicated, removed gate. manager+director
+    stage 4 (kp_network) was a duplicated, removed gate. manager+director
     alone must both unblock the manual "Далее" transition and trigger the
-    stage 5->6 auto-advance."""
+    stage 4->5 auto-advance."""
     code = _create_task(client, manager_headers)
     _upload_brief(client, manager_headers, code)
     client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
@@ -148,8 +155,7 @@ def test_kp_stage_auto_advances_without_network_approval(
         f"/api/tasks/{code}/prep-approval",
         headers=manager_headers,
         json={"gate": "zya", "approved": True},
-    )
-    client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 5})
+    )  # авто 3->4 (Бюджет и КП)
 
     client.post(
         f"/api/tasks/{code}/kp-approval",
@@ -162,7 +168,7 @@ def test_kp_stage_auto_advances_without_network_approval(
         json={"gate": "director", "approved": True},
     )
     assert r.status_code == 200, r.text
-    assert r.json()["stage"] == 6, "should auto-advance to stage 6 without a network approval"
+    assert r.json()["stage"] == 5, "should auto-advance to stage 5 without a network approval"
 
 
 def test_closing_without_payment_is_blocked_with_reasons(
@@ -171,16 +177,73 @@ def test_closing_without_payment_is_blocked_with_reasons(
     code = _create_task(client, manager_headers)
     _advance_through_all_gates(client, manager_headers, code)
 
-    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 12})
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 422
 
     r = client.get(f"/api/tasks/{code}", headers=manager_headers)
-    assert r.json()["stage"] == 11
+    assert r.json()["stage"] == 9
 
     r = client.patch(
         f"/api/tasks/{code}/stage-approval",
         headers=manager_headers,
-        json={"stage": 11, "approved": True},
+        json={"stage": 9, "approved": True},
     ).json()
-    assert r["stage"] == 11
+    assert r["stage"] == 9
     assert len(r.get("blocked_reasons", [])) > 0
+
+
+def _produce_task(client: TestClient, headers: dict[str, str], kind: str) -> str:
+    """Creates an Equipment(kind=kind) and produces a task from it, so
+    task.equipment.kind is set (unlike _create_task, which leaves
+    equipment_id unset)."""
+    r = client.post(
+        "/api/equipment",
+        headers=headers,
+        json={"brand": "Darling", "name": "Тестовое изделие", "kind": kind},
+    )
+    assert r.status_code == 201, r.text
+    eq_id = r.json()["id"]
+    r = client.post(f"/api/equipment/{eq_id}/produce", headers=headers, json={})
+    assert r.status_code == 201, r.text
+    return r.json()["code"]
+
+
+def test_install_stage_skipped_for_non_corner_equipment(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """A non-corner task jumps 7->9 in one PATCH, skipping "Монтаж" (8); an
+    explicit target of 8 is rejected; reverting 9->7 still works (revert is
+    never blocked, even onto/over a skipped stage)."""
+    code = _produce_task(client, manager_headers, "stand")
+    _advance_to_shipping(client, manager_headers, code)  # lands at stage 7
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 8})
+    assert r.status_code == 422, "Монтаж must not be settable for non-corner equipment"
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 9, "should skip straight over 8"
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 7})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 7, "revert is never blocked, even back past a skipped stage"
+
+
+def test_install_stage_required_for_corner_equipment(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """A corner-equipment task must pass through stage 8 — skipping it
+    straight from 7 to 9 is rejected like any other multi-step skip."""
+    code = _produce_task(client, manager_headers, "corner")
+    _advance_to_shipping(client, manager_headers, code)  # lands at stage 7
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 422, "corner equipment must not skip Монтаж"
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 8})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 8
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 9

@@ -32,7 +32,7 @@ class Task(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_tasks_stage", "stage"),
         Index("ix_tasks_deadline", "deadline_tt"),
-        CheckConstraint("stage >= 1 AND stage <= 12", name="ck_tasks_stage_range"),
+        CheckConstraint("stage >= 1 AND stage <= 10", name="ck_tasks_stage_range"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -231,7 +231,7 @@ class TaskStageApproval(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), index=True)
-    stage: Mapped[int] = mapped_column(Integer)  # 1..12
+    stage: Mapped[int] = mapped_column(Integer)  # 1..10
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
     user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True

@@ -31,10 +31,10 @@ def _utc(d: dt.datetime) -> dt.datetime:
 @router.get("", response_model=schemas.MetricsOut)
 def metrics(db: Session = Depends(get_db), _user: models.User = ReadDep):
     # WIP — сколько активных (не закрытых) задач стоит на каждом этапе сейчас.
-    wip_by_stage: dict[int, int] = dict.fromkeys(range(1, 12), 0)
+    wip_by_stage: dict[int, int] = dict.fromkeys(range(models.FIRST_STAGE, models.LAST_STAGE), 0)
     wip_rows = db.execute(
         select(models.Task.stage, func.count())
-        .where(models.Task.stage < 12)
+        .where(models.Task.stage < models.LAST_STAGE)
         .group_by(models.Task.stage)
     ).all()
     for stage, count in wip_rows:
@@ -45,7 +45,7 @@ def metrics(db: Session = Depends(get_db), _user: models.User = ReadDep):
     closed_rows = db.execute(
         select(models.Task.created_at, models.TaskStageHistory.created_at)
         .join(models.TaskStageHistory, models.TaskStageHistory.task_id == models.Task.id)
-        .where(models.TaskStageHistory.to_stage == 12)
+        .where(models.TaskStageHistory.to_stage == models.LAST_STAGE)
     ).all()
 
     lead_times_days = [

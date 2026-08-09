@@ -6,33 +6,34 @@ import enum
 
 
 class TaskStage(enum.IntEnum):
-    """Производственный конвейер (BUSINESS_RULES §2). Значения 1..12 —
-    числовой порядок сохранён, чтобы не ломать сортировку/Gantt/диапазоны."""
+    """Производственный конвейер (BUSINESS_RULES §2). Значения 1..10 —
+    числовой порядок сохранён, чтобы не ломать сортировку/Gantt/диапазоны.
+
+    Перенумеровано с 12 на 10 этапов: старый этап 4 "SUMMARY" (не имел
+    собственного гейта) слит в этап 3 как вкладка; старые 8 "Готов к
+    отгрузке" и 9 "Доставка" (оба без гейта) слиты в один этап 7 "Отгрузка".
+    См. миграцию 0032_renumber_task_stages для маппинга старых значений."""
 
     BRIEF_RECEIVED = 1
     SKETCH = 2
     DESIGN_APPROVAL = 3
-    PRE_PRODUCTION = 4
-    PRODUCTION = 5
-    QUALITY_CONTROL = 6
-    PACKING = 7
-    READY_FOR_DELIVERY = 8
-    DELIVERY = 9
-    INSTALLATION = 10
-    FINAL_APPROVAL = 11
-    CLOSED = 12
+    PRODUCTION = 4
+    QUALITY_CONTROL = 5
+    PACKING = 6
+    SHIPPING = 7
+    INSTALLATION = 8
+    FINAL_APPROVAL = 9
+    CLOSED = 10
 
 
 STAGE_LABELS: dict[TaskStage, str] = {
     TaskStage.BRIEF_RECEIVED: "ТЗ получено",
     TaskStage.SKETCH: "Разработка дизайна",
     TaskStage.DESIGN_APPROVAL: "Согласования",
-    TaskStage.PRE_PRODUCTION: "SUMMARY",
     TaskStage.PRODUCTION: "Бюджет и КП",
     TaskStage.QUALITY_CONTROL: "Документы",
     TaskStage.PACKING: "Образец и Производство",
-    TaskStage.READY_FOR_DELIVERY: "Готов к отгрузке",
-    TaskStage.DELIVERY: "Доставка",
+    TaskStage.SHIPPING: "Отгрузка",
     TaskStage.INSTALLATION: "Монтаж",
     TaskStage.FINAL_APPROVAL: "Распределение по ТТ",
     TaskStage.CLOSED: "Закрыт",

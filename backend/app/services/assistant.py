@@ -83,7 +83,7 @@ def tool_list_tasks(
     out = []
     for t in rows:
         if overdue:
-            if not (t.deadline_tt and t.deadline_tt.date() < today and t.stage < 12):
+            if not (t.deadline_tt and t.deadline_tt.date() < today and t.stage < models.LAST_STAGE):
                 continue
         out.append(_task_brief(t))
     return {"count": len(out), "tasks": out}
@@ -113,10 +113,20 @@ def tool_get_task(db: Session, code: str) -> dict:
 
 def tool_get_kpis(db: Session) -> dict:
     active = (
-        db.scalar(select(func.count()).select_from(models.Task).where(models.Task.stage < 12)) or 0
+        db.scalar(
+            select(func.count())
+            .select_from(models.Task)
+            .where(models.Task.stage < models.LAST_STAGE)
+        )
+        or 0
     )
     closed = (
-        db.scalar(select(func.count()).select_from(models.Task).where(models.Task.stage >= 12)) or 0
+        db.scalar(
+            select(func.count())
+            .select_from(models.Task)
+            .where(models.Task.stage >= models.LAST_STAGE)
+        )
+        or 0
     )
     brands = db.scalar(select(func.count()).select_from(models.Brand)) or 0
     groups = db.scalar(select(func.count()).select_from(models.Group)) or 0
@@ -189,7 +199,7 @@ TOOLS: dict[str, tuple[dict, Callable]] = {
             "properties": {
                 "brand": {"type": "string", "description": "название бренда, напр. Darling"},
                 "group": {"type": "string", "enum": ["A", "B", "C"]},
-                "stage": {"type": "integer", "description": "этап 1..12"},
+                "stage": {"type": "integer", "description": "этап 1..10"},
                 "urgent": {"type": "boolean"},
                 "overdue": {"type": "boolean", "description": "только просроченные по дедлайну"},
                 "limit": {"type": "integer"},
