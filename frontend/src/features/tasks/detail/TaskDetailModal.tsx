@@ -10,6 +10,7 @@ import { NumberInput } from "../../../components/NumberInput/NumberInput";
 import { useAuth } from "../../../auth/AuthContext";
 import { canApproveGate } from "../../../auth/roles";
 import { apiErrorMessage } from "../../../api/client";
+import { useGroups } from "../../../api/queries/groups";
 import {
   useAddComment,
   useContractors,
@@ -498,12 +499,33 @@ function KpStage({
 }: StageContentProps) {
   const { data: contractors } = useContractors();
   const createContractor = useCreateContractor();
+  const { data: groups } = useGroups();
+  const { data: kpDocs } = useTaskDocuments(code, 4);
+  const hasKp = (kpDocs ?? []).some((d) => d.kind === "kp");
   const [addingContractor, setAddingContractor] = useState(false);
   const [newContractorName, setNewContractorName] = useState("");
   const [budget, setBudget] = useState(kopToRub(task.budget));
   const [sampleCost, setSampleCost] = useState(kopToRub(task.sample_cost));
   const [tirazhCost, setTirazhCost] = useState(kopToRub(task.tirazh_cost));
   const [tirazhQty, setTirazhQty] = useState(task.tirazh_qty);
+  const budgetTouched = useRef(false);
+
+  // Подсказка: остаток бюджета группы (план минус уже освоенное другими
+  // задачами) как стартовое значение, пока задача ещё без своего бюджета.
+  // budget_spent на бэкенде уже суммирует бюджет ЭТОЙ задачи тоже, поэтому
+  // прибавляем его обратно, иначе остаток занижен на её же сумму.
+  useEffect(() => {
+    if (budgetTouched.current || task.budget !== 0 || !groups) return;
+    const group = groups.find((g) => g.code === task.group);
+    if (!group) return;
+    const remaining = kopToRub(group.budget_planned - group.budget_spent + task.budget);
+    if (remaining > 0) setBudget(remaining);
+  }, [groups, task.budget, task.group]);
+
+  function handleBudgetChange(v: number) {
+    budgetTouched.current = true;
+    setBudget(v);
+  }
 
   function setGate(gate: "manager" | "director") {
     return (approved: boolean) => {
@@ -608,47 +630,78 @@ function KpStage({
       )}
 
       {canMoney ? (
-        <div>
-          <div className={forms.grid2}>
-            <div className={forms.row}>
-              <label className={forms.label}>Бюджет, ₽</label>
-              <NumberInput className={forms.input} value={budget} onChange={setBudget} />
-            </div>
-            <div className={forms.row}>
-              <label className={forms.label}>Образец, ₽</label>
-              <NumberInput className={forms.input} value={sampleCost} onChange={setSampleCost} />
-            </div>
-          </div>
-          <div className={forms.row}>
-            <label className={forms.label}>Тираж, ₽</label>
-            <NumberInput className={forms.input} value={tirazhCost} onChange={setTirazhCost} />
-          </div>
-          <Button variant="ghost" disabled={updateTask.isPending} onClick={saveFinance}>
-            Сохранить финансы
-          </Button>
-        </div>
-      ) : (
-        <div className={styles.grid2}>
-          <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
-          <Field label="Образец" value={formatMoney(kopToRub(task.sample_cost))} />
-        </div>
-      )}
-
-      {isEditor ? (
         <div className={forms.row}>
-          <label className={forms.label}>Тираж, шт.</label>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <NumberInput className={forms.input} value={tirazhQty} onChange={setTirazhQty} />
-            <Button variant="ghost" disabled={updateTask.isPending} onClick={saveTirazhQty}>
-              Сохранить
-            </Button>
-          </div>
+          <label className={forms.label}>Бюджет, ₽</label>
+          <NumberInput className={forms.input} value={budget} onChange={handleBudgetChange} />
         </div>
       ) : (
-        <Field label="Тираж, шт." value={String(task.tirazh_qty)} />
+        <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
       )}
 
-      <div className={styles.sectionLabel}>Согласование КП (оба → Документы)</div>
+      <div style={{ marginTop: 12 }}>
+        <div className={styles.sectionLabel}>Файл КП</div>
+        <DocumentList
+          code={code}
+          stage={4}
+          canEdit={isEditor}
+          kinds={[{ value: "kp", label: "КП" }]}
+        />
+      </div>
+
+      {hasKp ? (
+        <div style={{ marginTop: 12 }}>
+          {canMoney ? (
+            <div className={forms.grid2}>
+              <div className={forms.row}>
+                <label className={forms.label}>Образец, ₽</label>
+                <NumberInput className={forms.input} value={sampleCost} onChange={setSampleCost} />
+              </div>
+              <div className={forms.row}>
+                <label className={forms.label}>Тираж, ₽</label>
+                <NumberInput className={forms.input} value={tirazhCost} onChange={setTirazhCost} />
+              </div>
+            </div>
+          ) : (
+            <div className={styles.grid2}>
+              <Field label="Образец" value={formatMoney(kopToRub(task.sample_cost))} />
+              <Field label="Тираж" value={formatMoney(kopToRub(task.tirazh_cost))} />
+            </div>
+          )}
+
+          {isEditor ? (
+            <div className={forms.row} style={{ marginTop: 8 }}>
+              <label className={forms.label}>Тираж, шт.</label>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <NumberInput className={forms.input} value={tirazhQty} onChange={setTirazhQty} />
+                <Button variant="ghost" disabled={updateTask.isPending} onClick={saveTirazhQty}>
+                  Сохранить
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Field label="Тираж, шт." value={String(task.tirazh_qty)} />
+          )}
+        </div>
+      ) : (
+        <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 12 }}>
+          Загрузите файл КП, чтобы указать стоимость образца и тиража.
+        </p>
+      )}
+
+      {canMoney && (
+        <Button
+          variant="ghost"
+          disabled={updateTask.isPending}
+          onClick={saveFinance}
+          style={{ marginTop: 8 }}
+        >
+          Сохранить финансы
+        </Button>
+      )}
+
+      <div className={styles.sectionLabel} style={{ marginTop: 16 }}>
+        Согласование КП (оба → Документы)
+      </div>
       <ApprovalGate
         label="Финансы"
         approved={task.kp_manager_approved}
@@ -665,16 +718,6 @@ function KpStage({
         pending={kpApproval.isPending}
         onSetApproved={setGate("director")}
       />
-
-      <div style={{ marginTop: 12 }}>
-        <div className={styles.sectionLabel}>Файл КП</div>
-        <DocumentList
-          code={code}
-          stage={4}
-          canEdit={isEditor}
-          kinds={[{ value: "kp", label: "КП" }]}
-        />
-      </div>
     </div>
   );
 }
