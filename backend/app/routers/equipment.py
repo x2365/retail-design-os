@@ -280,8 +280,19 @@ def delete_equipment(eq_id: int, db: Session = Depends(get_db), user: models.Use
 
 
 def _next_task_code(db: Session) -> str:
-    last = db.scalar(select(func.count()).select_from(models.Task)) or 0
-    return f"RD-{40 + last + 1:03d}"
+    """Next free RD-NNN code. Derived from the highest existing numeric
+    suffix, not COUNT(*) — a plain count collides with an existing code as
+    soon as any task has ever been deleted (count drops, the deleted task's
+    higher-numbered code doesn't), producing a UNIQUE constraint violation
+    on insert."""
+    codes = db.scalars(select(models.Task.code)).all()
+    max_num = 40
+    for code in codes:
+        try:
+            max_num = max(max_num, int(code.rsplit("-", 1)[-1]))
+        except ValueError:
+            continue
+    return f"RD-{max_num + 1:03d}"
 
 
 @router.post("/{eq_id}/produce", response_model=schemas.TaskOut, status_code=201)
