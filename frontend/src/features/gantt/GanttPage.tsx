@@ -82,11 +82,17 @@ export default function GanttPage() {
                     style={{
                       left: `${left}%`,
                       width: `${width}%`,
-                      background: `color-mix(in srgb, ${barColor(task.stage)} 20%, transparent)`,
-                      color: barColor(task.stage),
+                      background: `color-mix(in srgb, ${barColor(task.stage)} 12%, transparent)`,
                     }}
                   >
-                    {task.stage_name}
+                    <div
+                      className={styles.barFill}
+                      style={{
+                        width: `${progressPct}%`,
+                        background: `color-mix(in srgb, ${barColor(task.stage)} 55%, transparent)`,
+                      }}
+                    />
+                    <span className={styles.barLabel}>{task.stage_name}</span>
                   </div>
                   {todayPos >= 0 && todayPos <= 100 && (
                     <div className={styles.today} style={{ left: `${todayPos}%` }} />

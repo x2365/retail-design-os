@@ -18,30 +18,30 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Обзор",
     items: [
-      { to: "/", icon: "◈", label: "Дашборд" },
-      { to: "/pipeline", icon: "⬡", label: "Воронка задач" },
-      { to: "/metrics", icon: "▥", label: "Метрики" },
-      { to: "/gantt", icon: "▤", label: "Таймлайн" },
-      { to: "/archive", icon: "🗄", label: "Архив задач" },
+      { to: "/", icon: "📊", label: "Дашборд" },
+      { to: "/pipeline", icon: "🧩", label: "Воронка задач" },
+      { to: "/metrics", icon: "📉", label: "Метрики" },
+      { to: "/gantt", icon: "⏱️", label: "Таймлайн" },
+      { to: "/archive", icon: "📦", label: "Архив задач" },
     ],
   },
   {
     label: "Финансы",
     items: [
-      { to: "/budget", icon: "◎", label: "Бюджеты" },
-      { to: "/payments", icon: "◇", label: "Оплаты / КП" },
+      { to: "/budget", icon: "💵", label: "Бюджеты" },
+      { to: "/payments", icon: "🧾", label: "Оплаты / КП" },
     ],
   },
   {
     label: "Логистика",
-    items: [{ to: "/tt", icon: "◉", label: "Торговые точки" }],
+    items: [{ to: "/tt", icon: "📍", label: "Торговые точки" }],
   },
   {
     label: "Система",
     items: [
-      { to: "/approvals", icon: "✓", label: "Согласования" },
-      { to: "/brands", icon: "◈", label: "Бренды" },
-      { to: "/library", icon: "▦", label: "Библиотека" },
+      { to: "/approvals", icon: "☑️", label: "Согласования" },
+      { to: "/brands", icon: "🔖", label: "Бренды" },
+      { to: "/library", icon: "📂", label: "Библиотека" },
       { to: "/users", icon: "👤", label: "Пользователи", adminOnly: true },
     ],
   },
