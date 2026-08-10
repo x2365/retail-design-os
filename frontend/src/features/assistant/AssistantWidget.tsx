@@ -56,7 +56,7 @@ export function AssistantWidget() {
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
-        <div className={styles.title}>Ассистент-копайлот</div>
+        <div className={styles.title}>Ассистент</div>
         <button className={styles.close} onClick={() => setOpen(false)}>
           ✕
         </button>
@@ -65,7 +65,7 @@ export function AssistantWidget() {
       {!status.enabled ? (
         <div className={styles.disabled}>
           Ассистент выключен. Запустите Ollama с моделью «{status.model}» и включите LLM_ENABLED,
-          чтобы пользоваться копайлотом.
+          чтобы пользоваться ассистентом.
         </div>
       ) : (
         <>

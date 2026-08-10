@@ -27,7 +27,7 @@ export default function AppShell() {
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
           <div className={styles.logoMark}>RetailDesign</div>
-          <div className={styles.logoSub}>OS v1.0 · Portfolio</div>
+          <div className={styles.logoSub}>OS v1.0</div>
         </div>
 
         {NAV_SECTIONS.map((section) => {
