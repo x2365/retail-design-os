@@ -1,7 +1,24 @@
+.stagesWrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+/* .stages scrolls horizontally on narrow screens (10 stage tabs don't fit),
+   but a scrollbar-less overflow gives no hint there's more to the right —
+   this fade signals "swipe for more" without JS scroll-position tracking. */
+.stagesWrap::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--surface2));
+  border-radius: 0 10px 10px 0;
+  pointer-events: none;
+}
 .stages {
   display: flex;
   gap: 0;
-  margin-bottom: 24px;
   background: var(--surface2);
   border-radius: 10px;
   padding: 4px;

@@ -48,6 +48,14 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+/* Fixed two-up grid gets cramped once its container drops below ~300px
+   (e.g. a Modal on a phone) — labels like "Дата предполагаемого лонча"
+   wrap badly in a ~140px column. Collapse to one column instead. */
+@media (max-width: 480px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
 
 .error {
   color: var(--danger);

@@ -147,26 +147,28 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       }
       onClose={onClose}
     >
-      <div className={styles.stages}>
-        {Array.from({ length: TOTAL_STAGES }, (_, i) => i + 1).map((s) => {
-          const label = STAGE_TAB_LABELS[s];
-          if (!showsInstallStage(task.equipment_kind) && s === INSTALL_STAGE) return null;
-          const cls =
-            s === viewedStage
-              ? styles.stageActive
-              : s < task.stage
-                ? styles.stageDone
-                : styles.stage;
-          return (
-            <button
-              key={s}
-              className={[styles.stage, cls].join(" ")}
-              onClick={() => setViewedStage(s)}
-            >
-              {s}. {label}
-            </button>
-          );
-        })}
+      <div className={styles.stagesWrap}>
+        <div className={styles.stages}>
+          {Array.from({ length: TOTAL_STAGES }, (_, i) => i + 1).map((s) => {
+            const label = STAGE_TAB_LABELS[s];
+            if (!showsInstallStage(task.equipment_kind) && s === INSTALL_STAGE) return null;
+            const cls =
+              s === viewedStage
+                ? styles.stageActive
+                : s < task.stage
+                  ? styles.stageDone
+                  : styles.stage;
+            return (
+              <button
+                key={s}
+                className={[styles.stage, cls].join(" ")}
+                onClick={() => setViewedStage(s)}
+              >
+                {s}. {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <StageContent

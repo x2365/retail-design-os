@@ -15,7 +15,7 @@ export function Modal({ title, sub, onClose, headerExtra, children }: ModalProps
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <div>
+          <div className={styles.titleBlock}>
             <div className={styles.title}>{title}</div>
             {sub && <div className={styles.sub}>{sub}</div>}
           </div>
