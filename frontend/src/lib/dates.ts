@@ -10,3 +10,15 @@ export function parseRuDate(s: string | null | undefined): number | null {
   const date = new Date(2000 + Number(yy), Number(mm) - 1, Number(dd));
   return Number.isFinite(date.getTime()) ? date.getTime() : null;
 }
+
+/** Converts the same "дд.мм.гг" display string to "yyyy-mm-dd", the format
+ * `<input type="date">` needs for its `value`. Formats directly from the
+ * parsed digits rather than round-tripping through `Date`/`toISOString()`,
+ * which shifts the date by the local UTC offset. */
+export function ruDateToIso(s: string | null | undefined): string {
+  if (!s) return "";
+  const m = /^(\d{2})\.(\d{2})\.(\d{2})$/.exec(s);
+  if (!m) return "";
+  const [, dd, mm, yy] = m;
+  return `20${yy}-${mm}-${dd}`;
+}

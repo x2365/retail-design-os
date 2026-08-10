@@ -151,6 +151,10 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
             reasons.append("не заполнено ТЗ (укажите хотя бы название продукта)")
         if not has_doc(DocKind.brief):
             reasons.append("не загружен файл ТЗ")
+        if not task.deadline_tt:
+            reasons.append("не указана дата отгрузки в ТТ")
+        if not task.launch_date:
+            reasons.append("не указана дата предполагаемого лонча")
     elif s == 2:  # Разработка дизайна → нужен загруженный дизайн
         if not has_doc(DocKind.sketch, DocKind.model3d, DocKind.photo):
             reasons.append("не загружен файл дизайна")

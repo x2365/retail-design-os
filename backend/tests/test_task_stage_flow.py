@@ -13,6 +13,8 @@ def _create_task(client: TestClient, headers: dict[str, str], **overrides) -> st
         "brand": "Darling",
         "tt_total": 0,
         "brief_data": {"product_name": "gate"},
+        "deadline": "2026-12-01",
+        "launch": "2026-11-15",
     }
     payload.update(overrides)
     r = client.post("/api/tasks", headers=headers, json=payload)
@@ -203,7 +205,11 @@ def _produce_task(client: TestClient, headers: dict[str, str], kind: str) -> str
     )
     assert r.status_code == 201, r.text
     eq_id = r.json()["id"]
-    r = client.post(f"/api/equipment/{eq_id}/produce", headers=headers, json={})
+    r = client.post(
+        f"/api/equipment/{eq_id}/produce",
+        headers=headers,
+        json={"deadline": "2026-12-01", "launch": "2026-11-15"},
+    )
     assert r.status_code == 201, r.text
     return r.json()["code"]
 

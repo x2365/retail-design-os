@@ -18,6 +18,7 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
   const effectiveBrand = brand || brands?.[0]?.name || "";
   const [name, setName] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [launch, setLaunch] = useState("");
   const [error, setError] = useState("");
   const create = useCreateTask();
 
@@ -28,6 +29,7 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
         name,
         brand: effectiveBrand,
         deadline: deadline || undefined,
+        launch: launch || undefined,
         stage: 1,
         urgent: false,
         currency: "RUB",
@@ -70,15 +72,30 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
         <label className={forms.label}>Название</label>
         <input className={forms.input} value={name} onChange={(e) => setName(e.target.value)} />
       </div>
-      <div className={forms.row}>
-        <label className={forms.label}>Дедлайн ТТ (необязательно)</label>
-        <input
-          type="date"
-          className={forms.input}
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-        />
+      <div className={forms.grid2}>
+        <div className={forms.row}>
+          <label className={forms.label}>Дата отгрузки в ТТ</label>
+          <input
+            type="date"
+            className={forms.input}
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+          />
+        </div>
+        <div className={forms.row}>
+          <label className={forms.label}>Дата предполагаемого лонча</label>
+          <input
+            type="date"
+            className={forms.input}
+            value={launch}
+            onChange={(e) => setLaunch(e.target.value)}
+          />
+        </div>
       </div>
+      <p style={{ fontSize: 11, color: "var(--text3)", marginTop: -4, marginBottom: 8 }}>
+        Можно оставить пустым и заполнить позже на вкладке «ТЗ» — но без них задача не сможет
+        перейти на этап «Дизайн».
+      </p>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={create.isPending || !name.trim()} onClick={submit}>
         Создать

@@ -11,7 +11,13 @@ TOKEN = "test-1c-token"
 
 
 def _create_task(client: TestClient, headers: dict[str, str], **overrides) -> str:
-    payload = {"name": "1c-test", "brand": "Darling", "brief_data": {"product_name": "x"}}
+    payload = {
+        "name": "1c-test",
+        "brand": "Darling",
+        "brief_data": {"product_name": "x"},
+        "deadline": "2026-12-01",
+        "launch": "2026-11-15",
+    }
     payload.update(overrides)
     r = client.post("/api/tasks", headers=headers, json=payload)
     assert r.status_code == 201, r.text

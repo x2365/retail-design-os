@@ -23,6 +23,7 @@ import {
   useTaskDocuments,
   useUpdateTask,
 } from "../../../api/queries/taskDetail";
+import { ruDateToIso } from "../../../lib/dates";
 import { formatMoney, kopToRub } from "../../../lib/money";
 import {
   FINAL_APPROVAL_STAGE,
@@ -316,11 +317,19 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
   const [article, setArticle] = useState(task.article);
   const [dimensions, setDimensions] = useState(task.dimensions);
   const [packagingPrimary, setPackagingPrimary] = useState(task.packaging_primary);
+  const [deadline, setDeadline] = useState(ruDateToIso(task.deadline));
+  const [launch, setLaunch] = useState(ruDateToIso(task.launch));
 
   async function save() {
     setError("");
     try {
-      await updateTask.mutateAsync({ article, dimensions, packaging_primary: packagingPrimary });
+      await updateTask.mutateAsync({
+        article,
+        dimensions,
+        packaging_primary: packagingPrimary,
+        deadline: deadline || undefined,
+        launch: launch || undefined,
+      });
     } catch (e) {
       setError(apiErrorMessage(e, "Не удалось сохранить ТЗ"));
     }
@@ -332,6 +341,8 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
         <Field label="Артикул" value={task.article} />
         <Field label="Размеры, мм" value={task.dimensions} />
         <Field label="Первичная упаковка" value={task.packaging_primary} />
+        <Field label="Дата отгрузки в ТТ" value={task.deadline} />
+        <Field label="Дата предполагаемого лонча" value={task.launch} />
       </div>
     );
   }
@@ -364,6 +375,29 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
           onChange={(e) => setPackagingPrimary(e.target.value)}
         />
       </div>
+      <div className={forms.grid2}>
+        <div className={forms.row}>
+          <label className={forms.label}>Дата отгрузки в ТТ *</label>
+          <input
+            type="date"
+            className={forms.input}
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+          />
+        </div>
+        <div className={forms.row}>
+          <label className={forms.label}>Дата предполагаемого лонча *</label>
+          <input
+            type="date"
+            className={forms.input}
+            value={launch}
+            onChange={(e) => setLaunch(e.target.value)}
+          />
+        </div>
+      </div>
+      <p style={{ fontSize: 11, color: "var(--text3)", marginTop: -4, marginBottom: 8 }}>
+        * обязательно для перехода на «Дизайн»
+      </p>
       <Button variant="ghost" disabled={updateTask.isPending} onClick={save}>
         Сохранить
       </Button>
@@ -443,6 +477,7 @@ function SummaryStage({ task }: StageContentProps) {
     <div className={styles.grid2}>
       <Field label="Бренд" value={task.brand} />
       <Field label="Дедлайн ТТ" value={task.deadline} />
+      <Field label="Дата лонча" value={task.launch} />
       <Field label="Артикул" value={task.article} />
       <Field label="Размеры" value={task.dimensions} />
       <Field label="Согласование бренда" value={task.prep_brand_approved ? "✓ Согласовано" : "—"} />
