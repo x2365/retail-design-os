@@ -9,7 +9,11 @@ def test_kpis_reflect_seeded_reference_data(client: TestClient, admin_headers: d
     r = client.get("/api/dashboard/kpis", headers=admin_headers)
     assert r.status_code == 200
     body = r.json()
-    assert body["brands_count"] == 13
+    # seed() no longer creates any brands (removed self-healing that kept
+    # resurrecting deleted placeholder brands on every deploy) — the one
+    # brand here ("Darling") is created by conftest.py's client fixture
+    # purely so the test suite has a brand to attach tasks to.
+    assert body["brands_count"] == 1
     assert body["active_tasks"] == 0  # no products seeded, only reference data
 
 
@@ -18,12 +22,17 @@ def test_tasks_list_starts_empty(client: TestClient, admin_headers: dict[str, st
     assert r.json()["total"] == 0
 
 
-def test_retail_points_are_seeded_and_renamed(client: TestClient, admin_headers: dict[str, str]):
+def test_retail_points_are_seeded_with_generic_names(
+    client: TestClient, admin_headers: dict[str, str]
+):
+    """Point names must stay generic ("Магазин №N") — not a real retailer
+    name (this used to bake "Золотое Яблоко" into every seeded point)."""
     r = client.get("/api/retail-points", headers=admin_headers, params={"page_size": 5})
     body = r.json()
     assert body["total"] == 90
     names = " ".join(p["name"] for p in body["items"])
-    assert "Золотое Яблоко" in names
+    assert "Золотое Яблоко" not in names
+    assert "Магазин №1" in names
 
 
 def test_budget_spent_reflects_task_budget_edits(client: TestClient, admin_headers: dict[str, str]):

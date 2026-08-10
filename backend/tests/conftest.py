@@ -1,8 +1,9 @@
 """Pytest fixtures shared by the whole suite.
 
-Isolation strategy: reference data (users/groups/brands/retail points) is
-seeded once per test session via the app's own `lifespan` (create_all + seed).
-Each test then runs inside its own DB transaction wrapping a SAVEPOINT
+Isolation strategy: reference data (users/groups/retail points, plus one
+"Darling" test brand — see the `client` fixture) is seeded once per test
+session via the app's own `lifespan` (create_all + seed). Each test then
+runs inside its own DB transaction wrapping a SAVEPOINT
 (`Session(bind=connection, join_transaction_mode="create_savepoint")`), which
 is rolled back in teardown — so a test that creates tasks, documents, etc.
 never leaks state into the next test, without re-seeding 90 retail points
@@ -34,6 +35,7 @@ from app.main import app  # noqa: E402
 from app.rate_limit import limiter  # noqa: E402
 from app.seed import USERS  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 # email -> plaintext password, from the seed data (see app/seed.py)
@@ -55,6 +57,19 @@ def client() -> TestClient:
     """One TestClient for the whole session: triggers `lifespan` exactly
     once, so create_all + seed() run a single time."""
     with TestClient(app) as c:
+        # seed() no longer creates any brands (that was prod-only
+        # self-healing removed for resurrecting deleted placeholder brands
+        # on every deploy) — the whole suite hardcodes "Darling" as its one
+        # test brand, so create it here instead, once per session.
+        from app import models
+
+        with Session(bind=engine) as session:
+            group_a = session.scalars(select(models.Group).where(models.Group.code == "A")).first()
+            if group_a and not session.scalars(
+                select(models.Brand).where(models.Brand.name == "Darling")
+            ).first():
+                session.add(models.Brand(name="Darling", group_id=group_a.id))
+                session.commit()
         yield c
 
 
