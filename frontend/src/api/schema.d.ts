@@ -64,7 +64,7 @@ export interface paths {
         };
         /**
          * Meta
-         * @description Static reference: the 12-stage pipeline labels.
+         * @description Static reference: the pipeline stage labels.
          */
         get: operations["meta_api_dashboard_meta_get"];
         put?: never;
@@ -1949,6 +1949,11 @@ export interface components {
              */
             tirazh_cost: number;
             /**
+             * Tirazh Qty
+             * @default 0
+             */
+            tirazh_qty: number;
+            /**
              * Prepaid
              * @default 0
              */
@@ -2019,6 +2024,11 @@ export interface components {
              * @default 0
              */
             tirazh_cost: number;
+            /**
+             * Tirazh Qty
+             * @default 0
+             */
+            tirazh_qty: number;
             /**
              * Prepaid
              * @default 0
@@ -2274,6 +2284,8 @@ export interface components {
             sample_cost?: number | null;
             /** Tirazh Cost */
             tirazh_cost?: number | null;
+            /** Tirazh Qty */
+            tirazh_qty?: number | null;
             /** Prepaid */
             prepaid?: number | null;
             /** Payment Status */

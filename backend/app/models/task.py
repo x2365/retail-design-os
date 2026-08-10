@@ -55,6 +55,10 @@ class Task(Base, TimestampMixin):
     budget: Mapped[int] = mapped_column(Integer, default=0)
     sample_cost: Mapped[int] = mapped_column(Integer, default=0)
     tirazh_cost: Mapped[int] = mapped_column(Integer, default=0)
+    # Количество экземпляров в тираже (штуки, НЕ копейки) — отдельно от
+    # tirazh_cost (стоимость тиража), которая по-прежнему участвует в расчёте
+    # total на "Оплаты / КП" (payment_to_out).
+    tirazh_qty: Mapped[int] = mapped_column(Integer, default=0)
     prepaid: Mapped[int] = mapped_column(Integer, default=0)
     # Статус оплаты — РУЧНОЙ ввод (позже может приходить из 1С): unpaid/partial/paid.
     payment_status: Mapped[str] = mapped_column(

@@ -163,6 +163,7 @@ class TaskOut(BaseModel):
     budget: int = Field(default=0, ge=0)
     sample_cost: int = Field(default=0, ge=0)
     tirazh_cost: int = Field(default=0, ge=0)
+    tirazh_qty: int = Field(default=0, ge=0)
     prepaid: int = Field(default=0, ge=0)
     tt_total: int = Field(default=0, ge=0)
     tt_ok: int = 0
@@ -245,6 +246,7 @@ class TaskCreate(BaseModel):
     budget: int = Field(default=0, ge=0)
     sample_cost: int = Field(default=0, ge=0)
     tirazh_cost: int = Field(default=0, ge=0)
+    tirazh_qty: int = Field(default=0, ge=0)
     prepaid: int = Field(default=0, ge=0)
     deadline: dt.date | None = None
     launch: dt.date | None = None
@@ -261,6 +263,7 @@ class TaskUpdate(BaseModel):
     budget: int | None = Field(default=None, ge=0)
     sample_cost: int | None = Field(default=None, ge=0)
     tirazh_cost: int | None = Field(default=None, ge=0)
+    tirazh_qty: int | None = Field(default=None, ge=0)
     prepaid: int | None = Field(default=None, ge=0)
     payment_status: str | None = None
     article: str | None = Field(default=None, max_length=80)

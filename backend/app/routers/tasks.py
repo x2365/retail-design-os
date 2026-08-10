@@ -152,6 +152,7 @@ def create_task(
         budget=payload.budget,
         sample_cost=payload.sample_cost,
         tirazh_cost=payload.tirazh_cost,
+        tirazh_qty=payload.tirazh_qty,
         prepaid=payload.prepaid,
         deadline_tt=to_utc_datetime(payload.deadline),
         launch_date=to_utc_datetime(payload.launch),

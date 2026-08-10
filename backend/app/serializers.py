@@ -54,6 +54,7 @@ def task_to_out(task: models.Task, counts: dict | None = None) -> schemas.TaskOu
         budget=task.budget,
         sample_cost=task.sample_cost,
         tirazh_cost=task.tirazh_cost,
+        tirazh_qty=task.tirazh_qty,
         prepaid=task.prepaid,
         tt_total=c["tt_total"],
         tt_ok=c["tt_ok"],

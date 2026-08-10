@@ -503,6 +503,7 @@ function KpStage({
   const [budget, setBudget] = useState(kopToRub(task.budget));
   const [sampleCost, setSampleCost] = useState(kopToRub(task.sample_cost));
   const [tirazhCost, setTirazhCost] = useState(kopToRub(task.tirazh_cost));
+  const [tirazhQty, setTirazhQty] = useState(task.tirazh_qty);
 
   function setGate(gate: "manager" | "director") {
     return (approved: boolean) => {
@@ -532,6 +533,18 @@ function KpStage({
       });
     } catch (e) {
       setError(apiErrorMessage(e, "Не удалось сохранить финансы"));
+    }
+  }
+
+  // Отдельно от saveFinance: количество (штуки) — не деньги, не должно
+  // требовать canMoney и не должно попадать в money_in_payload на бэкенде
+  // (иначе PATCH получит 403 для редактора без прав на бюджет).
+  async function saveTirazhQty() {
+    setError("");
+    try {
+      await updateTask.mutateAsync({ tirazh_qty: Math.round(tirazhQty) });
+    } catch (e) {
+      setError(apiErrorMessage(e, "Не удалось сохранить тираж"));
     }
   }
 
@@ -619,6 +632,20 @@ function KpStage({
           <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
           <Field label="Образец" value={formatMoney(kopToRub(task.sample_cost))} />
         </div>
+      )}
+
+      {isEditor ? (
+        <div className={forms.row}>
+          <label className={forms.label}>Тираж, шт.</label>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <NumberInput className={forms.input} value={tirazhQty} onChange={setTirazhQty} />
+            <Button variant="ghost" disabled={updateTask.isPending} onClick={saveTirazhQty}>
+              Сохранить
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Field label="Тираж, шт." value={String(task.tirazh_qty)} />
       )}
 
       <div className={styles.sectionLabel}>Согласование КП (оба → Документы)</div>

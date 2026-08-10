@@ -37,6 +37,7 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
         budget: 0,
         sample_cost: 0,
         tirazh_cost: 0,
+        tirazh_qty: 0,
         prepaid: 0,
         team: [],
         brief_data: {},
