@@ -38,7 +38,11 @@ export function ApprovalsMini() {
           </div>
           <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
             {a.id < 0 ? (
-              <Link to="/pipeline" className={styles.reject} style={{ textDecoration: "none" }}>
+              <Link
+                to={`/pipeline?open=${a.task}`}
+                className={styles.reject}
+                style={{ textDecoration: "none" }}
+              >
                 Открыть →
               </Link>
             ) : (
