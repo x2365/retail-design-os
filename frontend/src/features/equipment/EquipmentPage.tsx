@@ -93,6 +93,8 @@ export default function EquipmentPage() {
             <Panel
               title={brand}
               count={items.length}
+              collapsible
+              defaultOpen={false}
               leading={
                 <div
                   style={{

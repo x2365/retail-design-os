@@ -39,6 +39,23 @@
   display: flex;
   gap: 8px;
 }
+.headerClickable {
+  cursor: pointer;
+  user-select: none;
+}
+.headerClickable:hover {
+  background: var(--surface2);
+}
+.chevron {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text3);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.chevronOpen {
+  transform: rotate(90deg);
+}
 .body {
   padding: 16px 20px;
   /* .panel's overflow: hidden (for rounded corners) silently clips anything
