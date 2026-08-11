@@ -399,6 +399,16 @@ def set_stage_approval(
                 blocked_reasons = blocked_reasons + task_stage.check_close_preconditions(db, task)
             if not blocked_reasons:
                 blocked_reasons = ["переход заблокирован"]
+    elif not payload.approved and payload.stage < task.stage:
+        # Отзыв согласования уже пройденного этапа откатывает карточку назад,
+        # чтобы воронка задач отражала фактическое состояние.
+        task_stage.apply_transition(
+            db,
+            task,
+            payload.stage,
+            user_id=user.id,
+            comment=f"авто-откат: согласование этапа {payload.stage} отозвано",
+        )
     db.commit()
     db.refresh(task)
     out = serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
@@ -572,6 +582,12 @@ def prep_approval(
             )
         except ValueError as e:
             raise HTTPException(409, str(e)) from e
+    elif not payload.approved and task.stage > 3:
+        # Отзыв согласования уже пройденного этапа откатывает карточку назад,
+        # чтобы воронка задач отражала фактическое состояние.
+        task_stage.apply_transition(
+            db, task, 3, user_id=user.id, comment="Авто-откат: согласование отозвано"
+        )
     db.commit()
     db.refresh(task)
     return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
@@ -614,6 +630,12 @@ def kp_approval(
             )
         except ValueError as e:
             raise HTTPException(409, str(e)) from e
+    elif not payload.approved and payload.gate in ("manager", "director") and task.stage > 4:
+        # Отзыв согласования уже пройденного этапа откатывает карточку назад,
+        # чтобы воронка задач отражала фактическое состояние.
+        task_stage.apply_transition(
+            db, task, 4, user_id=user.id, comment="Авто-откат: согласование КП отозвано"
+        )
     db.commit()
     db.refresh(task)
     return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
