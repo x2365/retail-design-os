@@ -55,6 +55,9 @@ def task_to_out(task: models.Task, counts: dict | None = None) -> schemas.TaskOu
         sample_cost=task.sample_cost,
         tirazh_cost=task.tirazh_cost,
         tirazh_qty=task.tirazh_qty,
+        # источник истины по бюджету проекта — сумма из КП (образец + тираж),
+        # ручной budget используется только пока КП ещё не загружено
+        kp_total=(task.sample_cost + task.tirazh_cost) or task.budget,
         prepaid=task.prepaid,
         tt_total=c["tt_total"],
         tt_ok=c["tt_ok"],

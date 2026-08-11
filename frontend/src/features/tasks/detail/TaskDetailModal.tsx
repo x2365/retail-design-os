@@ -42,6 +42,15 @@ import { DeliveriesList } from "./DeliveriesList";
 import { InstallationList } from "./InstallationList";
 import styles from "./TaskDetailModal.module.css";
 
+// Соответствует PS_LABELS в backend/app/serializers.py::payment_to_out
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  unpaid: "Ожидает оплаты",
+  registry: "Отправлен в реестр",
+  queued: "Заведён на оплату",
+  prepaid: "Предоплачен",
+  paid: "Оплачено",
+};
+
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
@@ -307,7 +316,7 @@ function StageContent(props: StageContentProps) {
       <div>
         <Badge color="green">✓ Задача закрыта</Badge>
         <div className={styles.grid2} style={{ marginTop: 16 }}>
-          <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
+          <Field label="Бюджет" value={formatMoney(kopToRub(task.kp_total))} />
           <Field label="Статус оплаты" value={task.payment_status} />
         </div>
       </div>
@@ -652,6 +661,11 @@ function KpStage({
 
       {hasKp ? (
         <div style={{ marginTop: 12 }}>
+          <div style={{ marginBottom: 12 }}>
+            <Badge color="blue">
+              ✓ Заведено на оплату · {PAYMENT_STATUS_LABELS[task.payment_status] ?? task.payment_status}
+            </Badge>
+          </div>
           {canMoney ? (
             <div className={forms.grid2}>
               <div className={forms.row}>

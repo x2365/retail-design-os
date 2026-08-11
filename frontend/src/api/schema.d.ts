@@ -2030,6 +2030,11 @@ export interface components {
              */
             tirazh_qty: number;
             /**
+             * Kp Total
+             * @default 0
+             */
+            kp_total: number;
+            /**
              * Prepaid
              * @default 0
              */

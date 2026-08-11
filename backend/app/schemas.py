@@ -164,6 +164,7 @@ class TaskOut(BaseModel):
     sample_cost: int = Field(default=0, ge=0)
     tirazh_cost: int = Field(default=0, ge=0)
     tirazh_qty: int = Field(default=0, ge=0)
+    kp_total: int = Field(default=0, ge=0)
     prepaid: int = Field(default=0, ge=0)
     tt_total: int = Field(default=0, ge=0)
     tt_ok: int = 0
