@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Panel } from "../../components/Panel/Panel";
 import { useTasks } from "../../api/queries/tasks";
 import { LAST_STAGE } from "../../lib/stages";
 import type { components } from "../../api/schema";
@@ -16,6 +17,11 @@ const TABS: { key: Filter; label: string }[] = [
   { key: "all", label: "Все" },
   { key: "urgent", label: "Срочные" },
 ];
+
+const PANEL_TITLES: Record<Filter, string> = {
+  all: "АКТИВНЫЕ ЗАДАЧИ",
+  urgent: "СРОЧНЫЕ ЗАДАЧИ",
+};
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "deadline", label: "По дедлайну" },
@@ -60,7 +66,12 @@ export function ActiveTasksPanel() {
   const [selected, setSelected] = useState<string | null>(null);
   const { data, isLoading } = useTasks({ page_size: 50 });
 
-  if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>;
+  if (isLoading)
+    return (
+      <Panel title={PANEL_TITLES[filter]}>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+      </Panel>
+    );
 
   let tasks = (data?.items ?? []).filter((t) => t.stage < LAST_STAGE); // closed -> Archive
   // "Срочные" = дедлайн ≤ 7 дней — тот же порог, что уже красит TaskRow
@@ -71,7 +82,7 @@ export function ActiveTasksPanel() {
   tasks = [...tasks].sort((a, b) => compareTasks(a, b, sort));
 
   return (
-    <div>
+    <Panel title={PANEL_TITLES[filter]} count={tasks.length}>
       {selected && <TaskDetailModal code={selected} onClose={() => setSelected(null)} />}
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
         <div className={styles.tabs} style={{ flex: 1, marginBottom: 0 }}>
@@ -108,6 +119,6 @@ export function ActiveTasksPanel() {
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

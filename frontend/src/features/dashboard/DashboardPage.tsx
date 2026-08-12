@@ -82,9 +82,7 @@ export default function DashboardPage() {
       </KpiRow>
 
       <div className={styles.gridMain}>
-        <Panel title="АКТИВНЫЕ ЗАДАЧИ" count={k.active_tasks}>
-          <ActiveTasksPanel />
-        </Panel>
+        <ActiveTasksPanel />
 
         <div className={styles.sideStack}>
           <Panel title="ОЖИДАЮТ РЕШЕНИЯ" count={pendingCount} countAlert>
