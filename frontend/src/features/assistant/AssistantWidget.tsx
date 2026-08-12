@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -25,6 +25,19 @@ export function AssistantWidget() {
   const [query, setQuery] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
 
+  // Mobile: the fixed-position panel floats over page content that can still
+  // be scrolled underneath it — on iOS Safari in particular this makes the
+  // whole layout feel like it's drifting (the toolbar collapsing/expanding
+  // shifts vh at the same time). Lock body scroll while the panel is open.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   if (!status) return null;
 
   function submit() {
@@ -47,7 +60,7 @@ export function AssistantWidget() {
 
   if (!open) {
     return (
-      <button className={styles.fab} onClick={() => setOpen(true)} title="Ассистент">
+      <button className={styles.fab} onClick={() => setOpen(true)} title="AI ассистент">
         💬
       </button>
     );
@@ -56,7 +69,7 @@ export function AssistantWidget() {
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
-        <div className={styles.title}>Ассистент</div>
+        <div className={styles.title}>AI ассистент</div>
         <button className={styles.close} onClick={() => setOpen(false)}>
           ✕
         </button>

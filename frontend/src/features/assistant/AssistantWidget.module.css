@@ -50,6 +50,9 @@
   width: 360px;
   max-width: calc(100vw - 24px);
   max-height: 70vh;
+  /* dvh tracks the actual visible viewport on mobile (Safari's collapsing
+     toolbar changes vh mid-scroll, which read as the whole panel "floating"). */
+  max-height: 70dvh;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 16px;
@@ -79,6 +82,7 @@
     bottom: 4px;
     right: 4px;
     max-height: calc(100vh - 8px);
+    max-height: calc(100dvh - 8px);
   }
 }
 .header {
