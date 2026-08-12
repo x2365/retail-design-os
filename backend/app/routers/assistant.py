@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .. import models, schemas, security
 from ..config import get_settings
 from ..database import get_db
+from ..rate_limit import limiter
 from ..services import assistant as assistant_svc
 
 settings = get_settings()
@@ -29,7 +30,11 @@ def assistant_status(_user: models.User = ReadDep) -> dict:
 
 
 @router.post("", response_model=schemas.AssistantAnswerOut)
+@limiter.limit("10/minute")
 def ask_assistant(
-    body: AssistantQuery, db: Session = Depends(get_db), _user: models.User = ReadDep
+    request: Request,
+    body: AssistantQuery,
+    db: Session = Depends(get_db),
+    _user: models.User = ReadDep,
 ) -> dict:
     return assistant_svc.run_assistant(db, body.query, body.screen, body.filters)

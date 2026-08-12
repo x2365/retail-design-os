@@ -41,6 +41,9 @@ class Settings(BaseSettings):
 
     # Brute-force mitigation on /auth/login (slowapi / limits syntax, e.g. "5/minute").
     login_rate_limit: str = "5/minute"
+    # App-wide default (every route not explicitly decorated with its own
+    # tighter @limiter.limit(...)) — see app/rate_limit.py.
+    default_rate_limit: str = "60/minute"
 
     # --- Uploads ------------------------------------------------------------
     # Local disk by default (zero setup for dev/tests). Set all four r2_*
@@ -88,6 +91,12 @@ class Settings(BaseSettings):
     # Telegram (если задан токен — канал telegram включён, нужен chat_id у юзера):
     telegram_bot_token: str = ""
 
+    # --- Error monitoring (Sentry) -------------------------------------------
+    # Пусто = мониторинг выключен. Создать проект на sentry.io и задать
+    # SENTRY_DSN в Render dashboard (или .env локально), чтобы включить.
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.0  # perf-трейсинг выкл. по умолчанию
+
     @property
     def email_enabled(self) -> bool:
         return bool(self.smtp_host and self.smtp_from)
@@ -114,6 +123,10 @@ class Settings(BaseSettings):
             and self.r2_secret_access_key
             and self.r2_bucket_name
         )
+
+    @property
+    def sentry_enabled(self) -> bool:
+        return bool(self.sentry_dsn)
 
     @property
     def sqlalchemy_database_url(self) -> str:

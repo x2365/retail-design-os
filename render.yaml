@@ -47,6 +47,11 @@ services:
       # dashboard for whoever needs to call it.
       - key: ONEC_SERVICE_TOKEN
         generateValue: true
+      # Error monitoring (Sentry, free tier). Create a project at sentry.io
+      # and set the DSN in the Render dashboard; sync: false keeps it out of
+      # git. Leave unset to keep monitoring disabled.
+      - key: SENTRY_DSN
+        sync: false
 
   - type: web
     name: retaildesign-frontend

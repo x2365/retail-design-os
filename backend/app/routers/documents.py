@@ -13,13 +13,14 @@ import re
 import uuid
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas, security
 from ..config import get_settings
 from ..database import get_db
+from ..rate_limit import limiter
 from ..services import audit
 from ..storage import storage
 
@@ -62,6 +63,29 @@ ALLOWED_EXTENSIONS = {
     ".txt",
 }
 SAFE_EXT_RE = re.compile(r"[^a-z0-9]")
+
+# Magic-byte signatures for the types a browser renders inline (images, PDF) —
+# where a spoofed extension is an actual XSS/content-confusion vector. CAD /
+# office / archive formats stay extension-only: browsers don't render them,
+# so the risk is far lower and real content-sniffing for those is a separate,
+# bigger effort (antivirus-style scanning), not attempted here.
+_MAGIC_SIGNATURES: dict[str, tuple[bytes, ...]] = {
+    "png": (b"\x89PNG\r\n\x1a\n",),
+    "jpg": (b"\xff\xd8\xff",),
+    "jpeg": (b"\xff\xd8\xff",),
+    "gif": (b"GIF87a", b"GIF89a"),
+    "pdf": (b"%PDF",),
+}
+
+
+def _content_matches_extension(ext: str, data: bytes) -> bool:
+    if ext == "svg":
+        # Text format, no magic bytes — block the concrete XSS vector instead.
+        return "<script" not in data[:4096].decode("utf-8", errors="ignore").lower()
+    if ext == "webp":
+        return data.startswith(b"RIFF") and data[8:12] == b"WEBP"
+    sigs = _MAGIC_SIGNATURES.get(ext)
+    return True if not sigs else any(data.startswith(sig) for sig in sigs)
 
 
 def _sanitize_filename(name: str) -> str:
@@ -128,9 +152,29 @@ def _validate_and_store(file: UploadFile, data: bytes, kind: str):
     if ("." + ext) not in ALLOWED_EXTENSIONS:
         allowed = ", ".join(sorted(e.lstrip(".") for e in ALLOWED_EXTENSIONS))
         raise HTTPException(415, f"Недопустимый тип файла. Разрешены: {allowed}")
+    if not _content_matches_extension(ext, data):
+        raise HTTPException(415, "Содержимое файла не соответствует расширению")
     storage_name = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
     storage.save(storage_name, data, file.content_type or "application/octet-stream")
     return doc_kind, clean_name, storage_name
+
+
+async def _read_limited(file: UploadFile) -> bytes:
+    """Reads the upload in chunks, aborting as soon as the size cap is
+    exceeded — avoids buffering an oversized body fully into memory before
+    _validate_and_store's own size check ever runs."""
+    max_bytes = settings.max_upload_mb * 1024 * 1024
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(413, f"Файл больше {settings.max_upload_mb} МБ")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def _reload_doc(db: Session, doc_id: int) -> models.Document:
@@ -170,7 +214,9 @@ def list_documents(
 
 
 @router.post("/tasks/{code}/documents", response_model=schemas.DocumentOut, status_code=201)
+@limiter.limit("20/minute")
 async def upload_document(
+    request: Request,
     code: str,
     file: UploadFile = File(...),
     kind: str = Form("other"),
@@ -181,7 +227,7 @@ async def upload_document(
     task = _get_task(db, code)
     if stage is not None and not (models.FIRST_STAGE <= stage <= models.LAST_STAGE):
         raise HTTPException(422, f"stage must be {models.FIRST_STAGE}..{models.LAST_STAGE}")
-    data = await file.read()
+    data = await _read_limited(file)
     doc_kind, clean_name, storage_name = _validate_and_store(file, data, kind)
     doc = models.Document(
         task_id=task.id,
@@ -229,7 +275,9 @@ def list_card_documents(eq_id: int, db: Session = Depends(get_db), _user: models
 
 
 @router.post("/equipment/{eq_id}/documents", response_model=schemas.DocumentOut, status_code=201)
+@limiter.limit("20/minute")
 async def upload_card_document(
+    request: Request,
     eq_id: int,
     file: UploadFile = File(...),
     kind: str = Form("other"),
@@ -239,7 +287,7 @@ async def upload_card_document(
     card = db.get(models.Equipment, eq_id)
     if not card:
         raise HTTPException(404, "Карточка не найдена")
-    data = await file.read()
+    data = await _read_limited(file)
     doc_kind, clean_name, storage_name = _validate_and_store(file, data, kind)
     doc = models.Document(
         equipment_id=card.id,

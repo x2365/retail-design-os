@@ -6,6 +6,7 @@ balancer. State lives only in the database.
 
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -40,6 +41,13 @@ from .routers import (
 from .seed import seed
 
 settings = get_settings()
+
+if settings.sentry_enabled:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.environment,
+        traces_sample_rate=settings.sentry_traces_sample_rate,
+    )
 
 
 @asynccontextmanager
@@ -89,7 +97,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Rate limiting (currently applied to POST /auth/login — see routers/auth.py).
+# Rate limiting: app-wide default (settings.default_rate_limit) applied by
+# SlowAPIMiddleware to every route, plus tighter per-route limits where
+# decorated explicitly (POST /auth/login, /assistant, document uploads).
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 app.add_middleware(SlowAPIMiddleware)
@@ -109,6 +119,7 @@ async def unhandled_exception_handler(request, exc):
     # Never leak stack traces / internals to clients.
     import logging
 
+    sentry_sdk.capture_exception(exc)  # no-op if sentry_sdk.init() was never called
     logging.getLogger("uvicorn.error").exception("Unhandled error: %s", exc)
     return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
 
