@@ -15,7 +15,7 @@ type SortKey = "deadline" | "group" | "created";
 const TABS: { key: Filter; label: string }[] = [
   { key: "all", label: "Все" },
   { key: "urgent", label: "Срочные" },
-  { key: "approval", label: "На утверждении" },
+  { key: "approval", label: "Согласования и КП" },
 ];
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
