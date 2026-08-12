@@ -27,6 +27,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .name {
   font-size: 13px;
@@ -40,24 +41,47 @@
 .actions {
   display: flex;
   gap: 6px;
+  flex-shrink: 0;
+}
+.approve,
+.reject {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
 }
 .approve {
-  padding: 6px 14px;
   background: rgba(6, 214, 160, 0.15);
   color: var(--accent3);
   border: 1px solid rgba(6, 214, 160, 0.25);
-  border-radius: 6px;
-  font-size: 11px;
-  cursor: pointer;
 }
 .reject {
-  padding: 6px 14px;
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 6px;
-  font-size: 11px;
-  cursor: pointer;
+}
+
+/* Narrow screens: avatar+info+button squeezed into one row forces the
+   button's text to wrap and left-align. Drop the actions row full-width
+   below instead — bigger tap target too. */
+@media (max-width: 560px) {
+  .item {
+    flex-wrap: wrap;
+  }
+  .actions {
+    flex-basis: 100%;
+    margin-top: 4px;
+    margin-left: 52px; /* align under .info, past the 40px avatar + 12px gap */
+  }
+  .approve,
+  .reject {
+    flex: 1;
+  }
 }
 .empty {
   color: var(--text3);
