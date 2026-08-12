@@ -63,7 +63,11 @@ export function ActiveTasksPanel() {
   if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>;
 
   let tasks = (data?.items ?? []).filter((t) => t.stage < LAST_STAGE); // closed -> Archive
-  if (filter === "urgent") tasks = tasks.filter((t) => t.urgent);
+  // "Срочные" = дедлайн ≤ 7 дней — тот же порог, что уже красит TaskRow
+  // красным (TaskRow.tsx). task.urgent — отдельный ручной флаг, который
+  // никак не выставляется через UI (ни при создании, ни в карточке), так
+  // что фильтровать по нему было по факту невозможно.
+  if (filter === "urgent") tasks = tasks.filter((t) => t.days_left <= 7);
   tasks = [...tasks].sort((a, b) => compareTasks(a, b, sort));
 
   return (
