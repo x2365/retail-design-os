@@ -23,7 +23,7 @@ def test_metrics_reflect_wip_lead_time_and_rework(
         f"/api/tasks/{open_code}/documents",
         headers=manager_headers,
         data={"kind": "sketch", "stage": "2"},
-        files={"file": ("s.png", b"x", "image/png")},
+        files={"file": ("s.png", b"\x89PNG\r\n\x1a\n", "image/png")},
     )
     client.patch(f"/api/tasks/{open_code}", headers=manager_headers, json={"stage": 3})
 

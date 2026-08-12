@@ -85,7 +85,7 @@ def test_brand_and_retailer_together_trigger_prep_auto_advance(
         f"/api/tasks/{code}/documents",
         headers=manager_headers,
         data={"kind": "sketch", "stage": "2"},
-        files={"file": ("d.png", b"x", "image/png")},
+        files={"file": ("d.png", b"\x89PNG\r\n\x1a\n", "image/png")},
     )
     client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 3})
 

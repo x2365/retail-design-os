@@ -4,7 +4,10 @@ deliveries in, a payment exists, all approvals resolved)."""
 
 from __future__ import annotations
 
+from app import models
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 
 def _create_task(client: TestClient, headers: dict[str, str], **overrides) -> str:
@@ -82,7 +85,7 @@ def _advance_to_shipping(client: TestClient, headers: dict[str, str], code: str)
         f"/api/tasks/{code}/documents",
         headers=headers,
         data={"kind": "sketch", "stage": "2"},
-        files={"file": ("d.png", b"x", "image/png")},
+        files={"file": ("d.png", b"\x89PNG\r\n\x1a\n", "image/png")},
     )
     client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 3})  # 2->3 (есть дизайн)
     client.post(
@@ -93,6 +96,12 @@ def _advance_to_shipping(client: TestClient, headers: dict[str, str], code: str)
     client.post(
         f"/api/tasks/{code}/prep-approval", headers=headers, json={"gate": "zya", "approved": True}
     )  # авто 3->4 (Бюджет и КП)
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=headers,
+        data={"kind": "kp", "stage": "4"},
+        files={"file": ("kp.pdf", b"%PDF", "application/pdf")},
+    )  # обязателен для выхода с этапа 4 — и авто-создаёт Payment
     client.post(
         f"/api/tasks/{code}/kp-approval",
         headers=headers,
@@ -145,7 +154,7 @@ def test_kp_stage_auto_advances_without_network_approval(
         f"/api/tasks/{code}/documents",
         headers=manager_headers,
         data={"kind": "sketch", "stage": "2"},
-        files={"file": ("d.png", b"x", "image/png")},
+        files={"file": ("d.png", b"\x89PNG\r\n\x1a\n", "image/png")},
     )
     client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 3})
     client.post(
@@ -159,6 +168,12 @@ def test_kp_stage_auto_advances_without_network_approval(
         json={"gate": "zya", "approved": True},
     )  # авто 3->4 (Бюджет и КП)
 
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "kp", "stage": "4"},
+        files={"file": ("kp.pdf", b"%PDF", "application/pdf")},
+    )  # обязателен для выхода с этапа 4
     client.post(
         f"/api/tasks/{code}/kp-approval",
         headers=manager_headers,
@@ -174,10 +189,17 @@ def test_kp_stage_auto_advances_without_network_approval(
 
 
 def test_closing_without_payment_is_blocked_with_reasons(
-    client: TestClient, manager_headers: dict[str, str]
+    client: TestClient, manager_headers: dict[str, str], db: Session
 ):
     code = _create_task(client, manager_headers)
     _advance_through_all_gates(client, manager_headers, code)
+
+    # Uploading the КП file (now required to leave stage 4) auto-creates a
+    # Payment row — delete it so this test can still exercise the close-gate
+    # actually blocking on a genuinely missing Payment.
+    task = db.scalar(select(models.Task).where(models.Task.code == code))
+    db.query(models.Payment).filter(models.Payment.task_id == task.id).delete()
+    db.commit()
 
     r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 422

@@ -163,10 +163,16 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
             reasons.append("нет согласования бренда")
         if not task.prep_zya_approved_at:
             reasons.append("нет согласования сети")
-    elif s == 4:  # Бюджет и КП → согласование финансы + бренд
+    elif s == 4:  # Бюджет и КП → загружен файл КП + согласование финансы + бренд
         # Согласование сети на этом этапе не требуется — оно уже получено
         # раньше, на этапе 3 «Согласования» (prep_zya); дублировать его
         # здесь было ошибкой.
+        # Файл КП обязателен: именно его загрузка автосоздаёт Payment
+        # (см. routers/documents.py) — без него согласования можно было
+        # проставить вручную, задача уходила дальше, а Payment так и не
+        # появлялся, и это вскрывалось только на закрытии ("нет оплаты").
+        if not has_doc(DocKind.kp):
+            reasons.append("не загружен файл КП")
         if not task.kp_manager_approved_at:
             reasons.append("нет согласования финансов")
         if not task.kp_director_approved_at:
