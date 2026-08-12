@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useTasks } from "../../api/queries/tasks";
-import { LAST_STAGE, STAGE_BANDS } from "../../lib/stages";
+import { LAST_STAGE } from "../../lib/stages";
 import type { components } from "../../api/schema";
 import { TaskDetailModal } from "./detail/TaskDetailModal";
 import { TaskRow } from "./TaskRow";
@@ -9,13 +9,12 @@ import forms from "../../styles/forms.module.css";
 import styles from "./PipelineTabs.module.css";
 
 type TaskOut = components["schemas"]["TaskOut"];
-type Filter = "all" | "urgent" | "approval";
+type Filter = "all" | "urgent";
 type SortKey = "deadline" | "group" | "created";
 
 const TABS: { key: Filter; label: string }[] = [
   { key: "all", label: "Все" },
   { key: "urgent", label: "Срочные" },
-  { key: "approval", label: "Согласования и КП" },
 ];
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -65,8 +64,6 @@ export function ActiveTasksPanel() {
 
   let tasks = (data?.items ?? []).filter((t) => t.stage < LAST_STAGE); // closed -> Archive
   if (filter === "urgent") tasks = tasks.filter((t) => t.urgent);
-  if (filter === "approval")
-    tasks = tasks.filter((t) => (STAGE_BANDS.approval as readonly number[]).includes(t.stage));
   tasks = [...tasks].sort((a, b) => compareTasks(a, b, sort));
 
   return (
