@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
@@ -6,6 +6,7 @@ import { ROLE_LABELS, type Role } from "../auth/roles";
 import { useChangeMyPassword } from "../api/queries/users";
 import { AssistantWidget } from "../features/assistant/AssistantWidget";
 import { PasswordModal } from "../features/users/PasswordModal";
+import { MobileNavDrawer } from "./MobileNavDrawer";
 import { NAV_SECTIONS, ROUTE_TITLES } from "./navConfig";
 import styles from "./AppShell.module.css";
 
@@ -21,6 +22,11 @@ export default function AppShell() {
   const title = ROUTE_TITLES[location.pathname] ?? "RetailDesign OS";
   const changeMyPassword = useChangeMyPassword();
   const [changingPassword, setChangingPassword] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Defensive close on navigation that doesn't go through the drawer's own
+  // NavLink onClick (e.g. the browser's back/forward buttons).
+  useEffect(() => setMobileNavOpen(false), [location.pathname]);
 
   return (
     <div className={styles.app}>
@@ -96,6 +102,14 @@ export default function AppShell() {
 
       <div className={styles.main}>
         <div className={styles.topbar}>
+          <button
+            className={styles.hamburger}
+            onClick={() => setMobileNavOpen(true)}
+            title="Меню"
+            aria-label="Открыть меню"
+          >
+            ☰
+          </button>
           <div className={styles.topbarTitle}>{title}</div>
         </div>
         <div className={styles.content}>
@@ -104,6 +118,11 @@ export default function AppShell() {
       </div>
 
       <AssistantWidget />
+      <MobileNavDrawer
+        open={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+        isAdmin={user?.role === "admin"}
+      />
     </div>
   );
 }

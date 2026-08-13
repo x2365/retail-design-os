@@ -145,62 +145,57 @@
   font-weight: 600;
 }
 
+/* Hidden on desktop — shown only ≤960px, see the media query below, where
+   it opens MobileNavDrawer in place of the old icon-only sidebar rail. */
+.hamburger {
+  display: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .content {
   padding: 28px 28px 96px;
   flex: 1;
   min-width: 0;
   overflow-x: auto;
+  animation: contentIn 0.35s ease;
+}
+@keyframes contentIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    animation: none;
+  }
 }
 
 /* ─── NARROW VIEWPORTS (landscape phones etc.) ──
-   Sidebar collapses to an icon-only rail — the fixed 240px sidebar alone
-   ate ~28% of a landscape-iPhone-width viewport. Text labels hide, icons +
-   title tooltips remain; everything is still reachable, just denser. */
+   The fixed 240px sidebar alone ate ~28% of a landscape-iPhone-width
+   viewport, and an icon-only rail (the old approach here) turned out to be
+   unreadable — emoji alone don't say what each item is. Hide it outright;
+   .hamburger opens MobileNavDrawer (full labels) in its place instead. */
 @media (max-width: 960px) {
   .sidebar {
-    width: 56px;
-    padding: 12px 0;
-  }
-  .logo {
-    padding: 0 0 12px;
-    margin-bottom: 12px;
-    text-align: center;
-  }
-  .logoMark {
-    font-size: 0;
-  }
-  .logoMark::before {
-    content: "R";
-    font-size: 15px;
-  }
-  .logoSub {
     display: none;
   }
-  .navSection {
-    padding: 0 6px;
-  }
-  .navLabel {
-    display: none;
-  }
-  .navItem {
-    justify-content: center;
-    padding: 10px 0;
-  }
-  .navIcon {
-    font-size: 17px;
-  }
-  .navText {
-    display: none;
-  }
-  .sidebarFooter {
-    padding: 12px 6px;
-  }
-  .userCard {
-    flex-direction: column;
-    gap: 6px;
-  }
-  .userInfo {
-    display: none;
+  .hamburger {
+    display: flex;
   }
 
   .topbar {
