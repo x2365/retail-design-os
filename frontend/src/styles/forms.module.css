@@ -40,6 +40,20 @@
   min-height: 72px;
 }
 
+/* iOS Safari renders type="date" as a native OS control — min-width:0 and
+   box-sizing:border-box above aren't enough there, it can still size
+   itself off its own localized-string content ("10 нояб. 2026 г.") and
+   ignore width:100%, ending up wider than sibling text inputs sharing the
+   identical .row/.grid2 markup (confirmed on-device; not reproducible in
+   desktop Chrome, which already respects the box model here). Turning off
+   native appearance makes Safari lay it out as a normal CSS box instead —
+   the calendar picker itself still opens natively on tap, only the inline
+   field's own sizing changes. */
+.input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .select {
   cursor: pointer;
 }
