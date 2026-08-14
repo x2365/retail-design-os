@@ -185,8 +185,13 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
     elif s == 6:  # Образец и Производство → образец утверждён
         if not task.sample_approved_at:
             reasons.append("образец не утверждён")
-    # этапы 7 (Отгрузка), 8 (Монтаж), 9 (Распределение) — без жёстких
-    # внутренних гейтов на этом шаге
+    elif s == 7:  # Отгрузка → загружены накладная и реестр
+        if not has_doc(DocKind.waybill):
+            reasons.append("не загружена накладная")
+        if not has_doc(DocKind.registry):
+            reasons.append("не загружен реестр")
+    # этапы 8 (Монтаж), 9 (Распределение) — без жёстких внутренних гейтов
+    # на этом шаге
     return reasons
 
 

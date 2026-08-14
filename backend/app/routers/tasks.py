@@ -694,6 +694,13 @@ def sample_approval(
 
     # Переход на следующий этап выполняется вручную кнопкой «Принято в работу»
     # (после того как проставлены все три согласования). Авто-перехода нет.
+    if not all_three and task.stage > 6:
+        # Отзыв согласования уже пройденного этапа откатывает карточку назад,
+        # чтобы воронка задач отражала фактическое состояние — тот же приём,
+        # что и для отзыва согласования КП выше (см. approve_kp).
+        task_stage.apply_transition(
+            db, task, 6, user_id=user.id, comment="Авто-откат: согласование образца отозвано"
+        )
     db.commit()
     db.refresh(task)
     return serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))

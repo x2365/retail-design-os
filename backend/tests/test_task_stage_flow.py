@@ -134,8 +134,25 @@ def _advance_to_shipping(client: TestClient, headers: dict[str, str], code: str)
     client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": 7})  # 6->7 (образец)
 
 
+def _upload_shipment_docs(client: TestClient, headers: dict[str, str], code: str) -> None:
+    """Накладная + реестр — both required to leave stage 7 (Отгрузка)."""
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=headers,
+        data={"kind": "waybill", "stage": "7"},
+        files={"file": ("waybill.pdf", b"%PDF", "application/pdf")},
+    )
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=headers,
+        data={"kind": "registry", "stage": "7"},
+        files={"file": ("registry.pdf", b"%PDF", "application/pdf")},
+    )
+
+
 def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code: str) -> None:
     _advance_to_shipping(client, headers, code)
+    _upload_shipment_docs(client, headers, code)
     for s in range(8, 10):
         client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": s})  # 7->8->9
 
@@ -244,6 +261,7 @@ def test_install_stage_skipped_for_non_corner_equipment(
     never blocked, even onto/over a skipped stage)."""
     code = _produce_task(client, manager_headers, "stand")
     _advance_to_shipping(client, manager_headers, code)  # lands at stage 7
+    _upload_shipment_docs(client, manager_headers, code)
 
     r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 8})
     assert r.status_code == 422, "Монтаж must not be settable for non-corner equipment"
@@ -264,6 +282,7 @@ def test_install_stage_required_for_corner_equipment(
     straight from 7 to 9 is rejected like any other multi-step skip."""
     code = _produce_task(client, manager_headers, "corner")
     _advance_to_shipping(client, manager_headers, code)  # lands at stage 7
+    _upload_shipment_docs(client, manager_headers, code)
 
     r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
     assert r.status_code == 422, "corner equipment must not skip Монтаж"
@@ -275,3 +294,95 @@ def test_install_stage_required_for_corner_equipment(
     r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
     assert r.status_code == 200, r.text
     assert r.json()["stage"] == 9
+
+
+def test_revoking_sample_approval_reverts_stage_back_to_sample(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """Same rule as revoking a КП approval past stage 4 (see
+    approve_kp/prep_approval): revoking a sample gate after the task has
+    already moved on to Отгрузка must roll the card back to stage 6, or the
+    board keeps showing it as past the sample stage despite the precondition
+    (task.sample_approved_at = all three gates) no longer holding."""
+    code = _produce_task(client, manager_headers, "stand")
+    _advance_to_shipping(client, manager_headers, code)  # lands at stage 7, sample fully approved
+
+    r = client.post(
+        f"/api/tasks/{code}/sample-approval",
+        headers=manager_headers,
+        json={"gate": "brand", "approved": False},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 6, "revoking one sample gate must revert stage 7 -> 6"
+    assert r.json()["sample_brand_approved"] is False
+
+    r = client.get(f"/api/tasks/{code}", headers=manager_headers)
+    assert r.json()["stage"] == 6, "revert must be persisted, not just in the response"
+
+
+def test_shipment_stage_requires_waybill_and_registry(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """Отгрузка (7) used to have no exit gate at all — "Далее" walked
+    straight to Распределение (9, non-corner skips 8) without either
+    shipping document, even though the stage's own DocumentList already
+    displays both as a checklist. Both must now be uploaded first."""
+    code = _produce_task(client, manager_headers, "stand")
+    _advance_to_shipping(client, manager_headers, code)  # lands at stage 7
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 422
+    assert "накладная" in r.text and "реестр" in r.text
+
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "waybill", "stage": "7"},
+        files={"file": ("waybill.pdf", b"%PDF", "application/pdf")},
+    )
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 422, "накладная alone must not be enough — реестр is still missing"
+
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "registry", "stage": "7"},
+        files={"file": ("registry.pdf", b"%PDF", "application/pdf")},
+    )
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 9
+
+
+def test_deleting_required_document_reverts_stage(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """Same auto-revert rule as revoking an approval (see
+    test_revoking_sample_approval_reverts_stage_back_to_sample), but for the
+    document side: deleting the накладная that stage 7 required after the
+    task has already advanced past it must roll the card back to 7, not
+    leave it sitting on 9 with a now-unmet precondition."""
+    code = _produce_task(client, manager_headers, "stand")
+    _advance_to_shipping(client, manager_headers, code)  # lands at stage 7
+    r = client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "waybill", "stage": "7"},
+        files={"file": ("waybill.pdf", b"%PDF", "application/pdf")},
+    )
+    waybill_id = r.json()["id"]
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "registry", "stage": "7"},
+        files={"file": ("registry.pdf", b"%PDF", "application/pdf")},
+    )
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 9})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 9
+
+    r = client.delete(f"/api/documents/{waybill_id}", headers=manager_headers)
+    assert r.status_code == 204
+
+    r = client.get(f"/api/tasks/{code}", headers=manager_headers)
+    assert r.json()["stage"] == 7, "deleting the required накладная must revert stage 9 -> 7"

@@ -21,7 +21,7 @@ from .. import models, schemas, security
 from ..config import get_settings
 from ..database import get_db
 from ..rate_limit import limiter
-from ..services import audit
+from ..services import audit, task_stage
 from ..storage import storage
 
 router = APIRouter(tags=["documents"])
@@ -335,5 +335,24 @@ def delete_document(doc_id: int, db: Session = Depends(get_db), user: models.Use
         description=f"Файл: {doc.filename}",
     )
     storage.delete(doc.storage_name)
+    task = doc.task
+    doc_stage = doc.stage
     db.delete(doc)
     db.commit()
+
+    # Same rule as revoking an approval past its stage (see routers/tasks.py
+    # prep/kp/sample-approval): deleting a document the task's own stage
+    # gate required — e.g. the brief file, ДС/счёт, накладная — must roll
+    # the card back if that precondition no longer holds, or the board keeps
+    # showing it as past a stage whose gate was silently un-met again.
+    if task is not None and doc_stage is not None and task.stage > doc_stage:
+        reasons = task_stage.check_stage_preconditions(db, task, doc_stage)
+        if reasons:
+            task_stage.apply_transition(
+                db,
+                task,
+                doc_stage,
+                user_id=user.id,
+                comment=f"Авто-откат: удалён обязательный документ этапа {doc_stage}",
+            )
+            db.commit()
