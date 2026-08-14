@@ -1934,11 +1934,6 @@ export interface components {
              */
             production_cost: number;
             /**
-             * Budget
-             * @default 0
-             */
-            budget: number;
-            /**
              * Sample Cost
              * @default 0
              */
@@ -2283,8 +2278,6 @@ export interface components {
             urgent?: boolean | null;
             /** Production Cost */
             production_cost?: number | null;
-            /** Budget */
-            budget?: number | null;
             /** Sample Cost */
             sample_cost?: number | null;
             /** Tirazh Cost */

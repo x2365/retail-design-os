@@ -157,6 +157,71 @@ def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code
         client.patch(f"/api/tasks/{code}", headers=headers, json={"stage": s})  # 7->8->9
 
 
+def test_kp_approval_sets_budget_from_sample_and_tirazh_and_revoke_resets_it(
+    client: TestClient, manager_headers: dict[str, str], admin_headers: dict[str, str]
+):
+    """task.budget is no longer hand-typed on the «Бюджет и КП» stage — it's
+    computed as Образец+Тираж the moment both gates (Финансы/Бренд) are
+    approved, and reset to 0 if either gets revoked (mirrors the stage
+    auto-revert below: an unapproved КП has no locked-in budget)."""
+    code = _create_task(client, manager_headers)
+    _upload_brief(client, manager_headers, code)
+    client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "sketch", "stage": "2"},
+        files={"file": ("d.png", b"\x89PNG\r\n\x1a\n", "image/png")},
+    )
+    client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 3})
+    client.post(
+        f"/api/tasks/{code}/prep-approval",
+        headers=manager_headers,
+        json={"gate": "brand", "approved": True},
+    )
+    client.post(
+        f"/api/tasks/{code}/prep-approval",
+        headers=manager_headers,
+        json={"gate": "zya", "approved": True},
+    )  # авто 3->4 (Бюджет и КП)
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "kp", "stage": "4"},
+        files={"file": ("kp.pdf", b"%PDF", "application/pdf")},
+    )
+    r = client.patch(
+        f"/api/tasks/{code}",
+        headers=admin_headers,  # money fields are admin-only
+        json={"sample_cost": 150_000, "tirazh_cost": 250_000},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["budget"] == 0, "not approved yet — budget must stay 0"
+
+    r = client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=manager_headers,
+        json={"gate": "manager", "approved": True},
+    )
+    assert r.json()["budget"] == 0, "only one of two gates approved — budget still 0"
+
+    r = client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=manager_headers,
+        json={"gate": "director", "approved": True},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["budget"] == 400_000, "both gates approved — budget = sample_cost + tirazh_cost"
+
+    r = client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=manager_headers,
+        json={"gate": "director", "approved": False},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["budget"] == 0, "revoking either gate must reset budget back to 0"
+
+
 def test_kp_stage_auto_advances_without_network_approval(
     client: TestClient, manager_headers: dict[str, str]
 ):

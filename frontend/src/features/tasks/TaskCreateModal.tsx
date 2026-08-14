@@ -34,7 +34,6 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
         urgent: false,
         currency: "RUB",
         production_cost: 0,
-        budget: 0,
         sample_cost: 0,
         tirazh_cost: 0,
         tirazh_qty: 0,

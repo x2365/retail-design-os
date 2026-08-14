@@ -244,7 +244,6 @@ class TaskCreate(BaseModel):
     urgent: bool = False
     currency: str = "RUB"
     production_cost: int = Field(default=0, ge=0)
-    budget: int = Field(default=0, ge=0)
     sample_cost: int = Field(default=0, ge=0)
     tirazh_cost: int = Field(default=0, ge=0)
     tirazh_qty: int = Field(default=0, ge=0)
@@ -261,7 +260,6 @@ class TaskUpdate(BaseModel):
     stage: int | None = Field(default=None, ge=1, le=10)
     urgent: bool | None = None
     production_cost: int | None = Field(default=None, ge=0)
-    budget: int | None = Field(default=None, ge=0)
     sample_cost: int | None = Field(default=None, ge=0)
     tirazh_cost: int | None = Field(default=None, ge=0)
     tirazh_qty: int | None = Field(default=None, ge=0)

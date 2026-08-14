@@ -520,28 +520,22 @@ function KpStage({
   const hasKp = (kpDocs ?? []).some((d) => d.kind === "kp");
   const [addingContractor, setAddingContractor] = useState(false);
   const [newContractorName, setNewContractorName] = useState("");
-  const [budget, setBudget] = useState(kopToRub(task.budget));
   const [sampleCost, setSampleCost] = useState(kopToRub(task.sample_cost));
   const [tirazhCost, setTirazhCost] = useState(kopToRub(task.tirazh_cost));
   const [tirazhQty, setTirazhQty] = useState(task.tirazh_qty);
-  const budgetTouched = useRef(false);
 
-  // Подсказка: остаток бюджета группы (план минус уже освоенное другими
-  // задачами) как стартовое значение, пока задача ещё без своего бюджета.
-  // budget_spent на бэкенде уже суммирует бюджет ЭТОЙ задачи тоже, поэтому
+  // Бюджет задачи больше не вводится — это Образец+Тираж, фиксируется
+  // бэкендом при согласовании КП (см. kp_approval). Здесь только
+  // предупреждаем, если то, что сейчас набрано в полях (ещё не сохранено),
+  // превышает остаток бюджета группы — план минус уже освоенное другими
+  // задачами. budget_spent уже суммирует бюджет ЭТОЙ задачи тоже, поэтому
   // прибавляем его обратно, иначе остаток занижен на её же сумму.
-  useEffect(() => {
-    if (budgetTouched.current || task.budget !== 0 || !groups) return;
-    const group = groups.find((g) => g.code === task.group);
-    if (!group) return;
-    const remaining = kopToRub(group.budget_planned - group.budget_spent + task.budget);
-    if (remaining > 0) setBudget(remaining);
-  }, [groups, task.budget, task.group]);
-
-  function handleBudgetChange(v: number) {
-    budgetTouched.current = true;
-    setBudget(v);
-  }
+  const group = groups?.find((g) => g.code === task.group);
+  const groupRemaining = group
+    ? kopToRub(group.budget_planned - group.budget_spent + task.budget)
+    : null;
+  const requested = sampleCost + tirazhCost;
+  const overBudget = groupRemaining !== null && requested > groupRemaining;
 
   function setGate(gate: "manager" | "director") {
     return (approved: boolean) => {
@@ -565,7 +559,6 @@ function KpStage({
     setError("");
     try {
       await updateTask.mutateAsync({
-        budget: Math.round(budget * 100),
         sample_cost: Math.round(sampleCost * 100),
         tirazh_cost: Math.round(tirazhCost * 100),
       });
@@ -645,13 +638,12 @@ function KpStage({
         </div>
       )}
 
-      {canMoney ? (
-        <div className={forms.row}>
-          <label className={forms.label}>Бюджет, ₽</label>
-          <NumberInput className={forms.input} value={budget} onChange={handleBudgetChange} />
-        </div>
-      ) : (
-        <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
+      <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
+      {task.budget === 0 && (
+        <p style={{ fontSize: 11, color: "var(--text3)", marginTop: -4, marginBottom: 8 }}>
+          Считается автоматически как Образец + Тираж — фиксируется, когда КП согласовано
+          (Финансы + Бренд ниже).
+        </p>
       )}
 
       <div style={{ marginTop: 12 }}>
@@ -687,6 +679,12 @@ function KpStage({
               <Field label="Образец" value={formatMoney(kopToRub(task.sample_cost))} />
               <Field label="Тираж" value={formatMoney(kopToRub(task.tirazh_cost))} />
             </div>
+          )}
+          {canMoney && overBudget && (
+            <p style={{ fontSize: 11, color: "var(--warn)", marginTop: 4 }}>
+              ⚠ Образец + Тираж ({formatMoney(requested)}) больше остатка бюджета группы (
+              {formatMoney(groupRemaining ?? 0)})
+            </p>
           )}
 
           {isEditor ? (

@@ -35,10 +35,14 @@ def test_retail_points_are_seeded_with_generic_names(
     assert "Магазин №1" in names
 
 
-def test_budget_spent_reflects_task_budget_edits(client: TestClient, admin_headers: dict[str, str]):
-    """The "Бюджет" field editable on the «Бюджет и КП» stage (task.budget) must
-    be what "освоено" sums — not the unreachable production_cost column, which
-    has no edit UI and would otherwise leave the dashboard/groups KPIs frozen."""
+def test_budget_spent_reflects_kp_approved_sample_and_tirazh(
+    client: TestClient, admin_headers: dict[str, str]
+):
+    """task.budget is no longer hand-typed — it's Образец+Тираж, set the
+    moment both КП gates (Финансы/Бренд) are approved. "освоено" (budget_spent)
+    must be what that sum feeds — not the unreachable production_cost column,
+    which has no edit UI and would otherwise leave the dashboard/groups KPIs
+    frozen."""
     r = client.post(
         "/api/tasks",
         headers=admin_headers,
@@ -47,8 +51,26 @@ def test_budget_spent_reflects_task_budget_edits(client: TestClient, admin_heade
     assert r.status_code == 201, r.text
     code = r.json()["code"]
 
-    r = client.patch(f"/api/tasks/{code}", headers=admin_headers, json={"budget": 500_000})
+    r = client.patch(
+        f"/api/tasks/{code}",
+        headers=admin_headers,
+        json={"sample_cost": 200_000, "tirazh_cost": 300_000},
+    )
     assert r.status_code == 200, r.text
+
+    r = client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=admin_headers,
+        json={"gate": "manager", "approved": True},
+    )
+    assert r.status_code == 200, r.text
+    r = client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=admin_headers,
+        json={"gate": "director", "approved": True},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["budget"] == 500_000, "budget must become sample_cost + tirazh_cost"
 
     r = client.get("/api/dashboard/kpis", headers=admin_headers)
     assert r.json()["budget_spent"] >= 500_000

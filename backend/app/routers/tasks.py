@@ -148,8 +148,7 @@ def create_task(
         stage=payload.stage,
         urgent=payload.urgent,
         currency=payload.currency,
-        production_cost=payload.production_cost or payload.budget,
-        budget=payload.budget,
+        production_cost=payload.production_cost,
         sample_cost=payload.sample_cost,
         tirazh_cost=payload.tirazh_cost,
         tirazh_qty=payload.tirazh_qty,
@@ -256,7 +255,6 @@ def update_task(
     # Бюджетные поля (в копейках) может менять ТОЛЬКО администратор; каждое
     # изменение пишется в журнал (audit_log) с прежним и новым значением.
     MONEY_FIELDS = {
-        "budget": "Итого бюджет",
         "sample_cost": "Образец",
         "tirazh_cost": "Тираж",
         "prepaid": "Предоплата",
@@ -617,6 +615,32 @@ def kp_approval(
     else:
         task.kp_network_approved_at = now if payload.approved else None
         task.kp_network_approved_by = user.full_name if payload.approved else ""
+
+    # Бюджет задачи больше не вводится вручную — он равен Образец+Тираж,
+    # но "фиксируется" только когда КП реально согласовано (оба гейта):
+    # до этого момента цифры из КП ещё могут поменяться. Пересчитывается на
+    # каждый вызов (и согласование, и отзыв), а не только на переход 4->5,
+    # чтобы повторное согласование после отката тоже восстанавливало сумму.
+    old_budget = task.budget
+    new_budget = (
+        task.sample_cost + task.tirazh_cost
+        if task.kp_manager_approved_at and task.kp_director_approved_at
+        else 0
+    )
+    if new_budget != old_budget:
+        task.budget = new_budget
+        db.add(
+            models.AuditLog(
+                user_id=user.id,
+                user_name=user.full_name,
+                entity_type="task",
+                entity_code=task.code,
+                field="Итого бюджет",
+                old_value=f"{old_budget // 100:,}".replace(",", " ") + " ₽",
+                new_value=f"{new_budget // 100:,}".replace(",", " ") + " ₽",
+            )
+        )
+
     # Согласования КП (финансы/бренд) и задача на «Бюджет и КП» (4) → в «Документы» (5).
     # Сеть здесь не требуется — её согласование уже получено на этапе 3.
     if task.kp_manager_approved_at and task.kp_director_approved_at and task.stage == 4:
