@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { Panel } from "../../components/Panel/Panel";
@@ -12,6 +12,10 @@ import styles from "./PipelinePage.module.css";
 export default function PipelinePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState<string | null>(null);
+  // Kept separately from `selected` (which clears on modal close) so the
+  // card stays visibly marked after the deep-linked modal is dismissed —
+  // otherwise there's no way to tell which card in the board it was.
+  const [highlightCode, setHighlightCode] = useState<string | null>(null);
 
   // Deep link from Approvals ("Перейти к задаче →" for gate-based approvals
   // that must be resolved inside the task card, not via approve/reject).
@@ -19,6 +23,7 @@ export default function PipelinePage() {
     const open = searchParams.get("open");
     if (open) {
       setSelected(open);
+      setHighlightCode(open);
       searchParams.delete("open");
       setSearchParams(searchParams, { replace: true });
     }
@@ -34,6 +39,19 @@ export default function PipelinePage() {
   const logistics = useTasks({ band: "logistics", page_size: 200 });
 
   const byBand = { dev, approval, production, logistics };
+
+  // The target card may be scrolled out of view inside its column. Runs
+  // once the card actually exists in the DOM (data loads async) — guarded
+  // so a later background refetch (staleTime, focus, etc.) doesn't yank
+  // the view back to it again.
+  const scrolledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!highlightCode || scrolledRef.current === highlightCode) return;
+    const card = document.querySelector(`[data-code="${highlightCode}"]`);
+    if (!card) return;
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+    scrolledRef.current = highlightCode;
+  });
 
   return (
     <div className={styles.board}>
@@ -57,7 +75,12 @@ export default function PipelinePage() {
                 <p className={styles.empty}>Нет задач</p>
               ) : (
                 tasks.map((t) => (
-                  <TaskCard key={t.code} task={t} onClick={() => setSelected(t.code)} />
+                  <TaskCard
+                    key={t.code}
+                    task={t}
+                    onClick={() => setSelected(t.code)}
+                    highlighted={t.code === highlightCode}
+                  />
                 ))
               )}
             </div>

@@ -6,11 +6,20 @@ import styles from "./TaskCard.module.css";
 type TaskOut = components["schemas"]["TaskOut"];
 
 /** Compact card used in the Kanban board columns. */
-export function TaskCard({ task, onClick }: { task: TaskOut; onClick?: () => void }) {
+export function TaskCard({
+  task,
+  onClick,
+  highlighted,
+}: {
+  task: TaskOut;
+  onClick?: () => void;
+  highlighted?: boolean;
+}) {
   const dlClass = task.days_left <= 7 ? styles.urgent : task.days_left <= 14 ? styles.warn : "";
   return (
     <div
-      className={styles.card}
+      className={[styles.card, highlighted ? styles.highlighted : ""].join(" ")}
+      data-code={task.code}
       onClick={onClick}
       style={onClick ? { cursor: "pointer" } : undefined}
     >
