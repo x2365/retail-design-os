@@ -43,6 +43,14 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  /* Mobile Safari's 100vh is the toolbar-collapsed (larger) viewport, while
+     .app below uses 100dvh (the real, current one) — the mismatch left body
+     taller than .app, a "phantom" scrollable strip of raw --bg background
+     below it. On short pages .main never needed to scroll internally, so
+     the browser handed scroll to that phantom body overflow instead — which
+     both showed as a black void AND broke .topbar's position:sticky (sticky
+     to .main, not to body). dvh removes the mismatch. */
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 

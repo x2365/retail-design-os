@@ -79,8 +79,7 @@
        margin (52px), clipping the button under .item's overflow:hidden. */
     flex-basis: calc(100% - 52px);
     margin-top: 4px;
-    margin-left: 52px; /* align under .info, past the 40px avatar + 12px gap */
-    justify-content: flex-end; /* compact chip at the row's end, not a full-width bar */
+    margin-left: 52px; /* align under .info/"Команда Бренд" text, past the 40px avatar + 12px gap */
   }
   .approve,
   .reject {
