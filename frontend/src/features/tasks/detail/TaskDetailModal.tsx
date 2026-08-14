@@ -334,6 +334,10 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
 
   async function save() {
     setError("");
+    if (dimensions.trim() && !/^\d+(\.\d+)?\s\d+(\.\d+)?\s\d+(\.\d+)?$/.test(dimensions.trim())) {
+      setError("Размеры — 3 числа через пробел (Ш В Г), например: 300 300 20");
+      return;
+    }
     try {
       await updateTask.mutateAsync({
         article,
@@ -351,7 +355,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
     return (
       <div className={styles.grid2}>
         <Field label="Артикул" value={task.article} />
-        <Field label="Размеры, мм" value={task.dimensions} />
+        <Field label="Размеры, мм (Ш В Г)" value={task.dimensions} />
         <Field label="Первичная упаковка" value={task.packaging_primary} />
         <Field label="Дата отгрузки в ТТ" value={task.deadline} />
         <Field label="Дата предполагаемого лонча" value={task.launch} />
@@ -371,11 +375,12 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
           />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Размеры, мм</label>
+          <label className={forms.label}>Размеры, мм (Ш В Г)</label>
           <input
             className={forms.input}
             value={dimensions}
             onChange={(e) => setDimensions(e.target.value)}
+            placeholder="300 300 20"
           />
         </div>
       </div>
@@ -491,7 +496,7 @@ function SummaryStage({ task }: StageContentProps) {
       <Field label="Дедлайн ТТ" value={task.deadline} />
       <Field label="Дата лонча" value={task.launch} />
       <Field label="Артикул" value={task.article} />
-      <Field label="Размеры" value={task.dimensions} />
+      <Field label="Размеры, мм (Ш В Г)" value={task.dimensions} />
       <Field label="Согласование бренда" value={task.prep_brand_approved ? "✓ Согласовано" : "—"} />
       <Field label="Согласование сети" value={task.prep_zya_approved ? "✓ Согласовано" : "—"} />
     </div>
