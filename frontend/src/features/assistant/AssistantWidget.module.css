@@ -1,7 +1,10 @@
 .fab {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  /* env() falls back to the plain 24px on devices/browsers without a home
+     indicator; adds clearance on notched iPhones so the FAB isn't flush
+     against the gesture bar. */
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: calc(24px + env(safe-area-inset-right));
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -45,8 +48,8 @@
 
 .panel {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: calc(24px + env(safe-area-inset-right));
   width: 360px;
   max-width: calc(100vw - 24px);
   max-height: 70vh;
@@ -73,14 +76,14 @@
   .fab {
     width: 34px;
     height: 34px;
-    bottom: 4px;
-    right: 4px;
+    bottom: calc(4px + env(safe-area-inset-bottom));
+    right: calc(4px + env(safe-area-inset-right));
     font-size: 14px;
     border-width: 1px;
   }
   .panel {
-    bottom: 4px;
-    right: 4px;
+    bottom: calc(4px + env(safe-area-inset-bottom));
+    right: calc(4px + env(safe-area-inset-right));
     max-height: calc(100vh - 8px);
     max-height: calc(100dvh - 8px);
   }

@@ -7,7 +7,9 @@
 }
 .label {
   font-size: 12px;
-  min-width: 140px;
+  min-width: 48px; /* was 140px — enough for "RD"/"Бренд"/"Сеть", freed up
+                      room so the row doesn't force the button onto its own
+                      line on narrow screens */
 }
 .by {
   font-size: 11px;
@@ -19,11 +21,16 @@
   font-size: 11px;
   font-family: "Geologica", sans-serif;
   cursor: pointer;
-  border: 1px solid #16a34a;
-  background: #16a34a;
-  color: #fff;
+  /* Outlined in the same --warn amber as .pendingLabel's text (same recipe
+     as Badge's amber variant) instead of an unrelated solid green — the
+     button's color now actually reflects "not yet approved". */
+  border: 1px solid var(--warn);
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warn);
+  flex-shrink: 0;
 }
 .pendingLabel {
   font-size: 11px;
   color: var(--warn);
+  flex: 1; /* fills the row, pushing .approveBtn to the end for alignment */
 }

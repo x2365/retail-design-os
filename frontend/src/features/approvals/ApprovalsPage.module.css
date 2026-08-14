@@ -74,13 +74,22 @@
     flex-wrap: wrap;
   }
   .actions {
-    flex-basis: 100%;
+    /* calc(), not a plain 100% — with flex:1 gone from the button below,
+       a 100% basis + margin-left overflowed the card by exactly the
+       margin (52px), clipping the button under .item's overflow:hidden. */
+    flex-basis: calc(100% - 52px);
     margin-top: 4px;
     margin-left: 52px; /* align under .info, past the 40px avatar + 12px gap */
+    justify-content: flex-end; /* compact chip at the row's end, not a full-width bar */
   }
   .approve,
   .reject {
-    flex: 1;
+    /* Wider is fixed, but the desktop 6px/11px sizing left a ~27px-tall tap
+       target — well under the ~44px touch-target minimum. Bump it up here.
+       (No flex:1 — that stretched it edge-to-edge into a bulky bar; sized to
+       its own content instead, still full row-height via the padding.) */
+    padding: 13px 14px;
+    font-size: 12px;
   }
 }
 .empty {
