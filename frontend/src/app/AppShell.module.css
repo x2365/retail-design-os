@@ -221,4 +221,31 @@
        partly under it. 96px matches desktop and leaves a bit of margin. */
     padding: 14px 14px 96px;
   }
+
+  /* Two rounds of dvh/vh-mismatch patches (.app height, body min-height)
+     still wasn't enough — the underlying pattern of a fixed-height .app
+     with .main scrolling *inside* it is inherently fragile on mobile
+     Safari (the viewport height a static/dynamic vh unit resolves to keeps
+     changing as the toolbar collapses/expands, and any mismatch between
+     .app/.main/body's idea of "the viewport" shows up as either a black
+     gap or a .topbar that stops sticking). Sidestep the whole class of bugs
+     on mobile: don't give .app a fixed height at all, don't let .main
+     scroll internally — let the actual document/body scroll, the simplest
+     and most universally correct pattern. .topbar's position:sticky then
+     naturally resolves against that real scroll instead of the nested one. */
+  .app {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .main {
+    /* overflow-x/-y aren't independent per spec: pairing overflow-x:hidden
+       (from the base rule, unchanged) with overflow-y:visible forces the
+       visible one to compute as auto anyway (a UA can't clip one axis and
+       not establish a scroll container on the other) — the .main-scrolls
+       bug survived the first attempt at this fix for exactly that reason.
+       Both axes need to go visible together; body's own overflow-x:hidden
+       (tokens.css) still clips any horizontal overflow at the document
+       edge, so nothing actually becomes scrollable sideways. */
+    overflow: visible;
+  }
 }

@@ -17,6 +17,13 @@
 .select,
 .textarea {
   width: 100%;
+  /* min-width:0 + explicit border-box: mobile Safari's native
+     type="date" widget can otherwise claim its own intrinsic content
+     width (long localized "10 нояб. 2026 г." strings) and ignore
+     width:100%, ending up a different size than sibling text inputs
+     that share the exact same .row/.grid2 markup. */
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
