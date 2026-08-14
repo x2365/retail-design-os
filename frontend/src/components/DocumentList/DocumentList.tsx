@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { downloadFile } from "../../api/client";
 import {
@@ -7,6 +7,7 @@ import {
   useUploadDocument,
 } from "../../api/queries/taskDetail";
 import { DocumentPreview } from "../DocumentPreview/DocumentPreview";
+import { FileInput } from "../FileInput/FileInput";
 import forms from "../../styles/forms.module.css";
 import styles from "./DocumentList.module.css";
 
@@ -26,7 +27,6 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
   const upload = useUploadDocument(code);
   const del = useDeleteDocument(code);
   const [kind, setKind] = useState(kinds[0]?.value ?? "other");
-  const fileRef = useRef<HTMLInputElement>(null);
 
   // If multiple document kinds are required at this stage (e.g. "ДС и Счёт"
   // needs both), keep the selector pointed at whichever kind is still
@@ -93,7 +93,7 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
               className={forms.select}
               value={kind}
               onChange={(e) => setKind(e.target.value)}
-              style={{ width: "auto", fontSize: 11 }}
+              style={{ width: "auto" }}
             >
               {kinds.map((k) => (
                 <option key={k.value} value={k.value}>
@@ -102,7 +102,7 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
               ))}
             </select>
           )}
-          <input ref={fileRef} type="file" onChange={handleFile} style={{ fontSize: 11 }} />
+          <FileInput onChange={handleFile} disabled={upload.isPending} />
           {upload.isPending && (
             <span style={{ fontSize: 11, color: "var(--text3)" }}>Загрузка…</span>
           )}

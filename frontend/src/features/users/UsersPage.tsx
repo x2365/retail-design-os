@@ -121,7 +121,7 @@ export default function UsersPage() {
                 <td>
                   <select
                     className={forms.select}
-                    style={{ width: "auto", fontSize: 11 }}
+                    style={{ width: "auto" }}
                     value={u.role}
                     onChange={(e) =>
                       updateUser.mutate({ id: u.id, payload: { role: e.target.value } })

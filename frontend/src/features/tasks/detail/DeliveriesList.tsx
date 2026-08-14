@@ -52,7 +52,7 @@ export function DeliveriesList({ code }: { code: string }) {
               min={1}
               value={count}
               onChange={setCount}
-              style={{ width: 70, marginBottom: 0, padding: "6px 8px", fontSize: 12 }}
+              style={{ width: 70, marginBottom: 0, padding: "6px 8px" }}
             />
             <Button variant="ghost" disabled={distribute.isPending} onClick={handleDistribute}>
               Распределить по ТТ
@@ -84,7 +84,7 @@ export function DeliveriesList({ code }: { code: string }) {
               onChange={(e) =>
                 update.mutate({ id: d.id, payload: { arrival_date: e.target.value || null } })
               }
-              style={{ width: "auto", marginBottom: 0, padding: "4px 8px", fontSize: 11 }}
+              style={{ width: "auto", marginBottom: 0, padding: "4px 8px" }}
             />
           ) : (
             <span style={{ color: "var(--text3)", fontSize: 11 }} title="Дата прихода в ТТ">
@@ -101,7 +101,7 @@ export function DeliveriesList({ code }: { code: string }) {
                 const qty_received = impliedQtyReceived(status, d.qty_expected);
                 update.mutate({ id: d.id, payload: { status, qty_received } });
               }}
-              style={{ width: "auto", fontSize: 11 }}
+              style={{ width: "auto" }}
             >
               {DELIVERY_STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>

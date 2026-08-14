@@ -102,7 +102,7 @@ export default function PaymentsPage() {
                         onChange={(e) =>
                           updateStatus.mutate({ code: p.id, paymentStatus: e.target.value })
                         }
-                        style={{ width: "auto", fontSize: 11 }}
+                        style={{ width: "auto" }}
                       >
                         {PAYMENT_STATUS_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>

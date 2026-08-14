@@ -1,0 +1,23 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Visually hidden but still focusable/clickable via the wrapping <label> —
+   display:none would drop it from the accessibility tree and break the
+   native label-click-opens-picker association in some browsers. */
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

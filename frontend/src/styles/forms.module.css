@@ -84,3 +84,19 @@
   min-height: 14px;
   margin-bottom: 8px;
 }
+
+/* iOS Safari auto-zooms the whole page in on focus of any text input whose
+   effective font-size is under 16px (to make the text legible) — and that
+   zoom doesn't reliably reset afterward when the field is closed/removed
+   programmatically (e.g. this modal unmounting) rather than via a plain tap
+   elsewhere, leaving the page visibly zoomed/off-center until some other
+   gesture forces a recalculation. 16px is below the threshold everywhere
+   .input/.select/.textarea are used, so bump it on mobile specifically —
+   desktop's tighter 13px is unaffected. */
+@media (max-width: 960px) {
+  .input,
+  .select,
+  .textarea {
+    font-size: 16px;
+  }
+}

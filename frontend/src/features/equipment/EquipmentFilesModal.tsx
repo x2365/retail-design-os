@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Modal } from "../../components/Modal/Modal";
+import { FileInput } from "../../components/FileInput/FileInput";
 import { downloadFile } from "../../api/client";
 import {
   useDeleteEquipmentDocument,
@@ -87,7 +88,7 @@ export function EquipmentFilesModal({
           className={forms.select}
           value={kind}
           onChange={(e) => setKind(e.target.value)}
-          style={{ width: "auto", fontSize: 11 }}
+          style={{ width: "auto" }}
         >
           {KIND_OPTIONS.map((k) => (
             <option key={k.value} value={k.value}>
@@ -95,7 +96,7 @@ export function EquipmentFilesModal({
             </option>
           ))}
         </select>
-        <input type="file" onChange={handleFile} style={{ fontSize: 11 }} />
+        <FileInput onChange={handleFile} disabled={upload.isPending} />
         {upload.isPending && <span style={{ fontSize: 11, color: "var(--text3)" }}>Загрузка…</span>}
       </div>
     </Modal>

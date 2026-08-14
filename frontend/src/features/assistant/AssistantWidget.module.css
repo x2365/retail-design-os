@@ -166,3 +166,10 @@
   color: var(--text);
   font-family: "Geologica", sans-serif;
 }
+/* Below 16px, iOS Safari auto-zooms the page on focus and doesn't always
+   zoom back out afterward — see forms.module.css for the full writeup. */
+@media (max-width: 960px) {
+  .input {
+    font-size: 16px;
+  }
+}

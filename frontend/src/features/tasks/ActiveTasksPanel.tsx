@@ -98,7 +98,7 @@ export function ActiveTasksPanel() {
         </div>
         <select
           className={forms.select}
-          style={{ width: "auto", fontSize: 11, flexShrink: 0 }}
+          style={{ width: "auto", flexShrink: 0 }}
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
         >
