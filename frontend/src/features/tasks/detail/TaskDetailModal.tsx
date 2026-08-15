@@ -25,6 +25,7 @@ import {
   useUpdateTask,
 } from "../../../api/queries/taskDetail";
 import { ruDateToIso } from "../../../lib/dates";
+import { evaluateFormula } from "../../../lib/formula";
 import { formatMoney, kopToRub } from "../../../lib/money";
 import {
   FINAL_APPROVAL_STAGE,
@@ -57,6 +58,82 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
       <div className={styles.fieldLabel}>{label}</div>
       <div className={styles.fieldValue}>{value || "—"}</div>
     </div>
+  );
+}
+
+/** Only used for «Тираж, ₽» — a plain NumberInput (type="number") can't
+ * physically accept "=", "*" or "%" characters, so this field alone gets a
+ * text input that also accepts a leading-"=" formula (evaluateFormula),
+ * e.g. "=200*1000+18%". Non-formula text behaves like NumberInput: empty ->
+ * 0, invalid -> 0, select-all on focus. */
+function FormulaCostInput({
+  value,
+  onChange,
+  onError,
+  className,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  onError: (msg: string) => void;
+  className?: string;
+}) {
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    // Same reconciliation rule as NumberInput (follow external changes
+    // unless local text already represents them) — plus don't clobber a
+    // formula the user is still typing, which never numerically equals
+    // `value` until it's actually committed.
+    setText((current) =>
+      Number(current) === value || current.trim().startsWith("=") ? current : String(value),
+    );
+  }, [value]);
+
+  function commit() {
+    const raw = text.trim();
+    if (!raw) {
+      setText("0");
+      onChange(0);
+      return;
+    }
+    if (raw.startsWith("=")) {
+      try {
+        const result = Math.round(evaluateFormula(raw) * 100) / 100;
+        setText(String(result));
+        onChange(result);
+        onError("");
+      } catch (e) {
+        onError(e instanceof Error ? `Формула в «Тираж, ₽»: ${e.message}` : "Не удалось посчитать формулу");
+      }
+      return;
+    }
+    const n = Number(raw);
+    if (Number.isNaN(n)) {
+      setText("0");
+      onChange(0);
+      return;
+    }
+    setText(String(n));
+    onChange(n);
+  }
+
+  return (
+    <input
+      className={className}
+      value={text}
+      placeholder="=200*1000+18%"
+      onFocus={(e) => {
+        if (!text.trim().startsWith("=")) e.target.select();
+      }}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          (e.target as HTMLInputElement).blur();
+        }
+      }}
+    />
   );
 }
 
@@ -328,7 +405,6 @@ function StageContent(props: StageContentProps) {
 function BriefStage({ task, code, isEditor, updateTask, setError }: StageContentProps) {
   const [article, setArticle] = useState(task.article);
   const [dimensions, setDimensions] = useState(task.dimensions);
-  const [packagingPrimary, setPackagingPrimary] = useState(task.packaging_primary);
   const [deadline, setDeadline] = useState(ruDateToIso(task.deadline));
   const [launch, setLaunch] = useState(ruDateToIso(task.launch));
 
@@ -342,7 +418,6 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
       await updateTask.mutateAsync({
         article,
         dimensions,
-        packaging_primary: packagingPrimary,
         deadline: deadline || undefined,
         launch: launch || undefined,
       });
@@ -356,7 +431,6 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
       <div className={styles.grid2}>
         <Field label="Артикул" value={task.article} />
         <Field label="Размеры, мм (Ш В Г)" value={task.dimensions} />
-        <Field label="Первичная упаковка" value={task.packaging_primary} />
         <Field label="Дата отгрузки в ТТ" value={task.deadline} />
         <Field label="Дата предполагаемого лонча" value={task.launch} />
       </div>
@@ -383,14 +457,6 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
             placeholder="300 300 20"
           />
         </div>
-      </div>
-      <div className={forms.row}>
-        <label className={forms.label}>Первичная упаковка</label>
-        <input
-          className={forms.input}
-          value={packagingPrimary}
-          onChange={(e) => setPackagingPrimary(e.target.value)}
-        />
       </div>
       <div className={forms.grid2}>
         <div className={forms.row}>
@@ -638,13 +704,15 @@ function KpStage({
         </div>
       )}
 
-      <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
-      {task.budget === 0 && (
-        <p style={{ fontSize: 11, color: "var(--text3)", marginTop: -4, marginBottom: 8 }}>
-          Считается автоматически как Образец + Тираж — фиксируется, когда КП согласовано
-          (Финансы + Бренд ниже).
-        </p>
-      )}
+      <div style={{ marginBottom: 16 }}>
+        <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
+        {task.budget === 0 && (
+          <p style={{ fontSize: 11, color: "var(--text3)", marginTop: 4 }}>
+            Считается автоматически как Образец + Тираж — фиксируется, когда КП согласовано
+            (Финансы + Бренд ниже).
+          </p>
+        )}
+      </div>
 
       <div style={{ marginTop: 12 }}>
         <div className={styles.sectionLabel}>Файл КП</div>
@@ -671,7 +739,12 @@ function KpStage({
               </div>
               <div className={forms.row}>
                 <label className={forms.label}>Тираж, ₽</label>
-                <NumberInput className={forms.input} value={tirazhCost} onChange={setTirazhCost} />
+                <FormulaCostInput
+                  className={forms.input}
+                  value={tirazhCost}
+                  onChange={setTirazhCost}
+                  onError={setError}
+                />
               </div>
             </div>
           ) : (
@@ -747,11 +820,8 @@ function SampleStage({
   isEditor,
   canApprove,
   sampleApproval,
-  updateTask,
   setError,
 }: StageContentProps) {
-  const [status, setStatus] = useState(task.sample_status);
-
   function setGate(gate: "qc" | "brand" | "network") {
     return (approved: boolean) => {
       setError("");
@@ -762,35 +832,19 @@ function SampleStage({
     };
   }
 
-  async function saveStatus(next: string) {
-    setStatus(next);
-    try {
-      await updateTask.mutateAsync({ sample_status: next });
-    } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сохранить статус образца"));
-    }
-  }
-
   return (
     <div>
-      <div className={forms.row}>
-        <label className={forms.label}>Статус образца</label>
-        {isEditor ? (
-          <select
-            className={forms.select}
-            value={status}
-            onChange={(e) => saveStatus(e.target.value)}
-          >
-            <option value="unpaid">Не оплачен</option>
-            <option value="paid">Оплачен</option>
-            <option value="in_tirazh">В тираже</option>
-          </select>
-        ) : (
-          <div className={styles.fieldValue}>{status}</div>
-        )}
-      </div>
+      <div className={styles.sectionLabel}>Фото образца</div>
+      <DocumentList
+        code={code}
+        stage={6}
+        canEdit={isEditor}
+        kinds={[{ value: "photo", label: "Фото" }]}
+      />
 
-      <div className={styles.sectionLabel}>Согласование образца</div>
+      <div className={styles.sectionLabel} style={{ marginTop: 12 }}>
+        Согласование образца
+      </div>
       <ApprovalGate
         label="RD"
         approved={task.sample_qc_approved}
@@ -815,16 +869,6 @@ function SampleStage({
         pending={sampleApproval.isPending}
         onSetApproved={setGate("network")}
       />
-
-      <div style={{ marginTop: 12 }}>
-        <div className={styles.sectionLabel}>Фото образца</div>
-        <DocumentList
-          code={code}
-          stage={6}
-          canEdit={isEditor}
-          kinds={[{ value: "photo", label: "Фото" }]}
-        />
-      </div>
     </div>
   );
 }

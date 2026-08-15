@@ -24,7 +24,7 @@ export function Modal({ title, sub, onClose, headerExtra, children }: ModalProps
             ✕
           </button>
         </div>
-        {children}
+        <div className={styles.body}>{children}</div>
       </div>
     </div>
   );

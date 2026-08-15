@@ -15,9 +15,13 @@
   width: 720px;
   max-width: 92vw;
   max-height: 85vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 28px;
+  /* Scrolling now lives on .body alone, not the whole modal — this stays
+     hidden (not auto) purely so the header's flat top edge doesn't spill
+     past the rounded corners; .header/.body split the old single padding
+     between them so nothing visually shifts. */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: modalIn 0.2s ease;
 }
 @keyframes modalIn {
@@ -33,15 +37,30 @@
 @media (max-height: 500px) {
   .modal {
     max-height: 94vh;
-    padding: 16px;
+  }
+  .header {
+    padding: 16px 16px 0;
+  }
+  .body {
+    padding: 0 16px 16px;
   }
 }
 .header {
+  padding: 28px 28px 0;
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 10px 14px;
   margin-bottom: 20px;
+}
+/* Everything Modal wraps as `children` — the part that actually scrolls
+   when a card's content is taller than the modal, while .header (title,
+   Delete, close) stays put above it. */
+.body {
+  padding: 0 28px 28px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 /* Without this, the title had no width constraint of its own and got
    squeezed by headerExtra (e.g. a "Delete" button) + the close button both
