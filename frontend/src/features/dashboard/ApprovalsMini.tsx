@@ -21,39 +21,50 @@ export function ApprovalsMini({ onOpenTask }: { onOpenTask: (code: string) => vo
 
   return (
     <div>
-      {pending.map((a) => (
-        <div
-          key={a.id}
-          className={styles.item}
-          style={{ cursor: "pointer" }}
-          onClick={() => navigate("/approvals")}
-          title="Открыть согласования"
-        >
-          <div className={styles.avatar} style={{ background: `${a.color}22`, color: a.color }}>
-            {a.avatar}
-          </div>
-          <div className={styles.info}>
-            <div className={styles.name}>{a.from_name}</div>
-            <div className={styles.task}>{a.task}</div>
-          </div>
-          <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
-            {a.id < 0 ? (
-              <button className={styles.reject} onClick={() => onOpenTask(a.task)}>
-                Открыть →
-              </button>
-            ) : (
-              <>
-                <button className={styles.approve} onClick={() => approve.mutate(a.id)}>
-                  ✓
+      {pending.map((a) => {
+        // Narrowed to a local const: TS can't carry a truthy-check on
+        // a.task (nullable in the schema) through into the onClick closure
+        // below, since it can't prove the property won't change by the time
+        // the closure runs — a local const it can.
+        const taskCode = a.task;
+        return (
+          <div
+            key={a.id}
+            className={styles.item}
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/approvals")}
+            title="Открыть согласования"
+          >
+            <div className={styles.avatar} style={{ background: `${a.color}22`, color: a.color }}>
+              {a.avatar}
+            </div>
+            <div className={styles.info}>
+              <div className={styles.name}>{a.from_name}</div>
+              <div className={styles.task}>{a.task}</div>
+            </div>
+            <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+              {a.id < 0 && taskCode ? (
+                <button className={styles.reject} onClick={() => onOpenTask(taskCode)}>
+                  Открыть →
                 </button>
-                <Link to="/approvals" className={styles.reject} style={{ textDecoration: "none" }}>
-                  ✗
-                </Link>
-              </>
-            )}
+              ) : (
+                <>
+                  <button className={styles.approve} onClick={() => approve.mutate(a.id)}>
+                    ✓
+                  </button>
+                  <Link
+                    to="/approvals"
+                    className={styles.reject}
+                    style={{ textDecoration: "none" }}
+                  >
+                    ✗
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
