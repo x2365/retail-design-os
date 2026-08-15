@@ -34,7 +34,8 @@
 }
 .name {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-heading);
   margin-bottom: 4px;
 }
 .meta {

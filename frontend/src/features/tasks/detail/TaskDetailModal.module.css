@@ -37,7 +37,7 @@
   cursor: pointer;
   border: none;
   background: none;
-  font-family: "Geologica", sans-serif;
+  font-family: var(--font-sans);
   white-space: nowrap;
 }
 .stageDone {
@@ -59,19 +59,19 @@
 .fieldLabel {
   font-size: 10px;
   color: var(--text3);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-loose);
   text-transform: uppercase;
   margin-bottom: 4px;
 }
 .fieldValue {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--font-weight-base);
 }
 
 .sectionLabel {
   font-size: 10px;
   color: var(--text3);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-loose);
   text-transform: uppercase;
   margin: 16px 0 8px;
 }

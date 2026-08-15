@@ -2,10 +2,10 @@
   padding: 7px 14px;
   border-radius: 7px;
   font-size: 12px;
-  font-family: "Geologica", sans-serif;
+  font-family: var(--font-sans);
   cursor: pointer;
   border: none;
-  font-weight: 500;
+  font-weight: var(--font-weight-base);
   transition: all 0.15s;
 }
 

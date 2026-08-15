@@ -47,10 +47,10 @@
   border-bottom: 1px solid var(--border);
 }
 .logoMark {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-loose);
   color: var(--gold);
   text-transform: uppercase;
 }
@@ -75,7 +75,7 @@
 }
 .navLabel {
   font-size: 9px;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-loose);
   color: var(--text3);
   text-transform: uppercase;
   padding: 0 8px;

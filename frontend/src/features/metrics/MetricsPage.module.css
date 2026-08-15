@@ -5,7 +5,6 @@
   margin-bottom: 18px;
 }
 .intro code {
-  font-family: var(--mono);
   font-size: 11px;
   background: var(--surface2);
   padding: 1px 5px;

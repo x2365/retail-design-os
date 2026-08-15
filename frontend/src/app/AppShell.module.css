@@ -29,17 +29,17 @@
   margin-bottom: 20px;
 }
 .logoMark {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-loose);
   color: var(--gold);
   text-transform: uppercase;
 }
 .logoSub {
   font-size: 10px;
   color: var(--text3);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-loose);
   margin-top: 2px;
 }
 
@@ -49,7 +49,7 @@
 }
 .navLabel {
   font-size: 9px;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-loose);
   color: var(--text3);
   text-transform: uppercase;
   padding: 0 8px;
@@ -103,7 +103,7 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--font-weight-base);
   flex-shrink: 0;
 }
 .userInfo {
@@ -112,7 +112,7 @@
 }
 .userName {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-weight-base);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,9 +152,10 @@
   z-index: 5;
 }
 .topbarTitle {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-heading);
   flex: 1;
   min-width: 0;
   overflow: hidden;

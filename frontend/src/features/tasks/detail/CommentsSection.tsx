@@ -21,7 +21,7 @@ export function CommentsSection({ code }: { code: string }) {
         {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</span>}
         {(data ?? []).map((c) => (
           <div key={c.id} style={{ fontSize: 12 }}>
-            <span style={{ fontWeight: 500 }}>{c.author}</span>{" "}
+            <span style={{ fontWeight: 300 }}>{c.author}</span>{" "}
             <span style={{ color: "var(--text3)", fontSize: 10 }}>{c.at}</span>
             <div>{c.text}</div>
           </div>

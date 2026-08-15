@@ -23,7 +23,20 @@
   --brand-a: #6470f5;
   --brand-b: #14c79a;
   --brand-c: #f5a623;
-  --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Typography — exactly two weights app-wide (300 base, 500 headings/
+     entity names), loaded as self-hosted variable fonts (see main.tsx),
+     not a hardcoded per-component "Geologica"/"Unbounded" string. */
+  --font-sans: "Geologica Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial,
+    sans-serif;
+  --font-heading: "Unbounded Variable", "Geologica Variable", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Arial, sans-serif;
+  --font-weight-base: 300;
+  --font-weight-heading: 500;
+  --tracking-base: 0.0285em;
+  --tracking-loose: 0.1em; /* uppercase eyebrow/nav/panel-title labels */
+  --tracking-heading: 0.018em;
+  --tracking-tight: -0.01em; /* large numeric displays */
 }
 
 * {
@@ -52,7 +65,9 @@ html {
 }
 
 body {
-  font-family: "Geologica", sans-serif;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-base);
+  letter-spacing: var(--tracking-base);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -71,8 +86,9 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "Unbounded", sans-serif;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-heading);
 }
 
 button,

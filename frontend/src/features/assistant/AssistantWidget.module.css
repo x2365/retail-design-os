@@ -102,10 +102,10 @@
   gap: 8px;
 }
 .title {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-loose);
   text-transform: uppercase;
   color: var(--gold);
 }
@@ -129,7 +129,7 @@
 }
 .turnQuery {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-weight-base);
   align-self: flex-end;
   background: var(--surface3);
   border-radius: 10px;
@@ -170,7 +170,7 @@
   padding: 8px 10px;
   font-size: 12px;
   color: var(--text);
-  font-family: "Geologica", sans-serif;
+  font-family: var(--font-sans);
 }
 /* Below 16px, iOS Safari auto-zooms the page on focus and doesn't always
    zoom back out afterward — see forms.module.css for the full writeup. */

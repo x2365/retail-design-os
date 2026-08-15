@@ -24,12 +24,13 @@
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: var(--font-weight-base);
   flex-shrink: 0;
 }
 .name {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-heading);
 }
 .meta {
   font-size: 10px;

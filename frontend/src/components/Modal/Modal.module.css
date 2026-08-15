@@ -72,9 +72,10 @@
   min-width: 0;
 }
 .title {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-heading);
 }
 .sub {
   font-size: 12px;

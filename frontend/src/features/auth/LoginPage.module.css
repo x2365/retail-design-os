@@ -28,10 +28,10 @@
 }
 
 .brand {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-loose);
   color: var(--accent);
   text-transform: uppercase;
 }

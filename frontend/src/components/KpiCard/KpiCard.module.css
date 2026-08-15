@@ -40,14 +40,15 @@
 .label {
   font-size: 10px;
   color: var(--text3);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-loose);
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 .value {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-sans);
   font-size: 22px;
-  font-weight: 600;
+  font-weight: var(--font-weight-base);
+  letter-spacing: var(--tracking-tight);
 }
 .sub {
   font-size: 11px;

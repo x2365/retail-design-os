@@ -17,7 +17,8 @@
 }
 .name {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-heading);
 }
 .total {
   margin-left: auto;

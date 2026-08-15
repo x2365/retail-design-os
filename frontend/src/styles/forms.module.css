@@ -30,7 +30,7 @@
   padding: 9px 12px;
   font-size: 13px;
   color: var(--text);
-  font-family: "Geologica", sans-serif;
+  font-family: var(--font-sans);
   outline: none;
   transition: border-color 0.15s;
 }

@@ -14,10 +14,10 @@
   row-gap: 8px;
 }
 .title {
-  font-family: "Unbounded", sans-serif;
+  font-family: var(--font-heading);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-loose);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

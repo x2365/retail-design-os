@@ -19,7 +19,7 @@
   padding: 6px 12px;
   border-radius: 7px;
   font-size: 11px;
-  font-family: "Geologica", sans-serif;
+  font-family: var(--font-sans);
   cursor: pointer;
   /* Outlined in the same --warn amber as .pendingLabel's text (same recipe
      as Badge's amber variant) instead of an unrelated solid green — the

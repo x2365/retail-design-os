@@ -4,7 +4,7 @@
 }
 .table th {
   font-size: 9px;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-loose);
   color: var(--text3);
   text-transform: uppercase;
   padding: 8px 10px;
