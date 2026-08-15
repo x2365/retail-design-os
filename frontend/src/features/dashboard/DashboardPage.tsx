@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
+import { useOutletContext } from "react-router-dom";
 
 import { Button } from "../../components/Button/Button";
 import { Panel } from "../../components/Panel/Panel";
 import { KpiCard, KpiRow } from "../../components/KpiCard/KpiCard";
+import type { AppShellContext } from "../../app/AppShell";
 import { useAuth } from "../../auth/AuthContext";
 import { useDashboardKpis } from "../../api/queries/dashboard";
 import { useApprovals } from "../../api/queries/approvals";
@@ -16,6 +19,7 @@ import { TTMini } from "./TTMini";
 import styles from "./DashboardPage.module.css";
 
 export default function DashboardPage() {
+  const { topbarActionsEl } = useOutletContext<AppShellContext>();
   const { data: k, isLoading } = useDashboardKpis();
   const { data: pendingApprovals } = useApprovals("pending");
   const pendingCount = pendingApprovals?.length ?? 0;
@@ -42,13 +46,14 @@ export default function DashboardPage() {
       {openedCode && (
         <TaskDetailModal code={openedCode} onClose={() => setOpenedCode(null)} />
       )}
-      {isEditor && (
-        <div className={styles.topActions}>
+      {isEditor &&
+        topbarActionsEl &&
+        createPortal(
           <Button variant="primary" onClick={() => setCreating(true)}>
             + Создать задачу
-          </Button>
-        </div>
-      )}
+          </Button>,
+          topbarActionsEl,
+        )}
       {creating && <TaskCreateModal onClose={() => setCreating(false)} />}
 
       <KpiRow>

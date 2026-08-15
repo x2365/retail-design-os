@@ -1,9 +1,3 @@
-.topActions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 14px;
-}
-
 .gridMain {
   display: grid;
   grid-template-columns: 1fr 340px;

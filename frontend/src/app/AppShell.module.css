@@ -155,6 +155,22 @@
   font-family: "Unbounded", sans-serif;
   font-size: 13px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Portal target for a page's own header action (e.g. Dashboard's "+
+   Создать задачу") — pinned to the far right, symmetric to the title on
+   the left. Empty and inert (no layout impact) when nothing portals into
+   it. */
+.topbarActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* Hidden on desktop — shown only ≤960px, see the media query below, where

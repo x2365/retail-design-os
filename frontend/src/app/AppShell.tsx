@@ -16,6 +16,14 @@ function initials(fullName: string): string {
   return letters.join("") || "?";
 }
 
+// A page reaches this via useOutletContext<AppShellContext>() and portals
+// its own header action (e.g. Dashboard's "+ Создать задачу") into
+// topbarActionsEl — state (not a plain ref) so setting it re-renders and
+// the portal target exists before a child tries to portal into it.
+export interface AppShellContext {
+  topbarActionsEl: HTMLDivElement | null;
+}
+
 export default function AppShell() {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -23,6 +31,7 @@ export default function AppShell() {
   const changeMyPassword = useChangeMyPassword();
   const [changingPassword, setChangingPassword] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [topbarActionsEl, setTopbarActionsEl] = useState<HTMLDivElement | null>(null);
 
   // Defensive close on navigation that doesn't go through the drawer's own
   // NavLink onClick (e.g. the browser's back/forward buttons).
@@ -111,9 +120,10 @@ export default function AppShell() {
             ☰
           </button>
           <div className={styles.topbarTitle}>{title}</div>
+          <div className={styles.topbarActions} ref={setTopbarActionsEl} />
         </div>
         <div className={styles.content}>
-          <Outlet />
+          <Outlet context={{ topbarActionsEl } satisfies AppShellContext} />
         </div>
       </div>
 
