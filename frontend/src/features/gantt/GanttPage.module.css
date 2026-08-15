@@ -1,5 +1,6 @@
 .wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .windowLabel {
   font-size: 11px;

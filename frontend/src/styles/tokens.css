@@ -38,6 +38,19 @@ body,
   height: 100%;
 }
 
+/* Smooth-scrolls anywhere the page itself jumps the viewport (scrollIntoView
+   calls that don't pass their own behavior, future anchor links) — doesn't
+   affect direct wheel/trackpad/touch scrolling, the browser already handles
+   that natively. */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   font-family: "Geologica", sans-serif;
   background: var(--bg);

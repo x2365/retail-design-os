@@ -26,6 +26,7 @@
   flex-direction: column;
   padding: 20px 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: drawerSlideIn 0.2s ease;
 }
 @keyframes drawerSlideIn {

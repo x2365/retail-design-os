@@ -64,4 +64,5 @@
      visible sign text was cut. Scroll it here, inside the body, before the
      outer clip ever needs to kick in. */
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }

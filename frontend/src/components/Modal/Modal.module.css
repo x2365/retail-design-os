@@ -16,6 +16,7 @@
   max-width: 92vw;
   max-height: 85vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 28px;
   animation: modalIn 0.2s ease;
 }

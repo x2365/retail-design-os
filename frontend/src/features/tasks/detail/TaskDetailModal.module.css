@@ -23,6 +23,7 @@
   border-radius: 10px;
   padding: 4px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .stage {
   flex: 1;
