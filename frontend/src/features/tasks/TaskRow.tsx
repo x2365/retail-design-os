@@ -11,14 +11,23 @@ type TaskOut = components["schemas"]["TaskOut"];
 /** Full-detail row used in the Dashboard's "Активные задачи" panel — same
  * content as the old app's renderTasks() card (stage-pipeline dots +
  * progress bar), distinct from the compact Kanban TaskCard. */
-export function TaskRow({ task, onClick }: { task: TaskOut; onClick?: () => void }) {
+export function TaskRow({
+  task,
+  onClick,
+  highlighted,
+}: {
+  task: TaskOut;
+  onClick?: () => void;
+  highlighted?: boolean;
+}) {
   const dlClass = task.days_left <= 7 ? styles.urgent : task.days_left <= 14 ? styles.warn : "";
   const dlIcon = task.days_left <= 7 ? "🔴" : task.days_left <= 14 ? "🟡" : "🟢";
   const pct = task.progress_pct;
 
   return (
     <div
-      className={styles.card}
+      className={[styles.card, highlighted ? styles.highlighted : ""].join(" ")}
+      data-code={task.code}
       onClick={onClick}
       style={onClick ? { cursor: "pointer" } : undefined}
     >

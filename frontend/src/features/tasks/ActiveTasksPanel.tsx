@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Panel } from "../../components/Panel/Panel";
 import { useTasks } from "../../api/queries/tasks";
@@ -60,11 +60,23 @@ function compareTasks(a: TaskOut, b: TaskOut, sort: SortKey): number {
  * TaskRow the full pipeline board (PipelinePage) reuses. Filtering happens
  * client-side over one already-small fetched page, matching the old app
  * (a single TASKS array filtered in memory), not three separate endpoints. */
-export function ActiveTasksPanel() {
+export function ActiveTasksPanel({ highlightCode }: { highlightCode?: string | null }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortKey>("deadline");
   const [selected, setSelected] = useState<string | null>(null);
   const { data, isLoading } = useTasks({ page_size: 50 });
+
+  // The target row may be scrolled out of view (or in the "Срочные" tab
+  // instead of "Все") — bring it on screen once it's in the DOM. Guarded so
+  // a later background refetch doesn't yank the view back to it again.
+  const scrolledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!highlightCode || scrolledRef.current === highlightCode) return;
+    const row = document.querySelector(`[data-code="${highlightCode}"]`);
+    if (!row) return;
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+    scrolledRef.current = highlightCode;
+  });
 
   if (isLoading)
     return (
@@ -115,7 +127,12 @@ export function ActiveTasksPanel() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {tasks.map((t) => (
-            <TaskRow key={t.code} task={t} onClick={() => setSelected(t.code)} />
+            <TaskRow
+              key={t.code}
+              task={t}
+              onClick={() => setSelected(t.code)}
+              highlighted={t.code === highlightCode}
+            />
           ))}
         </div>
       )}

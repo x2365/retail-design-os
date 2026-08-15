@@ -9,6 +9,7 @@ import { useApprovals } from "../../api/queries/approvals";
 import { formatMoney, kopToRub } from "../../lib/money";
 import { ActiveTasksPanel } from "../tasks/ActiveTasksPanel";
 import { TaskCreateModal } from "../tasks/TaskCreateModal";
+import { TaskDetailModal } from "../tasks/detail/TaskDetailModal";
 import { ApprovalsMini } from "./ApprovalsMini";
 import { BudgetMini } from "./BudgetMini";
 import { TTMini } from "./TTMini";
@@ -20,6 +21,15 @@ export default function DashboardPage() {
   const pendingCount = pendingApprovals?.length ?? 0;
   const { isEditor } = useAuth();
   const [creating, setCreating] = useState(false);
+  // "Открыть →" on Ожидают решения opens the task right here instead of
+  // navigating to Pipeline — no page change means no "where do I go back
+  // to" problem, and the row it came from can be highlighted once closed.
+  const [openedCode, setOpenedCode] = useState<string | null>(null);
+  const [highlightCode, setHighlightCode] = useState<string | null>(null);
+  function openTask(code: string) {
+    setOpenedCode(code);
+    setHighlightCode(code);
+  }
 
   if (isLoading || !k) return <p style={{ color: "var(--text2)" }}>Загрузка…</p>;
 
@@ -29,6 +39,9 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {openedCode && (
+        <TaskDetailModal code={openedCode} onClose={() => setOpenedCode(null)} />
+      )}
       {isEditor && (
         <div className={styles.topActions}>
           <Button variant="primary" onClick={() => setCreating(true)}>
@@ -82,11 +95,11 @@ export default function DashboardPage() {
       </KpiRow>
 
       <div className={styles.gridMain}>
-        <ActiveTasksPanel />
+        <ActiveTasksPanel highlightCode={highlightCode} />
 
         <div className={styles.sideStack}>
           <Panel title="ОЖИДАЮТ РЕШЕНИЯ" count={pendingCount} countAlert>
-            <ApprovalsMini />
+            <ApprovalsMini onOpenTask={openTask} />
           </Panel>
           <Panel title="БЮДЖЕТ ПО ГРУППАМ">
             <BudgetMini />

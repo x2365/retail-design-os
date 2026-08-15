@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useApprovals, useApproveApproval } from "../../api/queries/approvals";
 import styles from "./ApprovalsMini.module.css";
 
-export function ApprovalsMini() {
+export function ApprovalsMini({ onOpenTask }: { onOpenTask: (code: string) => void }) {
   const { data, isLoading } = useApprovals("pending");
   const approve = useApproveApproval();
   const navigate = useNavigate();
@@ -38,13 +38,9 @@ export function ApprovalsMini() {
           </div>
           <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
             {a.id < 0 ? (
-              <Link
-                to={`/pipeline?open=${a.task}`}
-                className={styles.reject}
-                style={{ textDecoration: "none" }}
-              >
+              <button className={styles.reject} onClick={() => onOpenTask(a.task)}>
                 Открыть →
-              </Link>
+              </button>
             ) : (
               <>
                 <button className={styles.approve} onClick={() => approve.mutate(a.id)}>

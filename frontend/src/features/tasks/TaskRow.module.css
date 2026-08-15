@@ -9,6 +9,24 @@
   border-color: var(--accent);
   background: var(--surface3);
 }
+/* Deep-linked from elsewhere (e.g. "Открыть →" on "Ожидают решения") —
+   pulses gold a few times so the row is findable in the list once the
+   detail modal that opened on top of it is closed, then settles back. */
+.highlighted {
+  animation: highlightPulse 1.4s ease-out 2;
+}
+@keyframes highlightPulse {
+  0% {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+    box-shadow: 0 0 0 3px var(--gold-soft);
+  }
+  100% {
+    border-color: var(--border);
+    background: var(--surface2);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
 .top {
   display: flex;
   align-items: flex-start;
