@@ -158,12 +158,15 @@ def _advance_through_all_gates(client: TestClient, headers: dict[str, str], code
 
 
 def test_kp_approval_sets_budget_from_sample_and_tirazh_and_revoke_resets_it(
-    client: TestClient, manager_headers: dict[str, str], admin_headers: dict[str, str]
+    client: TestClient, manager_headers: dict[str, str], admin_headers: dict[str, str], db: Session
 ):
     """task.budget is no longer hand-typed on the «Бюджет и КП» stage — it's
     computed as Образец+Тираж the moment both gates (Финансы/Бренд) are
     approved, and reset to 0 if either gets revoked (mirrors the stage
     auto-revert below: an unapproved КП has no locked-in budget)."""
+    group_a = db.scalars(select(models.Group).where(models.Group.code == "A")).first()
+    group_a.budget_planned = 1_000_000 * 100  # seeded groups start at 0 — give this test headroom
+    db.commit()
     code = _create_task(client, manager_headers)
     _upload_brief(client, manager_headers, code)
     client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
@@ -220,6 +223,77 @@ def test_kp_approval_sets_budget_from_sample_and_tirazh_and_revoke_resets_it(
     )
     assert r.status_code == 200, r.text
     assert r.json()["budget"] == 0, "revoking either gate must reset budget back to 0"
+
+
+def test_task_cannot_advance_or_close_when_group_budget_exhausted(
+    client: TestClient, manager_headers: dict[str, str], admin_headers: dict[str, str], db: Session
+):
+    """If a group's «освоено» (sum of Task.budget across its brands) exceeds
+    its budget_planned, no task in that group may advance to the next stage
+    (either via the auto-advance on the 2nd КП gate, or the manual «Далее»
+    PATCH) until the budget is revised — mirrors the on-screen КП-tab
+    warning (Образец + Тираж > остаток бюджета группы), but actually blocks
+    the transition server-side instead of only warning."""
+    code = _create_task(client, manager_headers)
+    _upload_brief(client, manager_headers, code)
+    client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 2})
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "sketch", "stage": "2"},
+        files={"file": ("d.png", b"\x89PNG\r\n\x1a\n", "image/png")},
+    )
+    client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 3})
+    client.post(
+        f"/api/tasks/{code}/prep-approval",
+        headers=manager_headers,
+        json={"gate": "brand", "approved": True},
+    )
+    client.post(
+        f"/api/tasks/{code}/prep-approval",
+        headers=manager_headers,
+        json={"gate": "zya", "approved": True},
+    )  # авто 3->4
+    client.post(
+        f"/api/tasks/{code}/documents",
+        headers=manager_headers,
+        data={"kind": "kp", "stage": "4"},
+        files={"file": ("kp.pdf", b"%PDF", "application/pdf")},
+    )
+    client.patch(
+        f"/api/tasks/{code}",
+        headers=admin_headers,
+        json={"sample_cost": 100_000, "tirazh_cost": 100_000},  # ₽2 000 total
+    )
+    client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=manager_headers,
+        json={"gate": "manager", "approved": True},
+    )
+    r = client.post(
+        f"/api/tasks/{code}/kp-approval",
+        headers=manager_headers,
+        json={"gate": "director", "approved": True},
+    )  # both gates → would auto 4->5, but group A's seeded budget_planned is 0
+    assert r.status_code == 409, r.text
+    assert "бюджет группы" in r.json()["detail"]
+
+    r = client.get(f"/api/tasks/{code}", headers=manager_headers)
+    assert r.json()["stage"] == 4, "must stay on stage 4 — auto-advance was blocked by budget"
+
+    # Same guard on the manual "Далее" path (generic PATCH), independent of
+    # the auto-advance above.
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 5})
+    assert r.status_code == 422, r.text
+    assert "бюджет группы" in r.json()["detail"]
+
+    # Fund the group and retry — the same manual PATCH now succeeds.
+    group_a = db.scalars(select(models.Group).where(models.Group.code == "A")).first()
+    group_a.budget_planned = 1_000_000 * 100
+    db.commit()
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 5})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 5
 
 
 def test_kp_stage_auto_advances_without_network_approval(
@@ -296,6 +370,32 @@ def test_closing_without_payment_is_blocked_with_reasons(
     ).json()
     assert r["stage"] == 9
     assert len(r.get("blocked_reasons", [])) > 0
+
+
+def test_closing_with_unpaid_status_is_blocked_even_with_a_payment_row(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """A Payment row existing is not the same as the task actually being
+    paid — `Payment` just tracks the КП/invoice paperwork, while
+    `task.payment_status` is the real "было ли оплачено" flag (manual or via
+    the 1С webhook). Closing must require payment_status == "paid", not just
+    a Payment row's mere existence."""
+    code = _create_task(client, manager_headers)
+    _advance_through_all_gates(client, manager_headers, code)  # stage 9, Payment row auto-created
+
+    r = client.get(f"/api/tasks/{code}", headers=manager_headers)
+    assert r.json()["payment_status"] == "unpaid"
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
+    assert r.status_code == 422, r.text
+    assert "не оплачена" in r.json()["detail"]
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"payment_status": "paid"})
+    assert r.status_code == 200, r.text
+
+    r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == 10
 
 
 def _produce_task(client: TestClient, headers: dict[str, str], kind: str) -> str:

@@ -113,6 +113,9 @@ def test_close_gate_now_real_after_distribute(client: TestClient, manager_header
             f"/api/deliveries/{d['id']}", headers=manager_headers, json={"status": "delivered"}
         )
 
+    client.patch(
+        f"/api/tasks/{code}", headers=manager_headers, json={"payment_status": "paid"}
+    )
     r = client.patch(f"/api/tasks/{code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 200, r.text
     assert r.json()["stage"] == 10

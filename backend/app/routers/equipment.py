@@ -161,8 +161,17 @@ def update_equipment(
         _check_kind(data["kind"])
     if "rc_ship_date" in data:
         data["rc_ship_date"] = to_utc_datetime(data["rc_ship_date"])
+    name_changed = "name" in data and data["name"] != e.name
     for k, v in data.items():
         setattr(e, k, v)
+    if name_changed:
+        # Карточка библиотеки и её производственные задачи — это одно и то
+        # же изделие (см. produce() выше); название задачи копируется из
+        # e.name только один раз при запуске, поэтому без этого шага
+        # переименование в библиотеке не доходило до карточки в воронке.
+        db.query(models.Task).filter(models.Task.equipment_id == eq_id).update(
+            {"name": e.name}, synchronize_session=False
+        )
     db.commit()
     db.refresh(e)
     return _to_out(e, db)

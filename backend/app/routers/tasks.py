@@ -368,6 +368,8 @@ def set_stage_approval(
         nxt = task_stage.next_stage(task.stage, task)
         if nxt == models.LAST_STAGE:
             pre = pre + task_stage.check_close_preconditions(db, task)
+        else:
+            pre = pre + task_stage.check_budget_preconditions(db, task)
         if pre:
             db.refresh(task)
             out = serializers.task_to_out(task, aggregates.counts_for_task(db, task.id))
@@ -395,6 +397,8 @@ def set_stage_approval(
             blocked_reasons = task_stage.check_stage_preconditions(db, task, task.stage)
             if nxt == models.LAST_STAGE:
                 blocked_reasons = blocked_reasons + task_stage.check_close_preconditions(db, task)
+            else:
+                blocked_reasons = blocked_reasons + task_stage.check_budget_preconditions(db, task)
             if not blocked_reasons:
                 blocked_reasons = ["переход заблокирован"]
     elif not payload.approved and payload.stage < task.stage:

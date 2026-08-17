@@ -53,6 +53,9 @@ def test_metrics_reflect_wip_lead_time_and_rework(
             "status": "",
         },
     )
+    client.patch(
+        f"/api/tasks/{closed_code}", headers=manager_headers, json={"payment_status": "paid"}
+    )
     r = client.patch(f"/api/tasks/{closed_code}", headers=manager_headers, json={"stage": 10})
     assert r.status_code == 200, r.text
 

@@ -195,6 +195,42 @@ def check_stage_preconditions(db: Session, task, stage: int) -> list[str]:
     return reasons
 
 
+def check_budget_preconditions(db: Session, task) -> list[str]:
+    """Бюджет группы: «освоено» (сумма Task.budget по всем задачам бренда
+    этой группы, включая саму задачу) не должно превышать план. Если группа
+    в минусе — задачу нельзя двигать вперёд («взять в работу») или закрывать,
+    пока бюджет группы не пересмотрят. Возвращает список причин (пустой =
+    бюджета хватает)."""
+    from sqlalchemy import func
+    from sqlalchemy import select as _select
+
+    from ..models import Brand
+    from ..models import Task as TaskModel
+
+    group = task.brand.group if task.brand else None
+    if group is None:
+        return []
+
+    # autoflush=False на сессии (см. database.py) — без явного flush() SUM()
+    # ниже не увидит ещё не сохранённое изменение task.budget, если проверка
+    # вызвана сразу после его присвоения в этом же запросе (как в kp_approval).
+    db.flush()
+    spent = (
+        db.scalar(
+            _select(func.coalesce(func.sum(TaskModel.budget), 0))
+            .select_from(TaskModel)
+            .join(Brand, TaskModel.brand_id == Brand.id)
+            .where(Brand.group_id == group.id)
+        )
+        or 0
+    )
+    remaining = group.budget_planned - spent
+    if remaining < 0:
+        over = f"{round(-remaining / 100):,}".replace(",", " ") + " ₽"
+        return [f"бюджет группы «{group.code}» исчерпан (перерасход {over})"]
+    return []
+
+
 def check_close_preconditions(db: Session, task) -> list[str]:
     """Предусловия закрытия задачи (этап CLOSED): все поставки доставлены +
     есть оплата. Возвращает список невыполненных условий (пустой = можно
@@ -227,6 +263,16 @@ def check_close_preconditions(db: Session, task) -> list[str]:
     if not has_payment:
         reasons.append("нет оплаты (Payment)")
 
+    if (task.payment_status or "unpaid") != "paid":
+        from ..models import PAYMENT_STATUS_LABELS
+
+        status_label = PAYMENT_STATUS_LABELS.get(
+            task.payment_status or "unpaid", task.payment_status
+        )
+        reasons.append(f"задача не оплачена (статус: {status_label})")
+
+    reasons.extend(check_budget_preconditions(db, task))
+
     return reasons
 
 
@@ -252,6 +298,13 @@ def apply_transition(
         pre = check_stage_preconditions(db, task, task.stage)
         if pre:
             raise ValueError(f"Этап «{label(task.stage)}» не завершён: " + "; ".join(pre) + ".")
+        if target != LAST:
+            # Переход на LAST (закрытие) — своё сообщение ниже, в
+            # check_close_preconditions, чтобы не дублировать с другой
+            # формулировкой.
+            budget_pre = check_budget_preconditions(db, task)
+            if budget_pre:
+                raise ValueError("Нельзя взять задачу в работу: " + "; ".join(budget_pre) + ".")
     if target == LAST:
         reasons = check_close_preconditions(db, task)
         if reasons:

@@ -79,3 +79,27 @@ def test_produce_skips_code_still_in_use_after_earlier_task_deleted(
     assert r.status_code == 201, r.text
     new_code = r.json()["code"]
     assert new_code not in codes
+
+
+def test_renaming_equipment_propagates_to_produced_task_card(
+    client: TestClient, manager_headers: dict[str, str]
+):
+    """task.name is copied from equipment.name only once, at produce() time
+    (see routers/equipment.py) — renaming the library card afterwards must
+    still reach the task, otherwise the funnel/pipeline card silently keeps
+    showing the old name forever."""
+    eq_id = _create_equipment(client, manager_headers)
+    r = client.post(f"/api/equipment/{eq_id}/produce", headers=manager_headers, json={})
+    assert r.status_code == 201, r.text
+    code = r.json()["code"]
+    assert r.json()["name"] == "Тестовый стенд"
+
+    r = client.patch(
+        f"/api/equipment/{eq_id}", headers=manager_headers, json={"name": "ТЕСТ переименован"}
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["name"] == "ТЕСТ переименован"
+
+    r = client.get(f"/api/tasks/{code}", headers=manager_headers)
+    assert r.status_code == 200, r.text
+    assert r.json()["name"] == "ТЕСТ переименован"
