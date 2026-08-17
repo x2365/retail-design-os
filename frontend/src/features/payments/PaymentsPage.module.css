@@ -22,22 +22,35 @@
 .table td {
   padding: 8px 10px;
   font-size: 12px;
+  text-align: center;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border);
 }
 .link {
   color: var(--accent);
   cursor: pointer;
 }
-/* Fixed (not width:"auto") so the column doesn't resize per-row based on
-   whichever status label happens to be selected — see forms.module.css:
-   .select's font-size jumps 13px -> 16px under 960px (iOS zoom-on-focus
-   guard), and the longest label ("Авто (по факту оплаты)") needs more room
-   at that size or it clips with no ellipsis. */
+/* Fills the cell instead of sizing to whichever status label happens to be
+   selected (that was width:"auto"'s problem — different width per row) —
+   this also means it stretches flush to the cell's own 10px padding on
+   both sides, symmetric with how every other column already sits 10px off
+   the table edge. min-width is load-bearing: a bare width:100% inside an
+   auto-layout table column collapses to near-0 on narrow viewports (the
+   browser can't resolve the percentage against the column's own
+   content-derived width and picks something tiny) — confirmed on a 390px
+   viewport, the select shrank to just its dropdown arrow. min-width forces
+   the column itself to stay wide enough for the longest label
+   ("Авто (по факту оплаты)") regardless, same as the old fixed width did,
+   while still letting it stretch further on wide screens. */
 .statusSelect {
-  width: 210px;
+  width: 100%;
+  min-width: 210px;
 }
 @media (max-width: 960px) {
+  /* .select's font-size jumps 13px -> 16px under this breakpoint (iOS
+     zoom-on-focus guard, forms.module.css) — 210px clips the longest label
+     ("Авто (по факту оплаты)") at that size. */
   .statusSelect {
-    width: 260px;
+    min-width: 260px;
   }
 }
