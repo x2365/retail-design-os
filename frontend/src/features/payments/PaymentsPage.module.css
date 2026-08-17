@@ -1,11 +1,5 @@
-/* No width:100% on purpose: this table's columns are wildly uneven (a few
-   short money figures next to a wide Статус <select>) — table-layout:auto
-   dumps 100%'s leftover slack almost entirely onto the widest column, which
-   left every header centered inside its own cell but the cells themselves
-   scattered unevenly across the row. Letting the table shrink to its
-   content keeps columns (and their centered headers) tight against the
-   data actually under them. */
 .table {
+  width: 100%;
   border-collapse: collapse;
 }
 .table th {
@@ -14,7 +8,7 @@
   color: var(--text3);
   text-transform: uppercase;
   padding: 8px 10px;
-  text-align: center;
+  text-align: left;
   border-bottom: 1px solid var(--border);
 }
 .sortable {
