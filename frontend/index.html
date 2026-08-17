@@ -1,11 +1,23 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" translate="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- ErrorBoundary.tsx's whole crash-recovery path exists because a
+         browser auto-translating this page rewrites live text nodes, then
+         React's next re-render tries to reconcile against DOM it no longer
+         recognizes and throws. That's a one-shot mitigation; if translate
+         stays ACTIVE (not a single pass) it keeps re-corrupting every fresh
+         remount, so the boundary just loops — which reads to the user as a
+         permanently stuck black screen (confirmed via a screen recording:
+         iOS Control Center showed "Перевод / Английский" engaged, and the
+         UI was rendering in English). translate="no" + notranslate below
+         ask Safari/Chrome's translators to leave the page alone instead of
+         only reacting after the damage is done. -->
+    <meta name="google" content="notranslate" />
     <title>RetailDesign OS — Трекинг оборудования</title>
   </head>
-  <body>
+  <body class="notranslate">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
