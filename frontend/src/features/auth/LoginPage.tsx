@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className={styles.overlay}>
       <form className={styles.card} onSubmit={handleSubmit}>
         <div className={styles.brand}>RETAILDESIGN&nbsp;OS</div>
-        <div className={styles.subtitle}>Вход в систему трекинга оборудования</div>
+        <div className={styles.subtitle}>Вход в систему трекинга</div>
 
         <div className={forms.row} style={{ marginTop: 20 }}>
           <label className={forms.label} htmlFor="login-email">
