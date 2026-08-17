@@ -6,8 +6,12 @@
      so on load .app is sized taller than what's actually visible, and the
      leftover --bg-colored strip only becomes visible once the toolbar
      auto-hides on scroll, reading as "the screen goes black while
-     scrolling". dvh tracks the real, current viewport instead. */
+     scrolling". dvh tracks the real, current viewport instead — except not
+     reliably everywhere (see tokens.css's body rule for the confirmed
+     recurrence); --vh100 (viewportHeightFix.ts) is the JS-computed,
+     guaranteed-accurate fallback-of-the-fallback. */
   height: 100dvh;
+  height: var(--vh100, 100dvh);
 }
 
 /* ─── SIDEBAR ─────────────────────────────────── */
@@ -268,6 +272,13 @@
   .app {
     height: auto;
     min-height: 100dvh;
+    /* Still recurred on an iPhone/Chrome after this "sidestep" (screen
+       recording: real content ends cleanly, ~1-2 screens of empty space
+       scroll on past it) — dvh itself was the unreliable part, not the
+       nested-vs-document-scroll architecture. --vh100 is JS-computed from
+       window.innerHeight/visualViewport (viewportHeightFix.ts), no
+       unit-support gap left to fall into. */
+    min-height: var(--vh100, 100dvh);
   }
   .main {
     /* overflow-x/-y aren't independent per spec: pairing overflow-x:hidden

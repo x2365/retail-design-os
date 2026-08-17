@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App";
 import { patchDomForTranslate } from "./app/patchDomForTranslate";
+import { installViewportHeightFix } from "./app/viewportHeightFix";
 // Self-hosted variable fonts (not a Google Fonts CDN link) — full weight
 // axis in one file each, cyrillic subset included. See tokens.css for the
 // --font-sans/--font-heading tokens that reference them.
@@ -12,6 +13,7 @@ import "./styles/tokens.css";
 
 // Must run before React ever touches the DOM — see patchDomForTranslate.ts.
 patchDomForTranslate();
+installViewportHeightFix();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

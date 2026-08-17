@@ -84,8 +84,14 @@ body {
      below it. On short pages .main never needed to scroll internally, so
      the browser handed scroll to that phantom body overflow instead — which
      both showed as a black void AND broke .topbar's position:sticky (sticky
-     to .main, not to body). dvh removes the mismatch. */
-  min-height: 100dvh;
+     to .main, not to body). dvh removes the mismatch in most browsers, but
+     not reliably in all of them — confirmed recurring on an iPhone running
+     Chrome (screen recording: real content ends cleanly, document scrolls
+     on for another 1-2 screens of empty space past it) even with dvh in
+     place. --vh100 (viewportHeightFix.ts, set from JS's window.innerHeight/
+     visualViewport before body's first paint) is the more reliable value;
+     dvh only survives here as the pre-JS/no-JS fallback. */
+  min-height: var(--vh100, 100dvh);
   overflow-x: hidden;
 }
 
