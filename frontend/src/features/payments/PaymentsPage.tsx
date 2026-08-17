@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
 import { Button } from "../../components/Button/Button";
@@ -23,11 +23,49 @@ function statusColor(status: string): "green" | "amber" | "blue" {
   return "blue";
 }
 
+type SortKey = "task" | "brand" | "date";
+
+// kp_date is "DD.MM.YY" (backend serializers._fmt_date), not ISO — must
+// parse before comparing, mirrors ActiveTasksPanel's parseDeadline.
+function parseKpDate(s: string | null): number {
+  if (!s) return Infinity; // nulls last regardless of direction
+  const [d, m, y] = s.split(".").map(Number);
+  return Date.UTC(2000 + y, m - 1, d);
+}
+
 export default function PaymentsPage() {
   const { data, isLoading } = usePayments();
   const { isEditor } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const updateStatus = useUpdatePaymentStatus();
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  function sortArrow(key: SortKey) {
+    if (sortKey !== key) return "";
+    return sortDir === "asc" ? " ▲" : " ▼";
+  }
+
+  const rows = useMemo(() => {
+    if (!data || !sortKey) return data ?? [];
+    const sorted = [...data].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "task") cmp = a.id.localeCompare(b.id, undefined, { numeric: true });
+      else if (sortKey === "brand") cmp = a.brand.localeCompare(b.brand);
+      else if (sortKey === "date") cmp = parseKpDate(a.kp_date) - parseKpDate(b.kp_date);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [data, sortKey, sortDir]);
 
   return (
     <div>
@@ -49,10 +87,16 @@ export default function PaymentsPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Задача</th>
-                <th>Бренд</th>
+                <th className={styles.sortable} onClick={() => toggleSort("task")}>
+                  Задача{sortArrow("task")}
+                </th>
+                <th className={styles.sortable} onClick={() => toggleSort("brand")}>
+                  Бренд{sortArrow("brand")}
+                </th>
                 <th>Подрядчик</th>
-                <th>Дата КП</th>
+                <th className={styles.sortable} onClick={() => toggleSort("date")}>
+                  Дата КП{sortArrow("date")}
+                </th>
                 <th>Образец</th>
                 <th>Тираж</th>
                 <th>Предоплата</th>
@@ -61,7 +105,7 @@ export default function PaymentsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((p) => (
+              {rows.map((p) => (
                 <tr key={p.id}>
                   <td>
                     <Badge color="gray">{p.id}</Badge>

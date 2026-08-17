@@ -8,8 +8,16 @@
   color: var(--text3);
   text-transform: uppercase;
   padding: 8px 10px;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid var(--border);
+}
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.sortable:hover {
+  color: var(--text);
 }
 .table td {
   padding: 9px 10px;
