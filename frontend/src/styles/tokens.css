@@ -56,6 +56,13 @@ body,
    affect direct wheel/trackpad/touch scrolling, the browser already handles
    that natively. */
 html {
+  /* body already paints --bg, but only body — if the real (post-toolbar-
+     collapse, post-scroll) document height on a given phone/browser ever
+     ends up taller than body's own box for any reason, whatever's beyond
+     it falls back to the browser's default canvas colour instead of the
+     app's background. Painting it here too costs nothing and removes that
+     failure mode outright, independent of chasing the exact vh/dvh cause. */
+  background: var(--bg);
   scroll-behavior: smooth;
 }
 @media (prefers-reduced-motion: reduce) {
