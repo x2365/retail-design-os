@@ -28,3 +28,16 @@
   color: var(--accent);
   cursor: pointer;
 }
+/* Fixed (not width:"auto") so the column doesn't resize per-row based on
+   whichever status label happens to be selected — see forms.module.css:
+   .select's font-size jumps 13px -> 16px under 960px (iOS zoom-on-focus
+   guard), and the longest label ("Авто (по факту оплаты)") needs more room
+   at that size or it clips with no ellipsis. */
+.statusSelect {
+  width: 210px;
+}
+@media (max-width: 960px) {
+  .statusSelect {
+    width: 260px;
+  }
+}
