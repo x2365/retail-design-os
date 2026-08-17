@@ -920,6 +920,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/internal/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Snapshot Endpoint */
+        get: operations["get_snapshot_endpoint_api_internal_snapshot_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/snapshot/take": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Take Snapshot Endpoint */
+        post: operations["take_snapshot_endpoint_api_internal_snapshot_take_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/snapshot/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Snapshot Endpoint */
+        post: operations["restore_snapshot_endpoint_api_internal_snapshot_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/run-snapshot-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run Snapshot Reset Endpoint */
+        post: operations["run_snapshot_reset_endpoint_api_internal_run_snapshot_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/telegram": {
         parameters: {
             query?: never;
@@ -1861,6 +1929,13 @@ export interface components {
              * @default true
              */
             approved: boolean;
+        };
+        /** SnapshotOut */
+        SnapshotOut: {
+            /** Taken At */
+            taken_at: string | null;
+            /** Size Bytes */
+            size_bytes: number;
         };
         /** StageApprovalUpdate */
         StageApprovalUpdate: {
@@ -4413,6 +4488,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_snapshot_endpoint_api_internal_snapshot_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+        };
+    };
+    take_snapshot_endpoint_api_internal_snapshot_take_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+        };
+    };
+    restore_snapshot_endpoint_api_internal_snapshot_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+        };
+    };
+    run_snapshot_reset_endpoint_api_internal_run_snapshot_reset_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-service-token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
                 };
             };
             /** @description Validation Error */

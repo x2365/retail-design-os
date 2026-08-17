@@ -40,6 +40,7 @@ from .nomenclature import (
 from .notification import Notification
 from .ops import Approval, Delivery, Document, Payment
 from .reference import Brand, Group, RetailPoint, TaskMember, TeamMember, User
+from .snapshot import DataSnapshot
 from .task import Task, TaskStageApproval, TaskStageHistory
 
 __all__ = [
@@ -89,4 +90,6 @@ __all__ = [
     "Comment",
     # contractors
     "Contractor",
+    # snapshot (demo data reset point)
+    "DataSnapshot",
 ]

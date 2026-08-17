@@ -7,7 +7,7 @@
   letter-spacing: var(--tracking-loose);
   color: var(--text3);
   text-transform: uppercase;
-  padding: 8px 10px;
+  padding: 7px 10px;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -20,7 +20,7 @@
   color: var(--text);
 }
 .table td {
-  padding: 9px 10px;
+  padding: 8px 10px;
   font-size: 12px;
   border-bottom: 1px solid var(--border);
 }

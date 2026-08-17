@@ -61,6 +61,12 @@ class PasswordChange(BaseModel):
     new_password: str = Field(min_length=6, max_length=128)
 
 
+# ---- Demo data reset point (snapshot) --------------------------------------
+class SnapshotOut(BaseModel):
+    taken_at: dt.datetime | None
+    size_bytes: int
+
+
 # ---- Groups / Brands -------------------------------------------------------
 class GroupOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

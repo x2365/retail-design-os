@@ -7,6 +7,14 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# pg_dump/pg_restore — used by services/snapshot.py for the demo data reset
+# point (see routers/internal.py's /internal/snapshot/* endpoints). Not
+# needed at all when DATABASE_URL is SQLite (dev) — snapshot.py just raises
+# a clear error there instead of failing at import time.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies first for better layer caching
 COPY requirements.txt .
 RUN pip install -r requirements.txt

@@ -77,6 +77,12 @@ class Settings(BaseSettings):
     # Токен для защищённого запуска обхода напоминаний (cron → эндпоинт).
     reminders_service_token: str = ""
 
+    # --- Demo data reset point (снепшот + периодический откат) --------------
+    # Токен для защищённого запуска отката к точке сброса (внешний cron →
+    # POST /api/internal/run-snapshot-reset). Пусто = эндпоинт выключен (403).
+    # Саму точку сброса сохраняет админ вручную (POST /api/internal/snapshot/take).
+    snapshot_reset_service_token: str = ""
+
     # --- External integrations (1С и т.п.) ----------------------------------
     # Токен для входящего вебхука статуса оплаты из 1С
     # (POST /api/internal/1c/payment-status). Пусто = эндпоинт выключен (403).

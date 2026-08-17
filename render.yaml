@@ -47,6 +47,19 @@ services:
       # dashboard for whoever needs to call it.
       - key: ONEC_SERVICE_TOKEN
         generateValue: true
+      # POST /api/internal/run-snapshot-reset — rolls the DB back to the last
+      # saved demo data reset point (see backend/app/services/snapshot.py).
+      # generateValue so the endpoint is live out of the box; the actual
+      # value is visible in the Render dashboard. Nothing calls this
+      # automatically — Render's free tier has no cron jobs, so point a free
+      # external scheduler (e.g. cron-job.org, GitHub Actions on a schedule)
+      # at this URL with header "X-Service-Token: <value>" on whatever
+      # cadence you want the demo to reset. Save the actual reset point once
+      # (as an admin, in the app) via POST /api/internal/snapshot/take before
+      # the first scheduled restore — restoring with no snapshot saved yet
+      # just 500s.
+      - key: SNAPSHOT_RESET_SERVICE_TOKEN
+        generateValue: true
       # Error monitoring (Sentry, free tier). Create a project at sentry.io
       # and set the DSN in the Render dashboard; sync: false keeps it out of
       # git. Leave unset to keep monitoring disabled.
