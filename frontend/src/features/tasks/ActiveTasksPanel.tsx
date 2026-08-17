@@ -96,7 +96,7 @@ export function ActiveTasksPanel({ highlightCode }: { highlightCode?: string | n
   return (
     <Panel title={PANEL_TITLES[filter]} count={tasks.length}>
       {selected && <TaskDetailModal code={selected} onClose={() => setSelected(null)} />}
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "stretch", marginBottom: 16 }}>
         <div className={styles.tabs} style={{ flex: 1, marginBottom: 0 }}>
           {TABS.map((t) => (
             <button
