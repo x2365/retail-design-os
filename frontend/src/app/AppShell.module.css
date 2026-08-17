@@ -18,15 +18,24 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 24px 0;
+  padding: 0 0 24px;
   position: relative;
   z-index: 10;
 }
 
+/* Fixed to the same 56px as .topbar (below) and vertically centered, so
+   the sidebar/topbar divider lines meet in one continuous horizontal line
+   instead of stepping — the old padding-based box happened to render a bit
+   taller than the topbar. */
 .logo {
-  padding: 0 20px 28px;
+  height: 56px;
+  box-sizing: border-box;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 .logoMark {
   font-family: var(--font-heading);
