@@ -8,8 +8,8 @@ import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
-  const [email, setEmail] = useState("admin@retail.os");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -69,14 +69,6 @@ export default function LoginPage() {
         >
           {submitting ? "Входим…" : "Войти →"}
         </Button>
-
-        <div className={styles.demoHint}>
-          Демо-доступы (пароль = роль+123):
-          <br />
-          admin@retail.os · manager@retail.os · brand@retail.os
-          <br />
-          retailer@retail.os · viewer@retail.os
-        </div>
       </form>
     </div>
   );

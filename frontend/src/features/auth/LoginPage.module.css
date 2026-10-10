@@ -41,10 +41,3 @@
   color: var(--text3);
   margin-top: 4px;
 }
-
-.demoHint {
-  margin-top: 16px;
-  font-size: 10px;
-  color: var(--text3);
-  line-height: 1.7;
-}
