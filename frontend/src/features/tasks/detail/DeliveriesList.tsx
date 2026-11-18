@@ -19,6 +19,13 @@ import {
   impliedQtyReceived,
 } from "../../../lib/deliveryStatus";
 import forms from "../../../styles/forms.module.css";
+import styles from "./DeliveriesList.module.css";
+
+/** ISO "2026-11-16" -> "16.11.26"; empty -> "—". */
+function shortDate(iso: string | null | undefined): string {
+  const m = iso ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
+  return m ? `${m[3]}.${m[2]}.${m[1].slice(2)}` : "—";
+}
 
 export function DeliveriesList({ code }: { code: string }) {
   const { data, isLoading } = useTaskDeliveries(code);
@@ -68,53 +75,69 @@ export function DeliveriesList({ code }: { code: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {rows.map((d) => (
-        <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-          <span style={{ flex: 1 }}>
-            {d.point_name} <span style={{ color: "var(--text3)" }}>· {d.city}</span>
+        <div key={d.id} className={styles.row}>
+          <span className={styles.name}>
+            {d.point_name} <span className={styles.city}>· {d.city}</span>
           </span>
-          <span style={{ color: "var(--text3)" }}>
+          <span className={styles.qty}>
             {d.qty_received}/{d.qty_expected}
           </span>
-          {canConfirm ? (
-            <input
-              className={forms.input}
-              type="date"
-              title={t("Дата прихода в ТТ")}
-              value={d.arrival_date ?? ""}
-              disabled={update.isPending}
-              onChange={(e) =>
-                update.mutate({ id: d.id, payload: { arrival_date: e.target.value || null } })
-              }
-              style={{ width: "auto", marginBottom: 0, padding: "4px 8px" }}
-            />
-          ) : (
-            <span style={{ color: "var(--text3)", fontSize: 11 }} title={t("Дата прихода в ТТ")}>
-              {d.arrival_date ?? "—"}
-            </span>
-          )}
-          {canConfirm ? (
-            <select
-              className={forms.select}
-              value={d.status}
-              disabled={update.isPending}
-              onChange={(e) => {
-                const status = e.target.value;
-                const qty_received = impliedQtyReceived(status, d.qty_expected);
-                update.mutate({ id: d.id, payload: { status, qty_received } });
-              }}
-              style={{ width: "auto" }}
-            >
-              {DELIVERY_STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <Badge color={DELIVERY_STATUS_COLOR[d.status] ?? "gray"}>
-              {deliveryStatusLabel(d.status)}
-            </Badge>
-          )}
+          <div className={styles.controls}>
+            {canConfirm ? (
+              <label className={styles.dateField} title={t("Дата прихода в ТТ")}>
+                <span
+                  className={`${forms.input} ${styles.dateLabel} ${d.arrival_date ? "" : styles.dateLabelEmpty}`}
+                >
+                  {shortDate(d.arrival_date)}
+                </span>
+                <input
+                  className={styles.dateInput}
+                  type="date"
+                  aria-label={t("Дата прихода в ТТ")}
+                  value={d.arrival_date ?? ""}
+                  disabled={update.isPending}
+                  onClick={(e) => {
+                    // Desktop browsers don't open the picker on a click into an
+                    // invisible input's text area — open it explicitly.
+                    try {
+                      e.currentTarget.showPicker?.();
+                    } catch {
+                      /* not supported / not user-activated: native fallback */
+                    }
+                  }}
+                  onChange={(e) =>
+                    update.mutate({ id: d.id, payload: { arrival_date: e.target.value || null } })
+                  }
+                />
+              </label>
+            ) : (
+              <span style={{ color: "var(--text3)", fontSize: 11 }} title={t("Дата прихода в ТТ")}>
+                {shortDate(d.arrival_date)}
+              </span>
+            )}
+            {canConfirm ? (
+              <select
+                className={`${forms.select} ${styles.status}`}
+                value={d.status}
+                disabled={update.isPending}
+                onChange={(e) => {
+                  const status = e.target.value;
+                  const qty_received = impliedQtyReceived(status, d.qty_expected);
+                  update.mutate({ id: d.id, payload: { status, qty_received } });
+                }}
+              >
+                {DELIVERY_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Badge color={DELIVERY_STATUS_COLOR[d.status] ?? "gray"}>
+                {deliveryStatusLabel(d.status)}
+              </Badge>
+            )}
+          </div>
         </div>
       ))}
     </div>
