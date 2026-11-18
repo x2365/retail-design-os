@@ -2,9 +2,10 @@ services:
   - type: web
     name: retaildesign-api
     runtime: docker
-    # Deploy every push to main, but only once GitHub Actions CI (lint,
-    # typecheck, tests, i18n, build) has passed — a red commit never ships.
-    autoDeployTrigger: checksPass
+    # Deploys are triggered by GitHub Actions CI through this service's Deploy
+    # Hook once every check is green (see the `deploy` job in ci.yml); Render's
+    # own auto-deploy stays off so a push is never deployed twice.
+    autoDeployTrigger: "off"
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     plan: free
@@ -70,9 +71,10 @@ services:
   - type: web
     name: retaildesign-frontend
     runtime: static
-    # Deploy every push to main, but only once GitHub Actions CI (lint,
-    # typecheck, tests, i18n, build) has passed — a red commit never ships.
-    autoDeployTrigger: checksPass
+    # Deploys are triggered by GitHub Actions CI through this service's Deploy
+    # Hook once every check is green (see the `deploy` job in ci.yml); Render's
+    # own auto-deploy stays off so a push is never deployed twice.
+    autoDeployTrigger: "off"
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
     routes:

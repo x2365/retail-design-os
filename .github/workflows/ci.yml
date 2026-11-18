@@ -66,3 +66,27 @@ jobs:
 
       - name: Build (includes tsc typecheck)
         run: npm run build
+
+  deploy:
+    # Render isn't connected to GitHub with its app (no webhooks), so its own
+    # auto-deploy never fires. Instead CI calls each service's Deploy Hook once
+    # both check jobs are green, pinned to the exact commit that was tested.
+    # Hooks live in repo secrets (Render → service → Settings → Deploy Hook).
+    name: Deploy to Render
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hooks
+        env:
+          API_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+          FRONTEND_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: |
+          set -euo pipefail
+          if [ -z "$API_HOOK" ] || [ -z "$FRONTEND_HOOK" ]; then
+            echo "::warning::Render deploy hooks are not configured — skipping deploy."
+            exit 0
+          fi
+          curl -fsS -X POST "${API_HOOK}&ref=${GITHUB_SHA}" -o /dev/null
+          curl -fsS -X POST "${FRONTEND_HOOK}&ref=${GITHUB_SHA}" -o /dev/null
+          echo "Deploy of ${GITHUB_SHA::7} requested for retaildesign-api and retaildesign-frontend."
