@@ -1,5 +1,6 @@
 .badge {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   gap: 4px;
   font-size: 10px;

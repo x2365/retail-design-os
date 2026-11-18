@@ -93,3 +93,46 @@
   height: 6px;
   border-radius: 2px;
 }
+
+/* Phones: the desktop 150px label column + 300px min track pushed the % column
+   off-screen and left ~80px for the bar, truncating every stage name. */
+@media (max-width: 560px) {
+  .windowLabel {
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+  .row {
+    margin-bottom: 6px;
+  }
+  .label {
+    width: 92px;
+    font-size: 10px;
+    line-height: 1.25;
+    padding-right: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .code {
+    font-size: 8px;
+  }
+  .track {
+    min-width: 0;
+    height: 18px;
+  }
+  .bar {
+    font-size: 8px;
+    padding: 0 4px;
+  }
+  .pct {
+    width: 30px;
+    font-size: 9px;
+    padding-left: 6px;
+  }
+  .legend {
+    gap: 10px;
+  }
+  .legendItem {
+    font-size: 9px;
+  }
+}
