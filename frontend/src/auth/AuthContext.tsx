@@ -18,6 +18,38 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+// Set when someone presses "Выйти" so the demo auto-login steps aside and the
+// login page stays up (e.g. to sign in as another role). Per-tab on purpose:
+// the next visit opens straight into the app again.
+const LOGGED_OUT_KEY = "retail_logged_out";
+
+function loggedOutOnPurpose(): boolean {
+  try {
+    return sessionStorage.getItem(LOGGED_OUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setLoggedOutOnPurpose(on: boolean): void {
+  try {
+    if (on) sessionStorage.setItem(LOGGED_OUT_KEY, "1");
+    else sessionStorage.removeItem(LOGGED_OUT_KEY);
+  } catch {
+    /* storage blocked — auto-login just stays on */
+  }
+}
+
+/** Passwordless sign-in as the demo user; null when the backend has it off. */
+async function demoLogin(): Promise<components["schemas"]["Token"] | null> {
+  try {
+    const res = await fetch("/api/auth/demo", { method: "POST" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchMe(): Promise<UserOut> {
   const { data, error } = await api.GET("/api/auth/me");
   if (error) throw new Error(apiErrorMessage(error, t("Не удалось получить профиль")));
@@ -29,24 +61,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const logout = useCallback(() => {
+    setLoggedOutOnPurpose(true);
     setToken(null);
     setUser(null);
   }, []);
 
-  useEffect(() => {
-    setUnauthorizedHandler(logout);
-  }, [logout]);
+  /** Signs in as the demo user unless the visitor logged out on purpose. */
+  const tryDemoLogin = useCallback(async () => {
+    if (loggedOutOnPurpose()) return;
+    const data = await demoLogin();
+    if (!data) return;
+    setToken(data.access_token);
+    setUser(data.user);
+  }, []);
 
   useEffect(() => {
-    if (!getToken()) {
-      setIsLoading(false);
-      return;
-    }
-    fetchMe()
-      .then(setUser)
-      .catch(() => setToken(null))
-      .finally(() => setIsLoading(false));
-  }, []);
+    // A 401 means the token expired: drop it and, on the demo, quietly sign
+    // back in rather than bouncing the visitor to the login page.
+    setUnauthorizedHandler(() => {
+      setToken(null);
+      setUser(null);
+      setIsLoading(true);
+      tryDemoLogin().finally(() => setIsLoading(false));
+    });
+  }, [tryDemoLogin]);
+
+  useEffect(() => {
+    const restore = getToken()
+      ? fetchMe()
+          .then(setUser)
+          .catch(() => {
+            setToken(null);
+            return tryDemoLogin();
+          })
+      : tryDemoLogin();
+    restore.finally(() => setIsLoading(false));
+  }, [tryDemoLogin]);
 
   const login = useCallback(async (email: string, password: string) => {
     // OAuth2PasswordRequestForm on the backend expects form-urlencoded
@@ -63,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(apiErrorMessage(body, t("Неверный email или пароль")));
     }
     const data: components["schemas"]["Token"] = await res.json();
+    setLoggedOutOnPurpose(false);
     setToken(data.access_token);
     setUser(data.user);
   }, []);

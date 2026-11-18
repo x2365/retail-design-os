@@ -40,3 +40,29 @@ def test_login_is_rate_limited_after_repeated_failures(client: TestClient, db: S
 
     r = client.post("/api/auth/login", data={"username": "admin@retail.os", "password": "admin123"})
     assert r.status_code == 429
+
+
+def test_demo_login_signs_in_as_the_configured_user(client: TestClient, db: Session):
+    r = client.post("/api/auth/demo")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["user"]["email"] == "manager@retail.os"
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert me.json()["role"] == "manager"
+
+
+def test_demo_login_is_off_when_not_configured(client: TestClient, db: Session, monkeypatch):
+    from app.routers import auth
+
+    monkeypatch.setattr(auth.settings, "demo_autologin_email", "")
+    assert client.post("/api/auth/demo").status_code == 404
+
+
+def test_demo_account_password_cannot_be_changed(client: TestClient, db: Session):
+    token = client.post("/api/auth/demo").json()["access_token"]
+    r = client.post(
+        "/api/me/password",
+        json={"current_password": "manager123", "new_password": "hijacked123"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 403

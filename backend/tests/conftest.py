@@ -25,6 +25,7 @@ os.environ.setdefault("UPLOAD_DIR", str(pathlib.Path(__file__).parent / "test_up
 os.environ["ENVIRONMENT"] = "development"
 os.environ["SEED_ON_STARTUP"] = "true"
 os.environ["ONEC_SERVICE_TOKEN"] = "test-1c-token"
+os.environ["DEMO_AUTOLOGIN_EMAIL"] = "manager@retail.os"
 # Never let the test suite report to a real Sentry project, regardless of
 # what a developer's local .env has configured.
 os.environ["SENTRY_DSN"] = ""

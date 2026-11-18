@@ -25,6 +25,10 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: "*"
+      # Public demo opens without a login screen: visitors are signed in as
+      # this user via POST /api/auth/demo. Remove to bring the login back.
+      - key: DEMO_AUTOLOGIN_EMAIL
+        value: manager@retail.os
       - key: SEED_ON_STARTUP
         value: "true"
       - key: UPLOAD_DIR

@@ -55,6 +55,7 @@ export const EN: Record<string, string> = {
   "Пароль должен быть не короче 6 символов": "Password must be at least 6 characters",
   "Не удалось сменить пароль": "Couldn’t change the password",
   "Текущий пароль неверен": "Current password is incorrect",
+  "Пароль демо-аккаунта менять нельзя": "The demo account password can’t be changed",
 
   // ---- roles & seeded users
   Администратор: "Admin",

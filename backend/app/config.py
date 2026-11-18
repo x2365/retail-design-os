@@ -41,6 +41,9 @@ class Settings(BaseSettings):
 
     # Brute-force mitigation on /auth/login (slowapi / limits syntax, e.g. "5/minute").
     login_rate_limit: str = "5/minute"
+    # Public demo: email of the user POST /api/auth/demo signs visitors in as,
+    # so the live demo opens without a login screen. Empty = endpoint off (404).
+    demo_autologin_email: str = ""
     # App-wide default (every route not explicitly decorated with its own
     # tighter @limiter.limit(...)) — see app/rate_limit.py.
     default_rate_limit: str = "60/minute"

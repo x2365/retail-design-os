@@ -14,9 +14,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import models, schemas, security
+from ..config import get_settings
 from ..database import get_db
 
 router = APIRouter(tags=["users"])
+settings = get_settings()
 
 AdminDep = Depends(security.require_roles(models.Role.admin))
 
@@ -98,6 +100,10 @@ def change_my_password(
     db: Session = Depends(get_db),
     user: models.User = Depends(security.get_current_user),
 ):
+    # The shared demo account is signed into by every visitor; one of them
+    # changing its password would lock everyone else out of manual login.
+    if settings.demo_autologin_email and user.email == settings.demo_autologin_email:
+        raise HTTPException(403, "Пароль демо-аккаунта менять нельзя")
     if not security.verify_password(payload.current_password, user.hashed_password):
         raise HTTPException(400, "Текущий пароль неверен")
     user.hashed_password = security.hash_password(payload.new_password)
