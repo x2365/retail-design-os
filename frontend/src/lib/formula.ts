@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 /** Tiny calculator-style expression evaluator for money fields that accept
  * a formula (e.g. "=200*1000+18%"). Deliberately not `eval`/`new Function` —
  * user input goes straight into this, so it's a real (if small) recursive-
@@ -37,13 +38,13 @@ function tokenize(input: string): Token[] {
       const raw = input.slice(i, j);
       const value = Number(raw);
       if (raw === "" || Number.isNaN(value)) {
-        throw new Error(`Не число: «${raw}»`);
+        throw new Error(t("Не число: «{v}»", { v: raw }));
       }
       tokens.push({ type: "number", value });
       i = j;
       continue;
     }
-    throw new Error(`Непонятный символ: «${ch}»`);
+    throw new Error(t("Непонятный символ: «{v}»", { v: ch }));
   }
   return tokens;
 }
@@ -56,18 +57,18 @@ class Parser {
     return this.tokens[this.pos];
   }
   private consume(type: TokenType): Token {
-    const t = this.tokens[this.pos];
-    if (!t || t.type !== type) {
-      throw new Error(`Ожидался «${type}»`);
+    const tok = this.tokens[this.pos];
+    if (!tok || tok.type !== type) {
+      throw new Error(t("Ожидался «{v}»", { v: type }));
     }
     this.pos++;
-    return t;
+    return tok;
   }
 
   parse(): number {
     const result = this.additive();
     if (this.pos < this.tokens.length) {
-      throw new Error("Лишнее в конце выражения");
+      throw new Error(t("Лишнее в конце выражения"));
     }
     return result;
   }
@@ -89,7 +90,7 @@ class Parser {
     while (this.peek()?.type === "*" || this.peek()?.type === "/") {
       const op = this.consume(this.peek()!.type).type;
       const right = this.factor();
-      if (op === "/" && right === 0) throw new Error("Деление на ноль");
+      if (op === "/" && right === 0) throw new Error(t("Деление на ноль"));
       left = op === "*" ? left * right : left / right;
     }
     return left;
@@ -97,28 +98,28 @@ class Parser {
 
   // factor := '-' factor | '(' additive ')' | number
   private factor(): number {
-    const t = this.peek();
-    if (!t) throw new Error("Незаконченное выражение");
-    if (t.type === "-") {
+    const tok = this.peek();
+    if (!tok) throw new Error(t("Незаконченное выражение"));
+    if (tok.type === "-") {
       this.consume("-");
       return -this.factor();
     }
-    if (t.type === "(") {
+    if (tok.type === "(") {
       this.consume("(");
       const v = this.additive();
       this.consume(")");
       return v;
     }
-    if (t.type === "number") {
+    if (tok.type === "number") {
       this.consume("number");
-      return t.value!;
+      return tok.value!;
     }
-    throw new Error("Ожидалось число или «(»");
+    throw new Error(t("Ожидалось число или «(»"));
   }
 }
 
 function evaluatePlain(expr: string): number {
-  if (!expr.trim()) throw new Error("Пустая формула");
+  if (!expr.trim()) throw new Error(t("Пустая формула"));
   return new Parser(tokenize(expr)).parse();
 }
 
@@ -126,7 +127,7 @@ function evaluatePlain(expr: string): number {
  * callers can pass the raw field text as-is. */
 export function evaluateFormula(input: string): number {
   const expr = input.trim().replace(/^=/, "");
-  if (!expr.trim()) throw new Error("Пустая формула");
+  if (!expr.trim()) throw new Error(t("Пустая формула"));
 
   // Trailing "<base> +/- N%" — the only place % is meaningful here.
   const withPercent = expr.match(/^(.*)([+-])\s*(\d+(?:\.\d+)?)\s*%$/);

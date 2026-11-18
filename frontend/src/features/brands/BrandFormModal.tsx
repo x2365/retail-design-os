@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useState } from "react";
 
 import { Button } from "../../components/Button/Button";
@@ -21,7 +22,7 @@ export function BrandFormModal({ brand, groupCode, onClose }: BrandFormModalProp
 
   function submit() {
     setError("");
-    const onError = (e: unknown) => setError(apiErrorMessage(e, "Не удалось сохранить бренд"));
+    const onError = (e: unknown) => setError(apiErrorMessage(e, t("Не удалось сохранить бренд")));
     if (brand) {
       update.mutate({ id: brand.id, payload: { name } }, { onSuccess: onClose, onError });
     } else {
@@ -31,12 +32,12 @@ export function BrandFormModal({ brand, groupCode, onClose }: BrandFormModalProp
 
   return (
     <Modal
-      title={brand ? "Изменить бренд" : "Новый бренд"}
-      sub={`Группа ${groupCode}`}
+      title={brand ? t("Изменить бренд") : t("Новый бренд")}
+      sub={t("Группа {code}", { code: groupCode })}
       onClose={onClose}
     >
       <div className={forms.row}>
-        <label className={forms.label}>Название</label>
+        <label className={forms.label}>{t("Название")}</label>
         <input
           className={forms.input}
           value={name}
@@ -46,7 +47,7 @@ export function BrandFormModal({ brand, groupCode, onClose }: BrandFormModalProp
       </div>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={pending || !name.trim()} onClick={submit}>
-        Сохранить
+        {t("Сохранить")}
       </Button>
     </Modal>
   );

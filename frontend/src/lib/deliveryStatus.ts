@@ -1,12 +1,13 @@
+import { t } from "../i18n";
 /** Single source of truth for delivery status options — shared by the task
  * detail modal's DeliveriesList and the retail point's PointDetailModal, so
  * the same Delivery can be moved through the same states from either screen
  * instead of each surface having its own narrower, inconsistent copy. */
 export const DELIVERY_STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "pending", label: "Ожидает отгрузки" },
-  { value: "delivered", label: "✓ Получено" },
-  { value: "partial", label: "~ Неполный объём" },
-  { value: "missing", label: "✗ Не получено" },
+  { value: "pending", label: t("Ожидает отгрузки") },
+  { value: "delivered", label: t("✓ Получено") },
+  { value: "partial", label: t("~ Неполный объём") },
+  { value: "missing", label: t("✗ Не получено") },
 ];
 
 export const DELIVERY_STATUS_COLOR: Record<string, "green" | "amber" | "red" | "gray"> = {

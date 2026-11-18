@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -34,9 +35,9 @@ export default function BudgetPage() {
                 <KpiCard
                   key={g.code}
                   accent={ACCENTS[i % 3]}
-                  label={`${g.name} — план`}
+                  label={t("{name} — план", { name: tServer(g.name) })}
                   value={formatMoney(planned)}
-                  sub={`Освоено ${formatMoney(spent)} · ${pct}%`}
+                  sub={t("Освоено {spent} · {pct}%", { spent: formatMoney(spent), pct })}
                   delta={
                     isAdmin ? (
                       <div className={styles.editRow}>
@@ -55,7 +56,7 @@ export default function BudgetPage() {
                             })
                           }
                         >
-                          Сохранить план
+                          {t("Сохранить план")}
                         </Button>
                       </div>
                     ) : undefined
@@ -69,7 +70,7 @@ export default function BudgetPage() {
         <BudgetLog />
       ) : (
         <p style={{ color: "var(--text3)", fontSize: 11 }}>
-          Редактировать бюджет может только администратор.
+          {t("Редактировать бюджет может только администратор.")}
         </p>
       )}
     </div>
@@ -77,12 +78,12 @@ export default function BudgetPage() {
 }
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
-  task: "Задача",
-  group: "Группа",
-  brand: "Бренд",
-  equipment: "Изделие",
-  retail_point: "Точка",
-  document: "Документ",
+  task: t("Задача"),
+  group: t("Группа"),
+  brand: t("Бренд"),
+  equipment: t("Изделие"),
+  retail_point: t("Точка"),
+  document: t("Документ"),
 };
 
 function BudgetLog() {
@@ -92,7 +93,7 @@ function BudgetLog() {
 
   return (
     <Panel
-      title={`ЖУРНАЛ ИЗМЕНЕНИЙ (${rows.length})`}
+      title={t("ЖУРНАЛ ИЗМЕНЕНИЙ ({n})", { n: rows.length })}
       actions={
         <button
           onClick={() => setOpen((o) => !o)}
@@ -104,20 +105,20 @@ function BudgetLog() {
     >
       {open &&
         (isLoading ? (
-          <p style={{ color: "var(--text3)", fontSize: 11 }}>Загрузка…</p>
+          <p style={{ color: "var(--text3)", fontSize: 11 }}>{t("Загрузка…")}</p>
         ) : rows.length === 0 ? (
-          <p style={{ color: "var(--text3)", fontSize: 11 }}>Изменений пока нет</p>
+          <p style={{ color: "var(--text3)", fontSize: 11 }}>{t("Изменений пока нет")}</p>
         ) : (
           <table className={styles.logTable}>
             <thead>
               <tr>
-                <th>Когда</th>
-                <th>Кто</th>
-                <th>Объект</th>
-                <th>Код</th>
-                <th>Поле</th>
-                <th>Было</th>
-                <th>Стало</th>
+                <th>{t("Когда")}</th>
+                <th>{t("Кто")}</th>
+                <th>{t("Объект")}</th>
+                <th>{t("Код")}</th>
+                <th>{t("Поле")}</th>
+                <th>{t("Было")}</th>
+                <th>{t("Стало")}</th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +132,7 @@ function BudgetLog() {
                   <td>
                     <Badge color="gray">{r.task}</Badge>
                   </td>
-                  <td>{r.field}</td>
+                  <td>{tServer(r.field)}</td>
                   <td style={{ color: r.field === "Удаление" ? "var(--danger)" : "var(--text3)" }}>
                     {r.old}
                   </td>

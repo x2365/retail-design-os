@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { NavLink } from "react-router-dom";
 
 import { NAV_SECTIONS } from "./navConfig";
@@ -20,7 +21,7 @@ export function MobileNavDrawer({ open, onClose, isAdmin }: MobileNavDrawerProps
       <aside className={styles.drawer} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <div className={styles.logoMark}>RetailDesign</div>
-          <button className={styles.close} onClick={onClose} title="Закрыть">
+          <button className={styles.close} onClick={onClose} title={t("Закрыть")}>
             ✕
           </button>
         </div>

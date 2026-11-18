@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { Link } from "react-router-dom";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -6,9 +7,9 @@ import { useApprovals, useApproveApproval, useRejectApproval } from "../../api/q
 import styles from "./ApprovalsPage.module.css";
 
 const STATUS_LABEL: Record<string, string> = {
-  approved: "Согласовано",
-  rejected: "Отклонено",
-  pending: "Ожидает",
+  approved: t("Согласовано"),
+  rejected: t("Отклонено"),
+  pending: t("Ожидает"),
 };
 const STATUS_COLOR: Record<string, "green" | "red" | "amber"> = {
   approved: "green",
@@ -22,20 +23,21 @@ export default function ApprovalsPage() {
   const reject = useRejectApproval();
 
   return (
-    <Panel title="СОГЛАСОВАНИЯ" count={isLoading ? undefined : data?.length}>
+    <Panel title={t("СОГЛАСОВАНИЯ")} count={isLoading ? undefined : data?.length}>
       {isLoading ? (
-        <p className={styles.empty}>Загрузка…</p>
+        <p className={styles.empty}>{t("Загрузка…")}</p>
       ) : !data || data.length === 0 ? (
         <p className={styles.empty}>
-          Нет согласований, ожидающих решения. Задача появляется здесь, когда доходит до этапа
-          «Согласования», «Бюджет и КП» или «Образец».
+          {t(
+            "Нет согласований, ожидающих решения. Задача появляется здесь, когда доходит до этапа «Согласования», «Бюджет и КП» или «Образец».",
+          )}
         </p>
       ) : (
         <>
           <p className={styles.hint}>
-            Часть строк — это задачи, зависшие на внутреннем гейте этапа: решение принимается в
-            карточке задачи, здесь только ссылка на неё. Остальные можно утвердить/отклонить прямо
-            тут.
+            {t(
+              "Часть строк — это задачи, зависшие на внутреннем гейте этапа: решение принимается в карточке задачи, здесь только ссылка на неё. Остальные можно утвердить/отклонить прямо тут.",
+            )}
           </p>
           {data.map((a) => {
             const isGate = a.id < 0;
@@ -51,10 +53,10 @@ export default function ApprovalsPage() {
                 </div>
                 <div className={styles.info}>
                   <div className={styles.topRow}>
-                    <span className={styles.name}>{a.from_name}</span>
-                    <Badge color="blue">{a.type}</Badge>
+                    <span className={styles.name}>{tServer(a.from_name)}</span>
+                    <Badge color="blue">{tServer(a.type)}</Badge>
                     {isGate ? (
-                      <Badge color="gray">гейт в карточке</Badge>
+                      <Badge color="gray">{t("гейт в карточке")}</Badge>
                     ) : (
                       <Badge color={color}>{label}</Badge>
                     )}
@@ -69,15 +71,15 @@ export default function ApprovalsPage() {
                       className={styles.approve}
                       style={{ textDecoration: "none" }}
                     >
-                      Перейти к задаче →
+                      {t("Перейти к задаче →")}
                     </Link>
                   ) : a.status === "pending" ? (
                     <>
                       <button className={styles.approve} onClick={() => approve.mutate(a.id)}>
-                        ✓ Утвердить
+                        {t("✓ Утвердить")}
                       </button>
                       <button className={styles.reject} onClick={() => reject.mutate(a.id)}>
-                        ✗ Отклонить
+                        {t("✗ Отклонить")}
                       </button>
                     </>
                   ) : null}

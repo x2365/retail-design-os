@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 /** Sidebar structure — ported from the old app's <aside class="sidebar"> markup
  * (section labels, icons, order, grouping) so the rewrite keeps the same
  * information architecture. `adminOnly` items are hidden unless the current
@@ -16,48 +17,48 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
-    label: "Обзор",
+    label: t("Обзор"),
     items: [
-      { to: "/", icon: "📊", label: "Дашборд" },
-      { to: "/pipeline", icon: "🧩", label: "Воронка задач" },
-      { to: "/metrics", icon: "📉", label: "Метрики" },
-      { to: "/gantt", icon: "⏱️", label: "Таймлайн" },
-      { to: "/archive", icon: "📦", label: "Архив задач" },
+      { to: "/", icon: "📊", label: t("Дашборд") },
+      { to: "/pipeline", icon: "🧩", label: t("Воронка задач") },
+      { to: "/metrics", icon: "📉", label: t("Метрики") },
+      { to: "/gantt", icon: "⏱️", label: t("Таймлайн") },
+      { to: "/archive", icon: "📦", label: t("Архив задач") },
     ],
   },
   {
-    label: "Финансы",
+    label: t("Финансы"),
     items: [
-      { to: "/budget", icon: "💵", label: "Бюджеты" },
-      { to: "/payments", icon: "🧾", label: "Оплаты / КП" },
+      { to: "/budget", icon: "💵", label: t("Бюджеты") },
+      { to: "/payments", icon: "🧾", label: t("Оплаты / КП") },
     ],
   },
   {
-    label: "Логистика",
-    items: [{ to: "/tt", icon: "📍", label: "Торговые точки" }],
+    label: t("Логистика"),
+    items: [{ to: "/tt", icon: "📍", label: t("Торговые точки") }],
   },
   {
-    label: "Система",
+    label: t("Система"),
     items: [
-      { to: "/approvals", icon: "☑️", label: "Согласования" },
-      { to: "/brands", icon: "🔖", label: "Бренды" },
-      { to: "/library", icon: "📂", label: "Библиотека" },
-      { to: "/users", icon: "👤", label: "Пользователи", adminOnly: true },
+      { to: "/approvals", icon: "☑️", label: t("Согласования") },
+      { to: "/brands", icon: "🔖", label: t("Бренды") },
+      { to: "/library", icon: "📂", label: t("Библиотека") },
+      { to: "/users", icon: "👤", label: t("Пользователи"), adminOnly: true },
     ],
   },
 ];
 
 export const ROUTE_TITLES: Record<string, string> = {
-  "/": "Дашборд",
-  "/pipeline": "Воронка задач",
-  "/metrics": "Метрики",
-  "/gantt": "Таймлайн",
-  "/archive": "Архив задач",
-  "/budget": "Бюджеты",
-  "/payments": "Оплаты / КП",
-  "/tt": "Торговые точки",
-  "/approvals": "Согласования",
-  "/brands": "Бренды",
-  "/library": "Библиотека",
-  "/users": "Пользователи",
+  "/": t("Дашборд"),
+  "/pipeline": t("Воронка задач"),
+  "/metrics": t("Метрики"),
+  "/gantt": t("Таймлайн"),
+  "/archive": t("Архив задач"),
+  "/budget": t("Бюджеты"),
+  "/payments": t("Оплаты / КП"),
+  "/tt": t("Торговые точки"),
+  "/approvals": t("Согласования"),
+  "/brands": t("Бренды"),
+  "/library": t("Библиотека"),
+  "/users": t("Пользователи"),
 };

@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import { useState } from "react";
 
 import { Button } from "../../../components/Button/Button";
@@ -18,7 +19,7 @@ export function CommentsSection({ code }: { code: string }) {
   return (
     <div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-        {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</span>}
+        {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>{t("Загрузка…")}</span>}
         {(data ?? []).map((c) => (
           <div key={c.id} style={{ fontSize: 12 }}>
             <span style={{ fontWeight: 300 }}>{c.author}</span>{" "}
@@ -27,19 +28,19 @@ export function CommentsSection({ code }: { code: string }) {
           </div>
         ))}
         {!isLoading && (data ?? []).length === 0 && (
-          <span style={{ fontSize: 12, color: "var(--text3)" }}>Пока нет комментариев</span>
+          <span style={{ fontSize: 12, color: "var(--text3)" }}>{t("Пока нет комментариев")}</span>
         )}
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <textarea
           className={forms.textarea}
           style={{ minHeight: 48, flex: 1 }}
-          placeholder="Комментарий…"
+          placeholder={t("Комментарий…")}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
         <Button variant="ghost" disabled={addComment.isPending} onClick={submit}>
-          Отправить
+          {t("Отправить")}
         </Button>
       </div>
     </div>

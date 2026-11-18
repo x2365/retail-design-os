@@ -1,3 +1,4 @@
+import { t, tServer } from "../i18n";
 import createClient, { type Middleware } from "openapi-fetch";
 
 import type { paths } from "./schema";
@@ -42,10 +43,10 @@ api.use(authMiddleware);
 
 /** Extracts a FastAPI-style `{detail: "..."}` message, falling back to the
  * status code — mirrors the old app's error handling in a typed form. */
-export function apiErrorMessage(error: unknown, fallback = "Ошибка запроса"): string {
+export function apiErrorMessage(error: unknown, fallback = t("Ошибка запроса")): string {
   if (error && typeof error === "object" && "detail" in error) {
     const detail = (error as { detail: unknown }).detail;
-    if (typeof detail === "string") return detail;
+    if (typeof detail === "string") return tServer(detail);
   }
   return fallback;
 }
@@ -69,7 +70,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
 export async function fetchAuthedBlobUrl(path: string): Promise<string> {
   const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(path, { headers });
-  if (!res.ok) throw new Error(`Не удалось загрузить файл (${res.status})`);
+  if (!res.ok) throw new Error(t("Не удалось загрузить файл ({status})", { status: res.status }));
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }

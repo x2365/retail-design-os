@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useState } from "react";
 
 import { Button } from "../../components/Button/Button";
@@ -24,7 +25,7 @@ export function PointFormModal({ point, onClose }: PointFormModalProps) {
 
   function submit() {
     setError("");
-    const onError = (e: unknown) => setError(apiErrorMessage(e, "Не удалось сохранить точку"));
+    const onError = (e: unknown) => setError(apiErrorMessage(e, t("Не удалось сохранить точку")));
     if (point) {
       update.mutate(
         { id: point.id, payload: { name, city, address } },
@@ -36,18 +37,18 @@ export function PointFormModal({ point, onClose }: PointFormModalProps) {
   }
 
   return (
-    <Modal title={point ? "Изменить точку" : "Новая торговая точка"} onClose={onClose}>
+    <Modal title={point ? t("Изменить точку") : t("Новая торговая точка")} onClose={onClose}>
       <div className={forms.row}>
-        <label className={forms.label}>Название</label>
+        <label className={forms.label}>{t("Название")}</label>
         <input className={forms.input} value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className={forms.grid2}>
         <div className={forms.row}>
-          <label className={forms.label}>Город</label>
+          <label className={forms.label}>{t("Город")}</label>
           <input className={forms.input} value={city} onChange={(e) => setCity(e.target.value)} />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Адрес</label>
+          <label className={forms.label}>{t("Адрес")}</label>
           <input
             className={forms.input}
             value={address}
@@ -57,7 +58,7 @@ export function PointFormModal({ point, onClose }: PointFormModalProps) {
       </div>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={pending || !name.trim()} onClick={submit}>
-        Сохранить
+        {t("Сохранить")}
       </Button>
     </Modal>
   );

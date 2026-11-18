@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -47,15 +48,15 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
           onClose();
           if (task) navigate(`/pipeline?open=${task.code}`);
         },
-        onError: (e) => setError(apiErrorMessage(e, "Не удалось создать задачу")),
+        onError: (e) => setError(apiErrorMessage(e, t("Не удалось создать задачу"))),
       },
     );
   }
 
   return (
-    <Modal title="Новая задача" onClose={onClose}>
+    <Modal title={t("Новая задача")} onClose={onClose}>
       <div className={forms.row}>
-        <label className={forms.label}>Бренд</label>
+        <label className={forms.label}>{t("Бренд")}</label>
         <select
           className={forms.select}
           value={effectiveBrand}
@@ -63,18 +64,19 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
         >
           {(brands ?? []).map((b) => (
             <option key={b.id} value={b.name}>
-              {b.name} (Гр.{b.group})
+              {b.name} {t("(Гр.")}
+              {b.group})
             </option>
           ))}
         </select>
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Название</label>
+        <label className={forms.label}>{t("Название")}</label>
         <input className={forms.input} value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className={forms.grid2}>
         <div className={forms.row}>
-          <label className={forms.label}>Дата отгрузки в ТТ</label>
+          <label className={forms.label}>{t("Дата отгрузки в ТТ")}</label>
           <input
             type="date"
             className={forms.input}
@@ -83,7 +85,7 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
           />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Дата предполагаемого лонча</label>
+          <label className={forms.label}>{t("Дата предполагаемого лонча")}</label>
           <input
             type="date"
             className={forms.input}
@@ -93,12 +95,13 @@ export function TaskCreateModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <p style={{ fontSize: 11, color: "var(--text3)", marginTop: -4, marginBottom: 8 }}>
-        Можно оставить пустым и заполнить позже на вкладке «ТЗ» — но без них задача не сможет
-        перейти на этап «Дизайн».
+        {t(
+          "Можно оставить пустым и заполнить позже на вкладке «ТЗ» — но без них задача не сможет перейти на этап «Дизайн».",
+        )}
       </p>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={create.isPending || !name.trim()} onClick={submit}>
-        Создать
+        {t("Создать")}
       </Button>
     </Modal>
   );

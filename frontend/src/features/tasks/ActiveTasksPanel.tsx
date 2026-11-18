@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useEffect, useRef, useState } from "react";
 
 import { Panel } from "../../components/Panel/Panel";
@@ -14,19 +15,19 @@ type Filter = "all" | "urgent";
 type SortKey = "deadline" | "group" | "created";
 
 const TABS: { key: Filter; label: string }[] = [
-  { key: "all", label: "Все" },
-  { key: "urgent", label: "Срочные" },
+  { key: "all", label: t("Все") },
+  { key: "urgent", label: t("Срочные") },
 ];
 
 const PANEL_TITLES: Record<Filter, string> = {
-  all: "АКТИВНЫЕ ЗАДАЧИ",
-  urgent: "СРОЧНЫЕ ЗАДАЧИ",
+  all: t("АКТИВНЫЕ ЗАДАЧИ"),
+  urgent: t("СРОЧНЫЕ ЗАДАЧИ"),
 };
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: "deadline", label: "По дедлайну" },
-  { key: "group", label: "По группе" },
-  { key: "created", label: "По дате создания" },
+  { key: "deadline", label: t("По дедлайну") },
+  { key: "group", label: t("По группе") },
+  { key: "created", label: t("По дате создания") },
 ];
 
 // task.deadline is "DD.MM.YY" (backend serializers._fmt_date), not ISO —
@@ -81,7 +82,7 @@ export function ActiveTasksPanel({ highlightCode }: { highlightCode?: string | n
   if (isLoading)
     return (
       <Panel title={PANEL_TITLES[filter]}>
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
       </Panel>
     );
 
@@ -123,7 +124,7 @@ export function ActiveTasksPanel({ highlightCode }: { highlightCode?: string | n
       </div>
 
       {tasks.length === 0 ? (
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>Нет задач</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Нет задач")}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {tasks.map((t) => (

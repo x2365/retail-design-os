@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useMemo, useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -42,7 +43,7 @@ export default function TTPage() {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <Panel title="СТАТУС ТОРГОВЫХ ТОЧЕК — АКТИВНЫЕ ЛОНЧИ">
+        <Panel title={t("СТАТУС ТОРГОВЫХ ТОЧЕК — АКТИВНЫЕ ЛОНЧИ")}>
           <TTMini />
         </Panel>
       </div>
@@ -56,7 +57,7 @@ export default function TTPage() {
       {viewing && <PointDetailModal point={viewing} onClose={() => setViewing(null)} />}
 
       <Panel
-        title="КАТАЛОГ ТОРГОВЫХ ТОЧЕК"
+        title={t("КАТАЛОГ ТОРГОВЫХ ТОЧЕК")}
         count={isLoading ? undefined : points.length}
         actions={
           <>
@@ -64,17 +65,17 @@ export default function TTPage() {
               variant="ghost"
               onClick={() => downloadFile("/api/export/retail-points.csv", "retail-points.csv")}
             >
-              ↓ Точки CSV
+              {t("↓ Точки CSV")}
             </Button>
             <Button
               variant="ghost"
               onClick={() => downloadFile("/api/export/deliveries.csv", "deliveries.csv")}
             >
-              ↓ Доставки CSV
+              {t("↓ Доставки CSV")}
             </Button>
             {isEditor && (
               <Button variant="primary" onClick={() => setEditing("new")}>
-                + Точка
+                {t("+ Точка")}
               </Button>
             )}
           </>
@@ -84,7 +85,7 @@ export default function TTPage() {
           <input
             className={[forms.input, styles.search].join(" ")}
             style={{ marginBottom: 0 }}
-            placeholder="Поиск по названию, городу, коду…"
+            placeholder={t("Поиск по названию, городу, коду…")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -92,22 +93,22 @@ export default function TTPage() {
             variant={problemsOnly ? "primary" : "ghost"}
             onClick={() => setProblemsOnly((v) => !v)}
           >
-            ⚠ Только с проблемами
+            {t("⚠ Только с проблемами")}
           </Button>
         </div>
 
         {isLoading ? (
-          <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+          <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
         ) : points.length === 0 ? (
-          <p style={{ color: "var(--text3)", fontSize: 12 }}>Точек не найдено</p>
+          <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Точек не найдено")}</p>
         ) : (
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Код</th>
-                <th>Название</th>
-                <th>Город</th>
-                <th>Отгрузки</th>
+                <th>{t("Код")}</th>
+                <th>{t("Название")}</th>
+                <th>{t("Город")}</th>
+                <th>{t("Отгрузки")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -121,7 +122,7 @@ export default function TTPage() {
                   <td>{p.city || "—"}</td>
                   <td>
                     {p.deliveries_total ? (
-                      `${p.deliveries_total} поз.`
+                      t("{n} поз.", { n: p.deliveries_total })
                     ) : (
                       <span style={{ color: "var(--text3)" }}>—</span>
                     )}
@@ -133,23 +134,27 @@ export default function TTPage() {
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                     <button className={styles.iconBtn} onClick={() => setViewing(p)}>
-                      Что отгружено
+                      {t("Что отгружено")}
                     </button>
                     {isEditor && (
                       <>
                         <button
                           className={styles.iconBtn}
-                          title="Изменить"
+                          title={t("Изменить")}
                           onClick={() => setEditing(p)}
                         >
                           ✎
                         </button>
                         <button
                           className={styles.iconBtn}
-                          title="Удалить"
+                          title={t("Удалить")}
                           onClick={() => {
                             if (
-                              confirm(`Удалить точку «${p.name}»? (только если в неё нет отгрузок)`)
+                              confirm(
+                                t("Удалить точку «{name}»? (только если в неё нет отгрузок)", {
+                                  name: p.name,
+                                }),
+                              )
                             ) {
                               deletePoint.mutate(p.id);
                             }

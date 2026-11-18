@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import { useEffect, useRef, useState } from "react";
 
 import { ApprovalGate } from "../../../components/ApprovalGate/ApprovalGate";
@@ -45,11 +46,11 @@ import styles from "./TaskDetailModal.module.css";
 
 // Соответствует PS_LABELS в backend/app/serializers.py::payment_to_out
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  unpaid: "Ожидает оплаты",
-  registry: "Отправлен в реестр",
-  queued: "Заведён на оплату",
-  prepaid: "Предоплачен",
-  paid: "Оплачено",
+  unpaid: t("Ожидает оплаты"),
+  registry: t("Отправлен в реестр"),
+  queued: t("Заведён на оплату"),
+  prepaid: t("Предоплачен"),
+  paid: t("Оплачено"),
 };
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
@@ -103,7 +104,11 @@ function FormulaCostInput({
         onChange(result);
         onError("");
       } catch (e) {
-        onError(e instanceof Error ? `Формула в «Тираж, ₽»: ${e.message}` : "Не удалось посчитать формулу");
+        onError(
+          e instanceof Error
+            ? t("Формула в «Тираж, ₽»: {msg}", { msg: e.message })
+            : t("Не удалось посчитать формулу"),
+        );
       }
       return;
     }
@@ -171,8 +176,8 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
 
   if (isLoading || !task || viewedStage === null) {
     return (
-      <Modal title="Загрузка…" onClose={onClose}>
-        <p style={{ color: "var(--text2)" }}>Загрузка карточки задачи…</p>
+      <Modal title={t("Загрузка…")} onClose={onClose}>
+        <p style={{ color: "var(--text2)" }}>{t("Загрузка карточки задачи…")}</p>
       </Modal>
     );
   }
@@ -184,7 +189,7 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       await updateTask.mutateAsync({ stage: next });
       setViewedStage(next);
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось перейти на следующий этап"));
+      setError(apiErrorMessage(e, t("Не удалось перейти на следующий этап")));
     }
   }
 
@@ -195,14 +200,17 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       await updateTask.mutateAsync({ stage: prev });
       setViewedStage(prev);
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось вернуться на предыдущий этап"));
+      setError(apiErrorMessage(e, t("Не удалось вернуться на предыдущий этап")));
     }
   }
 
   async function handleDelete() {
     if (
       !confirm(
-        `Удалить задачу ${task!.code} безвозвратно? Это удалит всю историю, документы, оплату и комментарии.`,
+        t(
+          "Удалить задачу {code} безвозвратно? Это удалит всю историю, документы, оплату и комментарии.",
+          { code: task!.code },
+        ),
       )
     ) {
       return;
@@ -212,7 +220,7 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       await deleteTask.mutateAsync();
       onClose();
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось удалить задачу"));
+      setError(apiErrorMessage(e, t("Не удалось удалить задачу")));
     }
   }
 
@@ -221,13 +229,14 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
       title={`${task.code} · ${task.name}`}
       sub={
         <>
-          {task.brand} · Группа {task.group} · {task.urgent && <Badge color="red">Срочно</Badge>}
+          {task.brand} {t("· Группа")} {task.group} ·{" "}
+          {task.urgent && <Badge color="red">{t("Срочно")}</Badge>}
         </>
       }
       headerExtra={
         user?.role === "admin" ? (
           <Button variant="ghost" disabled={deleteTask.isPending} onClick={handleDelete}>
-            🗑 Удалить
+            {t("🗑 Удалить")}
           </Button>
         ) : undefined
       }
@@ -272,18 +281,18 @@ export function TaskDetailModal({ code, onClose }: { code: string; onClose: () =
         setError={setError}
       />
 
-      <div className={styles.sectionLabel}>Комментарии и обсуждение</div>
+      <div className={styles.sectionLabel}>{t("Комментарии и обсуждение")}</div>
       <CommentsSection code={code} />
 
       <div className={styles.footer}>
         {isEditor && task.stage > 1 && (
           <Button variant="ghost" disabled={updateTask.isPending} onClick={revert}>
-            ← На предыдущий этап
+            {t("← На предыдущий этап")}
           </Button>
         )}
         {isEditor && task.stage < LAST_STAGE && (
           <Button variant="primary" disabled={updateTask.isPending} onClick={advance}>
-            Далее →
+            {t("Далее →")}
           </Button>
         )}
         {error && <span className={styles.error}>{error}</span>}
@@ -318,15 +327,15 @@ function StageContent(props: StageContentProps) {
   if (stage === 2)
     return (
       <div>
-        <div className={styles.sectionLabel}>Файлы дизайна (эскиз / 3D / фото)</div>
+        <div className={styles.sectionLabel}>{t("Файлы дизайна (эскиз / 3D / фото)")}</div>
         <DocumentList
           code={code}
           stage={2}
           canEdit={isEditor}
           kinds={[
-            { value: "sketch", label: "Эскиз" },
-            { value: "model3d", label: "3D-модель" },
-            { value: "photo", label: "Фото" },
+            { value: "sketch", label: t("Эскиз") },
+            { value: "model3d", label: t("3D-модель") },
+            { value: "photo", label: t("Фото") },
           ]}
         />
       </div>
@@ -349,14 +358,14 @@ function StageContent(props: StageContentProps) {
   if (stage === 5)
     return (
       <div>
-        <div className={styles.sectionLabel}>Документы</div>
+        <div className={styles.sectionLabel}>{t("Документы")}</div>
         <DocumentList
           code={code}
           stage={5}
           canEdit={isEditor}
           kinds={[
-            { value: "ds", label: "ДС" },
-            { value: "invoice", label: "Счёт" },
+            { value: "ds", label: t("ДС") },
+            { value: "invoice", label: t("Счёт") },
           ]}
         />
       </div>
@@ -367,7 +376,7 @@ function StageContent(props: StageContentProps) {
       <div>
         <ShipmentStage {...props} />
         <div style={{ marginTop: 16 }}>
-          <div className={styles.sectionLabel}>Доставка в ТТ</div>
+          <div className={styles.sectionLabel}>{t("Доставка в ТТ")}</div>
           <DeliveriesList code={code} />
         </div>
       </div>
@@ -376,13 +385,13 @@ function StageContent(props: StageContentProps) {
     if (!showsInstallStage(task.equipment_kind)) {
       return (
         <p style={{ fontSize: 12, color: "var(--text3)" }}>
-          Монтаж не требуется для этого типа изделия.
+          {t("Монтаж не требуется для этого типа изделия.")}
         </p>
       );
     }
     return (
       <div>
-        <div className={styles.sectionLabel}>Монтаж в ТТ</div>
+        <div className={styles.sectionLabel}>{t("Монтаж в ТТ")}</div>
         <InstallationList code={code} />
       </div>
     );
@@ -391,11 +400,11 @@ function StageContent(props: StageContentProps) {
   if (stage === LAST_STAGE) {
     return (
       <div>
-        <Badge color="green">✓ Задача закрыта</Badge>
+        <Badge color="green">{t("✓ Задача закрыта")}</Badge>
         <div className={styles.grid2} style={{ marginTop: 16 }}>
-          <Field label="Бюджет" value={formatMoney(kopToRub(task.kp_total))} />
+          <Field label={t("Бюджет")} value={formatMoney(kopToRub(task.kp_total))} />
           <Field
-            label="Статус оплаты"
+            label={t("Статус оплаты")}
             value={PAYMENT_STATUS_LABELS[task.payment_status] ?? task.payment_status}
           />
         </div>
@@ -414,7 +423,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
   async function save() {
     setError("");
     if (dimensions.trim() && !/^\d+(\.\d+)?\s\d+(\.\d+)?\s\d+(\.\d+)?$/.test(dimensions.trim())) {
-      setError("Размеры — 3 числа через пробел (Ш В Г), например: 300 300 20");
+      setError(t("Размеры — 3 числа через пробел (Ш В Г), например: 300 300 20"));
       return;
     }
     try {
@@ -425,17 +434,17 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
         launch: launch || undefined,
       });
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сохранить ТЗ"));
+      setError(apiErrorMessage(e, t("Не удалось сохранить ТЗ")));
     }
   }
 
   if (!isEditor) {
     return (
       <div className={styles.grid2}>
-        <Field label="Артикул" value={task.article} />
-        <Field label="Размеры, мм (Ш В Г)" value={task.dimensions} />
-        <Field label="Дата отгрузки в ТТ" value={task.deadline} />
-        <Field label="Дата предполагаемого лонча" value={task.launch} />
+        <Field label={t("Артикул")} value={task.article} />
+        <Field label={t("Размеры, мм (Ш В Г)")} value={task.dimensions} />
+        <Field label={t("Дата отгрузки в ТТ")} value={task.deadline} />
+        <Field label={t("Дата предполагаемого лонча")} value={task.launch} />
       </div>
     );
   }
@@ -444,7 +453,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
     <div>
       <div className={forms.grid2}>
         <div className={forms.row}>
-          <label className={forms.label}>Артикул</label>
+          <label className={forms.label}>{t("Артикул")}</label>
           <input
             className={forms.input}
             value={article}
@@ -452,7 +461,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
           />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Размеры, мм (Ш В Г)</label>
+          <label className={forms.label}>{t("Размеры, мм (Ш В Г)")}</label>
           <input
             className={forms.input}
             value={dimensions}
@@ -463,7 +472,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
       </div>
       <div className={forms.grid2}>
         <div className={forms.row}>
-          <label className={forms.label}>Дата отгрузки в ТТ *</label>
+          <label className={forms.label}>{t("Дата отгрузки в ТТ *")}</label>
           <input
             type="date"
             className={forms.input}
@@ -472,7 +481,7 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
           />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Дата предполагаемого лонча *</label>
+          <label className={forms.label}>{t("Дата предполагаемого лонча *")}</label>
           <input
             type="date"
             className={forms.input}
@@ -482,18 +491,18 @@ function BriefStage({ task, code, isEditor, updateTask, setError }: StageContent
         </div>
       </div>
       <p style={{ fontSize: 11, color: "var(--text3)", marginTop: -4, marginBottom: 8 }}>
-        * обязательно для перехода на «Дизайн»
+        {t("* обязательно для перехода на «Дизайн»")}
       </p>
       <Button variant="ghost" disabled={updateTask.isPending} onClick={save}>
-        Сохранить
+        {t("Сохранить")}
       </Button>
       <div style={{ marginTop: 16 }}>
-        <div className={styles.sectionLabel}>Файл ТЗ (если есть)</div>
+        <div className={styles.sectionLabel}>{t("Файл ТЗ (если есть)")}</div>
         <DocumentList
           code={code}
           stage={1}
           canEdit={isEditor}
-          kinds={[{ value: "brief", label: "ТЗ" }]}
+          kinds={[{ value: "brief", label: t("ТЗ") }]}
         />
       </div>
     </div>
@@ -517,7 +526,7 @@ function PrepStage({
       setError("");
       prepApproval.mutate(
         { gate, approved },
-        { onError: (e) => setError(apiErrorMessage(e, "Не удалось обновить согласование")) },
+        { onError: (e) => setError(apiErrorMessage(e, t("Не удалось обновить согласование"))) },
       );
     };
   }
@@ -526,13 +535,13 @@ function PrepStage({
     <div>
       {sketch && (
         <div style={{ marginBottom: 12 }}>
-          <div className={styles.sectionLabel}>Эскиз</div>
+          <div className={styles.sectionLabel}>{t("Эскиз")}</div>
           <DocumentPreview downloadUrl={sketch.download_url} filename={sketch.filename} />
         </div>
       )}
-      <div className={styles.sectionLabel}>Согласование (оба → Бюджет и КП)</div>
+      <div className={styles.sectionLabel}>{t("Согласование (оба → Бюджет и КП)")}</div>
       <ApprovalGate
-        label="Бренд"
+        label={t("Бренд")}
         approved={task.prep_brand_approved}
         by={task.prep_brand_by}
         canEdit={isEditor || canApprove("brand")}
@@ -540,7 +549,7 @@ function PrepStage({
         onSetApproved={setGate("brand")}
       />
       <ApprovalGate
-        label="Сеть"
+        label={t("Сеть")}
         approved={task.prep_zya_approved}
         by={task.prep_zya_by}
         canEdit={isEditor || canApprove("zya")}
@@ -549,9 +558,11 @@ function PrepStage({
       />
       <div style={{ marginTop: 8 }}>
         {both ? (
-          <Badge color="green">✓ Оба согласования получены</Badge>
+          <Badge color="green">{t("✓ Оба согласования получены")}</Badge>
         ) : (
-          <span style={{ fontSize: 11, color: "var(--text3)" }}>ожидаются оба согласования</span>
+          <span style={{ fontSize: 11, color: "var(--text3)" }}>
+            {t("ожидаются оба согласования")}
+          </span>
         )}
       </div>
     </div>
@@ -561,13 +572,19 @@ function PrepStage({
 function SummaryStage({ task }: StageContentProps) {
   return (
     <div className={styles.grid2}>
-      <Field label="Бренд" value={task.brand} />
-      <Field label="Дедлайн ТТ" value={task.deadline} />
-      <Field label="Дата лонча" value={task.launch} />
-      <Field label="Артикул" value={task.article} />
-      <Field label="Размеры, мм (Ш В Г)" value={task.dimensions} />
-      <Field label="Согласование бренда" value={task.prep_brand_approved ? "✓ Согласовано" : "—"} />
-      <Field label="Согласование сети" value={task.prep_zya_approved ? "✓ Согласовано" : "—"} />
+      <Field label={t("Бренд")} value={task.brand} />
+      <Field label={t("Дедлайн ТТ")} value={task.deadline} />
+      <Field label={t("Дата лонча")} value={task.launch} />
+      <Field label={t("Артикул")} value={task.article} />
+      <Field label={t("Размеры, мм (Ш В Г)")} value={task.dimensions} />
+      <Field
+        label={t("Согласование бренда")}
+        value={task.prep_brand_approved ? t("✓ Согласовано") : "—"}
+      />
+      <Field
+        label={t("Согласование сети")}
+        value={task.prep_zya_approved ? t("✓ Согласовано") : "—"}
+      />
     </div>
   );
 }
@@ -611,7 +628,7 @@ function KpStage({
       setError("");
       kpApproval.mutate(
         { gate, approved },
-        { onError: (e) => setError(apiErrorMessage(e, "Не удалось обновить согласование")) },
+        { onError: (e) => setError(apiErrorMessage(e, t("Не удалось обновить согласование"))) },
       );
     };
   }
@@ -620,7 +637,7 @@ function KpStage({
     try {
       await updateTask.mutateAsync({ kp_contractor: name });
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сохранить подрядчика"));
+      setError(apiErrorMessage(e, t("Не удалось сохранить подрядчика")));
     }
   }
 
@@ -632,7 +649,7 @@ function KpStage({
         tirazh_cost: Math.round(tirazhCost * 100),
       });
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сохранить финансы"));
+      setError(apiErrorMessage(e, t("Не удалось сохранить финансы")));
     }
   }
 
@@ -644,14 +661,14 @@ function KpStage({
     try {
       await updateTask.mutateAsync({ tirazh_qty: Math.round(tirazhQty) });
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сохранить тираж"));
+      setError(apiErrorMessage(e, t("Не удалось сохранить тираж")));
     }
   }
 
   return (
     <div>
       <div className={forms.row}>
-        <label className={forms.label}>Подрядчик</label>
+        <label className={forms.label}>{t("Подрядчик")}</label>
         {isEditor ? (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <select
@@ -667,7 +684,7 @@ function KpStage({
               ))}
             </select>
             <Button variant="ghost" onClick={() => setAddingContractor((o) => !o)}>
-              + Новый
+              {t("+ Новый")}
             </Button>
           </div>
         ) : (
@@ -677,7 +694,7 @@ function KpStage({
       {addingContractor && (
         <div className={forms.row} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <div style={{ flex: 1 }}>
-            <label className={forms.label}>Название подрядчика</label>
+            <label className={forms.label}>{t("Название подрядчика")}</label>
             <input
               className={forms.input}
               value={newContractorName}
@@ -697,33 +714,34 @@ function KpStage({
                     setAddingContractor(false);
                     if (c) saveContractor(c.name);
                   },
-                  onError: (e) => setError(apiErrorMessage(e, "Не удалось добавить подрядчика")),
+                  onError: (e) => setError(apiErrorMessage(e, t("Не удалось добавить подрядчика"))),
                 },
               );
             }}
           >
-            Добавить
+            {t("Добавить")}
           </Button>
         </div>
       )}
 
       <div style={{ marginBottom: 16 }}>
-        <Field label="Бюджет" value={formatMoney(kopToRub(task.budget))} />
+        <Field label={t("Бюджет")} value={formatMoney(kopToRub(task.budget))} />
         {task.budget === 0 && (
           <p style={{ fontSize: 11, color: "var(--text3)", marginTop: 4 }}>
-            Считается автоматически как Образец + Тираж — фиксируется, когда КП согласовано
-            (Финансы + Бренд ниже).
+            {t(
+              "Считается автоматически как Образец + Тираж — фиксируется, когда КП согласовано (Финансы + Бренд ниже).",
+            )}
           </p>
         )}
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <div className={styles.sectionLabel}>Файл КП</div>
+        <div className={styles.sectionLabel}>{t("Файл КП")}</div>
         <DocumentList
           code={code}
           stage={4}
           canEdit={isEditor}
-          kinds={[{ value: "kp", label: "КП" }]}
+          kinds={[{ value: "kp", label: t("КП") }]}
         />
       </div>
 
@@ -731,17 +749,18 @@ function KpStage({
         <div style={{ marginTop: 12 }}>
           <div style={{ marginBottom: 12 }}>
             <Badge color="blue">
-              ✓ Заведено на оплату · {PAYMENT_STATUS_LABELS[task.payment_status] ?? task.payment_status}
+              {t("✓ Заведено на оплату ·")}{" "}
+              {PAYMENT_STATUS_LABELS[task.payment_status] ?? task.payment_status}
             </Badge>
           </div>
           {canMoney ? (
             <div className={forms.grid2}>
               <div className={forms.row}>
-                <label className={forms.label}>Образец, ₽</label>
+                <label className={forms.label}>{t("Образец, ₽")}</label>
                 <NumberInput className={forms.input} value={sampleCost} onChange={setSampleCost} />
               </div>
               <div className={forms.row}>
-                <label className={forms.label}>Тираж, ₽</label>
+                <label className={forms.label}>{t("Тираж, ₽")}</label>
                 <FormulaCostInput
                   className={forms.input}
                   value={tirazhCost}
@@ -752,34 +771,36 @@ function KpStage({
             </div>
           ) : (
             <div className={styles.grid2}>
-              <Field label="Образец" value={formatMoney(kopToRub(task.sample_cost))} />
-              <Field label="Тираж" value={formatMoney(kopToRub(task.tirazh_cost))} />
+              <Field label={t("Образец")} value={formatMoney(kopToRub(task.sample_cost))} />
+              <Field label={t("Тираж")} value={formatMoney(kopToRub(task.tirazh_cost))} />
             </div>
           )}
           {canMoney && overBudget && (
             <p style={{ fontSize: 11, color: "var(--warn)", marginTop: 4 }}>
-              ⚠ Образец + Тираж ({formatMoney(requested)}) больше остатка бюджета группы (
+              {t("⚠ Образец + Тираж (")}
+              {formatMoney(requested)}
+              {t(") больше остатка бюджета группы (")}
               {formatMoney(groupRemaining ?? 0)})
             </p>
           )}
 
           {isEditor ? (
             <div className={forms.row} style={{ marginTop: 8 }}>
-              <label className={forms.label}>Тираж, шт.</label>
+              <label className={forms.label}>{t("Тираж, шт.")}</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <NumberInput className={forms.input} value={tirazhQty} onChange={setTirazhQty} />
                 <Button variant="ghost" disabled={updateTask.isPending} onClick={saveTirazhQty}>
-                  Сохранить
+                  {t("Сохранить")}
                 </Button>
               </div>
             </div>
           ) : (
-            <Field label="Тираж, шт." value={String(task.tirazh_qty)} />
+            <Field label={t("Тираж, шт.")} value={String(task.tirazh_qty)} />
           )}
         </div>
       ) : (
         <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 12 }}>
-          Загрузите файл КП, чтобы указать стоимость образца и тиража.
+          {t("Загрузите файл КП, чтобы указать стоимость образца и тиража.")}
         </p>
       )}
 
@@ -790,15 +811,15 @@ function KpStage({
           onClick={saveFinance}
           style={{ marginTop: 8 }}
         >
-          Сохранить финансы
+          {t("Сохранить финансы")}
         </Button>
       )}
 
       <div className={styles.sectionLabel} style={{ marginTop: 16 }}>
-        Согласование КП (оба → Документы)
+        {t("Согласование КП (оба → Документы)")}
       </div>
       <ApprovalGate
-        label="Финансы"
+        label={t("Финансы")}
         approved={task.kp_manager_approved}
         by={task.kp_manager_by}
         canEdit={isEditor || canApprove("manager")}
@@ -806,7 +827,7 @@ function KpStage({
         onSetApproved={setGate("manager")}
       />
       <ApprovalGate
-        label="Бренд"
+        label={t("Бренд")}
         approved={task.kp_director_approved}
         by={task.kp_director_by}
         canEdit={isEditor || canApprove("director")}
@@ -830,23 +851,23 @@ function SampleStage({
       setError("");
       sampleApproval.mutate(
         { gate, approved },
-        { onError: (e) => setError(apiErrorMessage(e, "Не удалось обновить согласование")) },
+        { onError: (e) => setError(apiErrorMessage(e, t("Не удалось обновить согласование"))) },
       );
     };
   }
 
   return (
     <div>
-      <div className={styles.sectionLabel}>Фото образца</div>
+      <div className={styles.sectionLabel}>{t("Фото образца")}</div>
       <DocumentList
         code={code}
         stage={6}
         canEdit={isEditor}
-        kinds={[{ value: "photo", label: "Фото" }]}
+        kinds={[{ value: "photo", label: t("Фото") }]}
       />
 
       <div className={styles.sectionLabel} style={{ marginTop: 12 }}>
-        Согласование образца
+        {t("Согласование образца")}
       </div>
       <ApprovalGate
         label="RD"
@@ -857,7 +878,7 @@ function SampleStage({
         onSetApproved={setGate("qc")}
       />
       <ApprovalGate
-        label="Бренд"
+        label={t("Бренд")}
         approved={task.sample_brand_approved}
         by={task.sample_brand_by}
         canEdit={isEditor || canApprove("brand")}
@@ -865,7 +886,7 @@ function SampleStage({
         onSetApproved={setGate("brand")}
       />
       <ApprovalGate
-        label="Сеть"
+        label={t("Сеть")}
         approved={task.sample_network_approved}
         by={task.sample_network_by}
         canEdit={isEditor || canApprove("network")}
@@ -885,22 +906,22 @@ function ShipmentStage({ task, code, isEditor, updateTask, setError }: StageCont
     try {
       await updateTask.mutateAsync({ shipment_order_no: orderNo });
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сохранить номер заказа"));
+      setError(apiErrorMessage(e, t("Не удалось сохранить номер заказа")));
     }
   }
 
   function requestOrderNo() {
     setError("");
-    addComment.mutate("Запрошен номер отгрузки у менеджера.", {
+    addComment.mutate(t("Запрошен номер отгрузки у менеджера."), {
       onSuccess: () => setRequested(true),
-      onError: (e) => setError(apiErrorMessage(e, "Не удалось отправить запрос")),
+      onError: (e) => setError(apiErrorMessage(e, t("Не удалось отправить запрос"))),
     });
   }
 
   return (
     <div>
       <div className={forms.row}>
-        <label className={forms.label}>Номер отгрузки</label>
+        <label className={forms.label}>{t("Номер отгрузки")}</label>
         {isEditor ? (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input
@@ -910,10 +931,12 @@ function ShipmentStage({ task, code, isEditor, updateTask, setError }: StageCont
               onBlur={saveOrderNo}
             />
             <Button variant="ghost" disabled={addComment.isPending} onClick={requestOrderNo}>
-              Запросить
+              {t("Запросить")}
             </Button>
             {requested && (
-              <span style={{ fontSize: 11, color: "var(--accent3)" }}>✓ запрос отправлен</span>
+              <span style={{ fontSize: 11, color: "var(--accent3)" }}>
+                {t("✓ запрос отправлен")}
+              </span>
             )}
           </div>
         ) : (
@@ -922,14 +945,14 @@ function ShipmentStage({ task, code, isEditor, updateTask, setError }: StageCont
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <div className={styles.sectionLabel}>Отгрузочные документы</div>
+        <div className={styles.sectionLabel}>{t("Отгрузочные документы")}</div>
         <DocumentList
           code={code}
           stage={7}
           canEdit={isEditor}
           kinds={[
-            { value: "waybill", label: "Накладная" },
-            { value: "registry", label: "Реестр" },
+            { value: "waybill", label: t("Накладная") },
+            { value: "registry", label: t("Реестр") },
           ]}
         />
       </div>
@@ -946,21 +969,21 @@ function FinalStage({ code, task, isEditor, setStageApproval, setError }: StageC
         approved: true,
       });
       if (result.blocked_reasons.length > 0) {
-        setError("Нельзя закрыть: " + result.blocked_reasons.join("; "));
+        setError(t("Нельзя закрыть: ") + result.blocked_reasons.join("; "));
       }
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось проверить готовность"));
+      setError(apiErrorMessage(e, t("Не удалось проверить готовность")));
     }
   }
 
   return (
     <div>
-      <div className={styles.sectionLabel}>Распределение по торговым точкам</div>
+      <div className={styles.sectionLabel}>{t("Распределение по торговым точкам")}</div>
       <DeliveriesList code={code} />
       {isEditor && (
         <div style={{ marginTop: 12 }}>
           <Button variant="ghost" disabled={setStageApproval.isPending} onClick={checkReady}>
-            Проверить готовность к закрытию
+            {t("Проверить готовность к закрытию")}
           </Button>
         </div>
       )}

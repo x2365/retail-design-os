@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useState } from "react";
 
 import { Button } from "../../components/Button/Button";
@@ -41,7 +42,7 @@ export function EquipmentFormModal({
 
   function submit() {
     setError("");
-    const onError = (e: unknown) => setError(apiErrorMessage(e, "Не удалось сохранить изделие"));
+    const onError = (e: unknown) => setError(apiErrorMessage(e, t("Не удалось сохранить изделие")));
     const common = {
       name,
       kind,
@@ -62,10 +63,10 @@ export function EquipmentFormModal({
   }
 
   return (
-    <Modal title={equipment ? "Изменить изделие" : "Новое изделие"} onClose={onClose}>
+    <Modal title={equipment ? t("Изменить изделие") : t("Новое изделие")} onClose={onClose}>
       {!equipment && (
         <div className={forms.row}>
-          <label className={forms.label}>Бренд</label>
+          <label className={forms.label}>{t("Бренд")}</label>
           <select
             className={forms.select}
             value={effectiveBrand}
@@ -73,19 +74,20 @@ export function EquipmentFormModal({
           >
             {(brands ?? []).map((b) => (
               <option key={b.id} value={b.name}>
-                {b.name} (Гр.{b.group})
+                {b.name} {t("(Гр.")}
+                {b.group})
               </option>
             ))}
           </select>
         </div>
       )}
       <div className={forms.row}>
-        <label className={forms.label}>Название</label>
+        <label className={forms.label}>{t("Название")}</label>
         <input className={forms.input} value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className={forms.grid2}>
         <div className={forms.row}>
-          <label className={forms.label}>Тип</label>
+          <label className={forms.label}>{t("Тип")}</label>
           <select className={forms.select} value={kind} onChange={(e) => setKind(e.target.value)}>
             {KIND_OPTIONS.map((k) => (
               <option key={k.value} value={k.value}>
@@ -95,7 +97,7 @@ export function EquipmentFormModal({
           </select>
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Размеры</label>
+          <label className={forms.label}>{t("Размеры")}</label>
           <input
             className={forms.input}
             value={dimensions}
@@ -104,7 +106,7 @@ export function EquipmentFormModal({
         </div>
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Описание</label>
+        <label className={forms.label}>{t("Описание")}</label>
         <textarea
           className={forms.textarea}
           value={description}
@@ -113,21 +115,21 @@ export function EquipmentFormModal({
       </div>
       <div className={forms.grid2}>
         <div className={forms.row}>
-          <label className={forms.label}>Бюджет, ₽</label>
+          <label className={forms.label}>{t("Бюджет, ₽")}</label>
           <NumberInput className={forms.input} value={budget} onChange={setBudget} />
         </div>
         <div className={forms.row}>
-          <label className={forms.label}>Образец, ₽</label>
+          <label className={forms.label}>{t("Образец, ₽")}</label>
           <NumberInput className={forms.input} value={sample} onChange={setSample} />
         </div>
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Тираж, ₽</label>
+        <label className={forms.label}>{t("Тираж, ₽")}</label>
         <NumberInput className={forms.input} value={tirazh} onChange={setTirazh} />
       </div>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={pending || !name.trim()} onClick={submit}>
-        Сохранить
+        {t("Сохранить")}
       </Button>
     </Modal>
   );

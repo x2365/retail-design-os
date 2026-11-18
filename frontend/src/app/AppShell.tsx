@@ -1,3 +1,5 @@
+import { LangSwitch } from "../components/LangSwitch/LangSwitch";
+import { t, tServer } from "../i18n";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
@@ -72,15 +74,15 @@ export default function AppShell() {
         {user && (
           <div className={styles.sidebarFooter}>
             <div className={styles.userCard}>
-              <div className={styles.userAvatar}>{initials(user.full_name)}</div>
+              <div className={styles.userAvatar}>{initials(tServer(user.full_name))}</div>
               <div className={styles.userInfo}>
-                <div className={styles.userName}>{user.full_name}</div>
+                <div className={styles.userName}>{tServer(user.full_name)}</div>
                 <div className={styles.userRole}>{ROLE_LABELS[user.role as Role] ?? user.role}</div>
               </div>
               <button
                 className={styles.navItem}
                 style={{ padding: "4px 7px" }}
-                title="Сменить пароль"
+                title={t("Сменить пароль")}
                 onClick={() => setChangingPassword(true)}
               >
                 🔑
@@ -88,7 +90,7 @@ export default function AppShell() {
               <button
                 className={styles.navItem}
                 style={{ padding: "4px 7px" }}
-                title="Выйти"
+                title={t("Выйти")}
                 onClick={logout}
               >
                 ⎋
@@ -100,7 +102,7 @@ export default function AppShell() {
 
       {changingPassword && (
         <PasswordModal
-          title="Сменить пароль"
+          title={t("Сменить пароль")}
           requireCurrent
           onSubmit={({ currentPassword, newPassword }) =>
             changeMyPassword.mutateAsync({ currentPassword: currentPassword ?? "", newPassword })
@@ -114,13 +116,14 @@ export default function AppShell() {
           <button
             className={styles.hamburger}
             onClick={() => setMobileNavOpen(true)}
-            title="Меню"
-            aria-label="Открыть меню"
+            title={t("Меню")}
+            aria-label={t("Открыть меню")}
           >
             ☰
           </button>
           <div className={styles.topbarTitle}>{title}</div>
           <div className={styles.topbarActions} ref={setTopbarActionsEl} />
+          <LangSwitch />
         </div>
         <div className={styles.content}>
           <Outlet context={{ topbarActionsEl } satisfies AppShellContext} />

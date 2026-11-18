@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { Badge } from "../../components/Badge/Badge";
 import { ProgressBar } from "../../components/ProgressBar/ProgressBar";
 import { StageBadge } from "../../components/StageBadge/StageBadge";
@@ -38,13 +39,15 @@ export function TaskRow({
           <div className={styles.metaRow}>
             <Badge color="gray">{task.code}</Badge>
             <span className={styles.metaText}>
-              {task.brand} · Гр.{task.group}
+              {task.brand} {t("· Гр.")}
+              {task.group}
             </span>
-            <StageBadge stage={task.stage} label={task.stage_name} />
+            <StageBadge stage={task.stage} label={tServer(task.stage_name)} />
           </div>
         </div>
         <div className={[styles.deadline, dlClass].join(" ")}>
-          {dlIcon} {task.days_left}д
+          {dlIcon} {task.days_left}
+          {t("д")}
         </div>
       </div>
 
@@ -67,7 +70,7 @@ export function TaskRow({
       <div className={styles.progressWrap}>
         <div className={styles.progressLabel}>
           <span>
-            Этап {task.stage}/{TOTAL_STAGES}
+            {t("Этап")} {task.stage}/{TOTAL_STAGES}
           </span>
           <span>{pct}%</span>
         </div>

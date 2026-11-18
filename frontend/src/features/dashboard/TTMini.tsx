@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { Badge } from "../../components/Badge/Badge";
 import { ProgressBar } from "../../components/ProgressBar/ProgressBar";
 import { useTT } from "../../api/queries/tt";
@@ -6,13 +7,13 @@ import styles from "./TTMini.module.css";
 export function TTMini() {
   const { data, isLoading } = useTT();
 
-  if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>;
+  if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>;
   const rows = data ?? [];
 
   if (rows.length === 0) {
     return (
       <div style={{ color: "var(--text3)", fontSize: 12 }}>
-        Нет активных лончей с доставками в ТТ
+        {t("Нет активных лончей с доставками в ТТ")}
       </div>
     );
   }
@@ -21,13 +22,13 @@ export function TTMini() {
     <table className={styles.table}>
       <thead>
         <tr>
-          <th>Задача</th>
-          <th>Бренд</th>
-          <th>Всего ТТ</th>
-          <th>Получили</th>
-          <th>Неполный объём</th>
-          <th>Не получили</th>
-          <th>Прогресс</th>
+          <th>{t("Задача")}</th>
+          <th>{t("Бренд")}</th>
+          <th>{t("Всего ТТ")}</th>
+          <th>{t("Получили")}</th>
+          <th>{t("Неполный объём")}</th>
+          <th>{t("Не получили")}</th>
+          <th>{t("Прогресс")}</th>
         </tr>
       </thead>
       <tbody>

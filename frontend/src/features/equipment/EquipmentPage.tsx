@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -51,7 +52,7 @@ export default function EquipmentPage() {
       const task = await produce.mutateAsync(e.id);
       if (task) navigate(`/pipeline?open=${task.code}`);
     } catch (err) {
-      setError(apiErrorMessage(err, "Не удалось запустить в производство"));
+      setError(apiErrorMessage(err, t("Не удалось запустить в производство")));
     }
   }
 
@@ -71,22 +72,22 @@ export default function EquipmentPage() {
         <input
           className={forms.input}
           style={{ marginBottom: 0, flex: 1 }}
-          placeholder="Поиск по названию…"
+          placeholder={t("Поиск по названию…")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         {isEditor && (
           <Button variant="primary" onClick={() => setEditing("new")}>
-            + Изделие
+            {t("+ Изделие")}
           </Button>
         )}
       </div>
       {error && <div className={forms.error}>{error}</div>}
 
       {isLoading ? (
-        <p style={{ color: "var(--text2)" }}>Загрузка…</p>
+        <p style={{ color: "var(--text2)" }}>{t("Загрузка…")}</p>
       ) : byBrand.size === 0 ? (
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>Библиотека пуста</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Библиотека пуста")}</p>
       ) : (
         [...byBrand.entries()].map(([brand, items]) => (
           <div className={styles.groupWrap} key={brand}>
@@ -122,8 +123,10 @@ export default function EquipmentPage() {
                     <div className={styles.cardBody}>
                       <div className={styles.topRow}>
                         <Badge color="blue">{KIND_LABELS[e.kind] ?? e.kind}</Badge>
-                        {!e.is_active && <Badge color="gray">архив</Badge>}
-                        <span className={styles.produced}>в производстве {e.times_produced}×</span>
+                        {!e.is_active && <Badge color="gray">{t("архив")}</Badge>}
+                        <span className={styles.produced}>
+                          {t("в производстве")} {e.times_produced}×
+                        </span>
                       </div>
                       <div className={styles.name}>{e.name}</div>
                       <div className={styles.meta}>
@@ -131,14 +134,14 @@ export default function EquipmentPage() {
                         {e.description ? ` · ${e.description}` : ""}
                       </div>
                       <div className={styles.budget}>
-                        Бюджет:{" "}
+                        {t("Бюджет:")}{" "}
                         <b style={{ color: "var(--text)" }}>
                           {formatMoneyShort(kopToRub(e.est_budget))} ₽
                         </b>
                       </div>
                       <div className={styles.actions}>
                         <Button variant="ghost" onClick={() => setFiles(e)}>
-                          📁 Файлы
+                          {t("📁 Файлы")}
                         </Button>
                         {isEditor && e.is_active && (
                           <Button
@@ -146,7 +149,7 @@ export default function EquipmentPage() {
                             disabled={produce.isPending}
                             onClick={() => handleProduce(e)}
                           >
-                            В производство →
+                            {t("В производство →")}
                           </Button>
                         )}
                         {isEditor && (
@@ -160,16 +163,20 @@ export default function EquipmentPage() {
                                 updateEq.mutate({ id: e.id, payload: { is_active: !e.is_active } })
                               }
                             >
-                              {e.is_active ? "В архив" : "Из архива"}
+                              {e.is_active ? t("В архив") : t("Из архива")}
                             </Button>
                             <Button
                               variant="danger"
                               onClick={() => {
                                 setError("");
-                                if (confirm(`Удалить «${e.name}» из библиотеки?`)) {
+                                if (
+                                  confirm(t("Удалить «{name}» из библиотеки?", { name: e.name }))
+                                ) {
                                   deleteEq.mutate(e.id, {
                                     onError: (err) =>
-                                      setError(apiErrorMessage(err, "Не удалось удалить изделие")),
+                                      setError(
+                                        apiErrorMessage(err, t("Не удалось удалить изделие")),
+                                      ),
                                   });
                                 }
                               }}

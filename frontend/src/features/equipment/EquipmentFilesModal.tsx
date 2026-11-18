@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { useState } from "react";
 
 import { Modal } from "../../components/Modal/Modal";
@@ -11,13 +12,13 @@ import {
 import forms from "../../styles/forms.module.css";
 
 const KIND_OPTIONS = [
-  { value: "photo", label: "Фото" },
-  { value: "model3d", label: "Визуализация" },
-  { value: "brief", label: "ТЗ" },
-  { value: "ds", label: "ДС" },
-  { value: "invoice", label: "Счёт" },
-  { value: "planogram", label: "Планограмма" },
-  { value: "other", label: "Прочее" },
+  { value: "photo", label: t("Фото") },
+  { value: "model3d", label: t("Визуализация") },
+  { value: "brief", label: t("ТЗ") },
+  { value: "ds", label: t("ДС") },
+  { value: "invoice", label: t("Счёт") },
+  { value: "planogram", label: t("Планограмма") },
+  { value: "other", label: t("Прочее") },
 ];
 
 export function EquipmentFilesModal({
@@ -42,9 +43,9 @@ export function EquipmentFilesModal({
   }
 
   return (
-    <Modal title={`📁 ${name}`} sub="Файлы проекта" onClose={onClose}>
+    <Modal title={`📁 ${name}`} sub={t("Файлы проекта")} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-        {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</span>}
+        {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>{t("Загрузка…")}</span>}
         {(data ?? []).map((d) => (
           <div
             key={d.id}
@@ -63,9 +64,11 @@ export function EquipmentFilesModal({
               style={{ color: "var(--accent)", cursor: "pointer", flex: 1 }}
               onClick={() => downloadFile(d.download_url, d.filename)}
             >
-              <b>{d.kind_label}:</b> {d.filename}
+              <b>{tServer(d.kind_label)}:</b> {d.filename}
             </a>
-            <span style={{ color: "var(--text3)" }}>{(d.size / 1024).toFixed(0)} КБ</span>
+            <span style={{ color: "var(--text3)" }}>
+              {(d.size / 1024).toFixed(0)} {t("КБ")}
+            </span>
             <button
               onClick={() => del.mutate(d.id)}
               style={{
@@ -80,7 +83,9 @@ export function EquipmentFilesModal({
           </div>
         ))}
         {!isLoading && (data ?? []).length === 0 && (
-          <span style={{ fontSize: 12, color: "var(--text3)" }}>Файлов проекта пока нет</span>
+          <span style={{ fontSize: 12, color: "var(--text3)" }}>
+            {t("Файлов проекта пока нет")}
+          </span>
         )}
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -97,7 +102,9 @@ export function EquipmentFilesModal({
           ))}
         </select>
         <FileInput onChange={handleFile} disabled={upload.isPending} />
-        {upload.isPending && <span style={{ fontSize: 11, color: "var(--text3)" }}>Загрузка…</span>}
+        {upload.isPending && (
+          <span style={{ fontSize: 11, color: "var(--text3)" }}>{t("Загрузка…")}</span>
+        )}
       </div>
     </Modal>
   );

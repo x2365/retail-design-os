@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import type { ReactNode } from "react";
 
 import { useAuth } from "../auth/AuthContext";
@@ -12,7 +13,7 @@ export function RequireRole({ roles, children }: { roles: Role[]; children: Reac
   if (!user || !roles.includes(user.role as Role)) {
     return (
       <p style={{ color: "var(--text2)", fontSize: 13 }}>
-        Доступно только для роли: {roles.join(", ")}.
+        {t("Доступно только для роли:")} {roles.join(", ")}.
       </p>
     );
   }

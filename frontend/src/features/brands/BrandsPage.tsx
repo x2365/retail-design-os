@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { useState } from "react";
 
 import { Button } from "../../components/Button/Button";
@@ -18,7 +19,8 @@ export default function BrandsPage() {
   const deleteBrand = useDeleteBrand();
   const [editing, setEditing] = useState<{ brand: Brand | null; groupCode: string } | null>(null);
 
-  if (groupsLoading || brandsLoading) return <p style={{ color: "var(--text2)" }}>Загрузка…</p>;
+  if (groupsLoading || brandsLoading)
+    return <p style={{ color: "var(--text2)" }}>{t("Загрузка…")}</p>;
 
   return (
     <div className={styles.grid}>
@@ -34,7 +36,7 @@ export default function BrandsPage() {
         return (
           <Panel
             key={g.code}
-            title={g.name}
+            title={tServer(g.name)}
             leading={<div className={styles.dot} style={{ background: g.color }} />}
             count={groupBrands.length}
             actions={
@@ -43,7 +45,7 @@ export default function BrandsPage() {
                   variant="ghost"
                   onClick={() => setEditing({ brand: null, groupCode: g.code })}
                 >
-                  + Бренд
+                  {t("+ Бренд")}
                 </Button>
               ) : undefined
             }
@@ -60,23 +62,24 @@ export default function BrandsPage() {
                   <div style={{ flex: 1 }}>
                     <div className={styles.name}>{b.name}</div>
                     <div className={styles.meta}>
-                      {b.active_tasks} активных · {b.equipment_count} в библиотеке
+                      {b.active_tasks} {t("активных ·")} {b.equipment_count} {t("в библиотеке")}
                     </div>
                   </div>
                   {isEditor && (
                     <>
                       <button
                         className={styles.iconBtn}
-                        title="Изменить"
+                        title={t("Изменить")}
                         onClick={() => setEditing({ brand: b, groupCode: g.code })}
                       >
                         ✎
                       </button>
                       <button
                         className={styles.iconBtn}
-                        title="Удалить"
+                        title={t("Удалить")}
                         onClick={() => {
-                          if (confirm(`Удалить бренд «${b.name}»?`)) deleteBrand.mutate(b.id);
+                          if (confirm(t("Удалить бренд «{name}»?", { name: b.name })))
+                            deleteBrand.mutate(b.id);
                         }}
                       >
                         ✕
@@ -86,7 +89,7 @@ export default function BrandsPage() {
                 </div>
               ))}
               {groupBrands.length === 0 && (
-                <p style={{ color: "var(--text3)", fontSize: 11 }}>Нет брендов в группе</p>
+                <p style={{ color: "var(--text3)", fontSize: 11 }}>{t("Нет брендов в группе")}</p>
               )}
             </div>
           </Panel>

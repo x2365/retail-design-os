@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import type { ChangeEvent } from "react";
 
 import buttonStyles from "../Button/Button.module.css";
@@ -13,7 +14,7 @@ import styles from "./FileInput.module.css";
 export function FileInput({
   onChange,
   disabled,
-  label = "Выбрать файл",
+  label = t("Выбрать файл"),
 }: {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
@@ -29,12 +30,7 @@ export function FileInput({
       ].join(" ")}
     >
       {label}
-      <input
-        type="file"
-        className={styles.hiddenInput}
-        onChange={onChange}
-        disabled={disabled}
-      />
+      <input type="file" className={styles.hiddenInput} onChange={onChange} disabled={disabled} />
     </label>
   );
 }

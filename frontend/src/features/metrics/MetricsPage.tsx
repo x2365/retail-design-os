@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { KpiCard, KpiRow } from "../../components/KpiCard/KpiCard";
 import { Panel } from "../../components/Panel/Panel";
 import { ProgressBar } from "../../components/ProgressBar/ProgressBar";
@@ -8,7 +9,7 @@ import styles from "./MetricsPage.module.css";
 export default function MetricsPage() {
   const { data, isLoading } = useMetrics();
 
-  if (isLoading || !data) return <p style={{ color: "var(--text2)" }}>Загрузка…</p>;
+  if (isLoading || !data) return <p style={{ color: "var(--text2)" }}>{t("Загрузка…")}</p>;
 
   const wipEntries = Object.entries(data.wip_by_stage)
     .map(([stage, count]) => [Number(stage), count] as const)
@@ -22,36 +23,39 @@ export default function MetricsPage() {
   return (
     <div>
       <p className={styles.intro}>
-        Flow-метрики процесса, посчитанные из истории переходов между этапами (
-        <code>TaskStageHistory</code>) — WIP, Lead Time, Throughput и Rework Rate уже полностью
-        вычислимы из существующих данных. Conversion Rate, Cost per Outcome и Customer Outcome сюда
-        не входят — для них не хватает конкретных полей в модели данных.
+        {t("Flow-метрики процесса, посчитанные из истории переходов между этапами (")}
+        <code>TaskStageHistory</code>
+        {t(
+          ") — WIP, Lead Time, Throughput и Rework Rate уже полностью вычислимы из существующих данных. Conversion Rate, Cost per Outcome и Customer Outcome сюда не входят — для них не хватает конкретных полей в модели данных.",
+        )}
       </p>
 
       <KpiRow>
         <KpiCard
           accent="blue"
           label="Lead Time"
-          value={data.lead_time_avg_days != null ? `${data.lead_time_avg_days} дн.` : "—"}
-          sub="в среднем от создания до закрытия"
+          value={
+            data.lead_time_avg_days != null ? t("{n} дн.", { n: data.lead_time_avg_days }) : "—"
+          }
+          sub={t("в среднем от создания до закрытия")}
         />
         <KpiCard
           accent="green"
           label="Throughput"
           value={throughputThisWeek}
-          sub="задач закрыто за эту неделю"
+          sub={t("задач закрыто за эту неделю")}
         />
-        <KpiCard accent="purple" label="WIP" value={wipTotal} sub="задач сейчас в работе" />
+        <KpiCard accent="purple" label="WIP" value={wipTotal} sub={t("задач сейчас в работе")} />
         <KpiCard
           accent="amber"
           label="Rework Rate"
           value={`${data.rework_rate}%`}
-          sub={`из ${data.total_transitions} переходов между этапами`}
+          sub={t("из {n} переходов между этапами", { n: data.total_transitions })}
         />
       </KpiRow>
 
       <div className={styles.grid}>
-        <Panel title="WIP ПО ЭТАПАМ">
+        <Panel title={t("WIP ПО ЭТАПАМ")}>
           <div className={styles.barList}>
             {wipEntries.map(([stage, count]) => (
               <div className={styles.barRow} key={stage}>
@@ -65,7 +69,7 @@ export default function MetricsPage() {
           </div>
         </Panel>
 
-        <Panel title="THROUGHPUT ПО НЕДЕЛЯМ">
+        <Panel title={t("THROUGHPUT ПО НЕДЕЛЯМ")}>
           <div className={styles.barList}>
             {data.throughput_by_week.map((w) => (
               <div className={styles.barRow} key={w.week}>

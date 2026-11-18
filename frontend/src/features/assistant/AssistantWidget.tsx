@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -60,7 +61,7 @@ export function AssistantWidget() {
 
   if (!open) {
     return (
-      <button className={styles.fab} onClick={() => setOpen(true)} title="AI ассистент">
+      <button className={styles.fab} onClick={() => setOpen(true)} title={t("AI ассистент")}>
         💬
       </button>
     );
@@ -69,7 +70,7 @@ export function AssistantWidget() {
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
-        <div className={styles.title}>AI ассистент</div>
+        <div className={styles.title}>{t("AI ассистент")}</div>
         <button className={styles.close} onClick={() => setOpen(false)}>
           ✕
         </button>
@@ -77,16 +78,18 @@ export function AssistantWidget() {
 
       {!status.enabled ? (
         <div className={styles.disabled}>
-          Ассистент выключен. Запустите Ollama с моделью «{status.model}» и включите LLM_ENABLED,
-          чтобы пользоваться ассистентом.
+          {t("Ассистент выключен. Запустите Ollama с моделью «")}
+          {status.model}
+          {t("» и включите LLM_ENABLED, чтобы пользоваться ассистентом.")}
         </div>
       ) : (
         <>
           <div className={styles.log}>
             {turns.length === 0 && (
               <div style={{ fontSize: 12, color: "var(--text3)" }}>
-                Спросите про задачи, бюджеты, согласования или доставки — ассистент отвечает только
-                на основе реальных данных дашборда.
+                {t(
+                  "Спросите про задачи, бюджеты, согласования или доставки — ассистент отвечает только на основе реальных данных дашборда.",
+                )}
               </div>
             )}
             {turns.map((t, i) => (
@@ -106,12 +109,14 @@ export function AssistantWidget() {
                 </div>
               </div>
             ))}
-            {ask.isPending && <div style={{ fontSize: 12, color: "var(--text3)" }}>Думаю…</div>}
+            {ask.isPending && (
+              <div style={{ fontSize: 12, color: "var(--text3)" }}>{t("Думаю…")}</div>
+            )}
           </div>
           <div className={styles.inputRow}>
             <input
               className={styles.input}
-              placeholder="Спросить про задачи…"
+              placeholder={t("Спросить про задачи…")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}

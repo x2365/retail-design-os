@@ -1,3 +1,4 @@
+import { locale, t, tServer } from "../../i18n";
 import { useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -19,7 +20,7 @@ import styles from "./UsersPage.module.css";
 const ROLES = Object.keys(ROLE_LABELS) as Role[];
 
 function formatTakenAt(iso: string): string {
-  return new Date(iso).toLocaleString("ru-RU", {
+  return new Date(iso).toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -37,7 +38,7 @@ function SnapshotPanel() {
   function onTake() {
     setError("");
     takeSnapshot.mutate(undefined, {
-      onError: (e) => setError(apiErrorMessage(e, "Не удалось сохранить точку сброса")),
+      onError: (e) => setError(apiErrorMessage(e, t("Не удалось сохранить точку сброса"))),
     });
   }
 
@@ -45,40 +46,46 @@ function SnapshotPanel() {
     setError("");
     if (
       !confirm(
-        "Откатить все данные к последней сохранённой точке сброса? Всё, что накопилось после неё, будет безвозвратно потеряно.",
+        t(
+          "Откатить все данные к последней сохранённой точке сброса? Всё, что накопилось после неё, будет безвозвратно потеряно.",
+        ),
       )
     )
       return;
     restoreSnapshot.mutate(undefined, {
-      onError: (e) => setError(apiErrorMessage(e, "Не удалось выполнить сброс")),
+      onError: (e) => setError(apiErrorMessage(e, t("Не удалось выполнить сброс"))),
     });
   }
 
   return (
-    <Panel title="ДЕМО-ДАННЫЕ">
+    <Panel title={t("ДЕМО-ДАННЫЕ")}>
       <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 10 }}>
-        Точка сброса — снимок всей базы, к которому можно откатить накопившиеся правки посетителей
-        демо. Внешний cron дёргает это же по расписанию (см. render.yaml).
+        {t(
+          "Точка сброса — снимок всей базы, к которому можно откатить накопившиеся правки посетителей демо. Внешний cron дёргает это же по расписанию (см. render.yaml).",
+        )}
       </p>
       {isLoading ? (
-        <p style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</p>
+        <p style={{ fontSize: 12, color: "var(--text3)" }}>{t("Загрузка…")}</p>
       ) : (
         <p style={{ fontSize: 12, color: "var(--text3)", marginBottom: 10 }}>
           {snap?.taken_at
-            ? `Сохранена: ${formatTakenAt(snap.taken_at)} (${Math.round((snap.size_bytes ?? 0) / 1024)} КБ)`
-            : "Точка сброса ещё не сохранена"}
+            ? t("Сохранена: {at} ({kb} КБ)", {
+                at: formatTakenAt(snap.taken_at),
+                kb: Math.round((snap.size_bytes ?? 0) / 1024),
+              })
+            : t("Точка сброса ещё не сохранена")}
         </p>
       )}
       <div style={{ display: "flex", gap: 8 }}>
         <Button variant="ghost" disabled={takeSnapshot.isPending} onClick={onTake}>
-          Сохранить точку сброса
+          {t("Сохранить точку сброса")}
         </Button>
         <Button
           variant="ghost"
           disabled={restoreSnapshot.isPending || !snap?.taken_at}
           onClick={onRestore}
         >
-          Сбросить сейчас
+          {t("Сбросить сейчас")}
         </Button>
       </div>
       {error && <div className={forms.error}>{error}</div>}
@@ -101,7 +108,7 @@ export default function UsersPage() {
   function submitNewUser() {
     setError("");
     if (!email || !fullName || password.length < 6) {
-      setError("Заполните email, ФИО и пароль (мин. 6 символов)");
+      setError(t("Заполните email, ФИО и пароль (мин. 6 символов)"));
       return;
     }
     createUser.mutate(
@@ -112,7 +119,7 @@ export default function UsersPage() {
           setFullName("");
           setPassword("");
         },
-        onError: (e) => setError(apiErrorMessage(e, "Не удалось создать пользователя")),
+        onError: (e) => setError(apiErrorMessage(e, t("Не удалось создать пользователя"))),
       },
     );
   }
@@ -120,10 +127,10 @@ export default function UsersPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <SnapshotPanel />
-      <Panel title="ПОЛЬЗОВАТЕЛИ">
+      <Panel title={t("ПОЛЬЗОВАТЕЛИ")}>
         {resetTarget && (
           <PasswordModal
-            title={`Новый пароль для ${resetTarget.email}`}
+            title={t("Новый пароль для {email}", { email: resetTarget.email })}
             onSubmit={({ newPassword }) =>
               resetPassword.mutateAsync({ id: resetTarget.id, newPassword })
             }
@@ -142,7 +149,7 @@ export default function UsersPage() {
           <input
             className={forms.input}
             style={{ marginBottom: 0, width: 180 }}
-            placeholder="ФИО"
+            placeholder={t("ФИО")}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
@@ -161,26 +168,26 @@ export default function UsersPage() {
           <input
             className={forms.input}
             style={{ marginBottom: 0, width: 150 }}
-            placeholder="пароль (мин. 6)"
+            placeholder={t("пароль (мин. 6)")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <Button variant="primary" disabled={createUser.isPending} onClick={submitNewUser}>
-            + Добавить
+            {t("+ Добавить")}
           </Button>
         </div>
         {error && <div className={forms.error}>{error}</div>}
 
         {isLoading ? (
-          <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+          <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
         ) : (
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>Email</th>
-                <th>ФИО</th>
-                <th>Роль</th>
-                <th>Статус</th>
+                <th>{t("ФИО")}</th>
+                <th>{t("Роль")}</th>
+                <th>{t("Статус")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -188,7 +195,7 @@ export default function UsersPage() {
               {(data ?? []).map((u) => (
                 <tr key={u.id}>
                   <td>{u.email}</td>
-                  <td>{u.full_name}</td>
+                  <td>{tServer(u.full_name)}</td>
                   <td>
                     <select
                       className={forms.select}
@@ -207,7 +214,7 @@ export default function UsersPage() {
                   </td>
                   <td>
                     <Badge color={u.is_active ? "green" : "gray"}>
-                      {u.is_active ? "активен" : "отключён"}
+                      {u.is_active ? t("активен") : t("отключён")}
                     </Badge>
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
@@ -215,7 +222,7 @@ export default function UsersPage() {
                       className={styles.link}
                       onClick={() => setResetTarget({ id: u.id, email: u.email })}
                     >
-                      Сброс пароля
+                      {t("Сброс пароля")}
                     </button>
                     {"  "}
                     <button
@@ -224,7 +231,7 @@ export default function UsersPage() {
                         updateUser.mutate({ id: u.id, payload: { is_active: !u.is_active } })
                       }
                     >
-                      {u.is_active ? "Отключить" : "Включить"}
+                      {u.is_active ? t("Отключить") : t("Включить")}
                     </button>
                   </td>
                 </tr>

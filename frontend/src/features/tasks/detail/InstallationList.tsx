@@ -1,3 +1,4 @@
+import { t, tServer } from "../../../i18n";
 import { Badge } from "../../../components/Badge/Badge";
 import { canConfirmDeliveryRole } from "../../../auth/roles";
 import { useAuth } from "../../../auth/AuthContext";
@@ -13,10 +14,10 @@ export function InstallationList({ code }: { code: string }) {
   const { user } = useAuth();
   const canConfirm = user ? canConfirmDeliveryRole(user.role) : false;
 
-  if (isLoading) return <p style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</p>;
+  if (isLoading) return <p style={{ fontSize: 12, color: "var(--text3)" }}>{t("Загрузка…")}</p>;
   const rows = data ?? [];
   if (rows.length === 0)
-    return <p style={{ fontSize: 12, color: "var(--text3)" }}>Нет доставок по ТТ</p>;
+    return <p style={{ fontSize: 12, color: "var(--text3)" }}>{t("Нет доставок по ТТ")}</p>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -29,10 +30,11 @@ export function InstallationList({ code }: { code: string }) {
             </span>
             {d.installed_at ? (
               <Badge color="green">
-                ✓ Смонтировано{d.installed_by ? ` · ${d.installed_by}` : ""}
+                {t("✓ Смонтировано")}
+                {d.installed_by ? ` · ${tServer(d.installed_by)}` : ""}
               </Badge>
             ) : !canInstall ? (
-              <Badge color="gray">сначала доставка</Badge>
+              <Badge color="gray">{t("сначала доставка")}</Badge>
             ) : canConfirm ? (
               <button
                 style={{
@@ -45,10 +47,10 @@ export function InstallationList({ code }: { code: string }) {
                 disabled={update.isPending}
                 onClick={() => update.mutate({ id: d.id, payload: { installed: true } })}
               >
-                отметить монтаж
+                {t("отметить монтаж")}
               </button>
             ) : (
-              <Badge color="amber">ожидает монтажа</Badge>
+              <Badge color="amber">{t("ожидает монтажа")}</Badge>
             )}
           </div>
         );

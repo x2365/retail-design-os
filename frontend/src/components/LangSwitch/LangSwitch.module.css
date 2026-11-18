@@ -1,0 +1,29 @@
+.wrap {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+  background: var(--surface);
+}
+
+.opt {
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: var(--tracking-loose);
+  color: var(--text3);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.opt:hover {
+  color: var(--text);
+}
+
+.active {
+  background: var(--surface3);
+  color: var(--text);
+}

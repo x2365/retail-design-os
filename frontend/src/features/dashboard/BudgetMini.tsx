@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { ProgressBar } from "../../components/ProgressBar/ProgressBar";
 import { useGroups } from "../../api/queries/groups";
 import { formatMoneyShort, kopToRub } from "../../lib/money";
@@ -6,7 +7,7 @@ import styles from "./BudgetMini.module.css";
 export function BudgetMini() {
   const { data, isLoading } = useGroups();
 
-  if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>;
+  if (isLoading) return <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>;
 
   return (
     <div>
@@ -18,7 +19,7 @@ export function BudgetMini() {
           <div className={styles.group} key={g.code}>
             <div className={styles.header}>
               <div className={styles.dot} style={{ background: g.color }} />
-              <div className={styles.name}>{g.name}</div>
+              <div className={styles.name}>{tServer(g.name)}</div>
               <div className={styles.total}>
                 {formatMoneyShort(spent)} / {formatMoneyShort(planned)} ₽
               </div>
@@ -27,8 +28,13 @@ export function BudgetMini() {
               <ProgressBar pct={pct} color={pct >= 100 ? "red" : pct >= 80 ? "amber" : "blue"} />
             </div>
             <div className={styles.foot}>
-              <span>{pct}% освоено</span>
-              <span>остаток {formatMoneyShort(Math.max(0, planned - spent))} ₽</span>
+              <span>
+                {pct}
+                {t("% освоено")}
+              </span>
+              <span>
+                {t("остаток")} {formatMoneyShort(Math.max(0, planned - spent))} ₽
+              </span>
             </div>
           </div>
         );

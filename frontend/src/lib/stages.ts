@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 /** Single source of truth for the 10-stage POSM pipeline — mirrors
  * backend/app/models/enums.py TaskStage exactly (same numeric order, same
  * Russian labels). Every screen rendering stage labels, counts, band
@@ -6,31 +7,31 @@
  * file existed; don't add an 8th. */
 
 export const STAGE_LABELS: Record<number, string> = {
-  1: "ТЗ получено",
-  2: "Разработка дизайна",
-  3: "Согласования",
-  4: "Бюджет и КП",
-  5: "Документы",
-  6: "Образец и Производство",
-  7: "Отгрузка",
-  8: "Монтаж",
-  9: "Распределение по ТТ",
-  10: "Закрыт",
+  1: t("ТЗ получено"),
+  2: t("Разработка дизайна"),
+  3: t("Согласования"),
+  4: t("Бюджет и КП"),
+  5: t("Документы"),
+  6: t("Образец и Производство"),
+  7: t("Отгрузка"),
+  8: t("Монтаж"),
+  9: t("Распределение по ТТ"),
+  10: t("Закрыт"),
 };
 
 // Shorter labels for the task-detail modal's tab strip (10 tabs need to fit
 // across one header row).
 export const STAGE_TAB_LABELS: Record<number, string> = {
-  1: "ТЗ",
-  2: "Дизайн",
-  3: "Согласования",
-  4: "Бюджет и КП",
-  5: "Документы",
-  6: "Образец",
-  7: "Отгрузка",
-  8: "Монтаж",
-  9: "Распределение",
-  10: "Закрыт",
+  1: t("ТЗ"),
+  2: t("Дизайн"),
+  3: t("Согласования"),
+  4: t("Бюджет и КП"),
+  5: t("Документы"),
+  6: t("Образец"),
+  7: t("Отгрузка"),
+  8: t("Монтаж"),
+  9: t("Распределение"),
+  10: t("Закрыт"),
 };
 
 export const FIRST_STAGE = 1;

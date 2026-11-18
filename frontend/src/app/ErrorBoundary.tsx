@@ -44,9 +44,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     return (
       <div ref={this.ref}>
-        {this.state.hasError ? null : (
-          <div key={this.state.key}>{this.props.children}</div>
-        )}
+        {this.state.hasError ? null : <div key={this.state.key}>{this.props.children}</div>}
       </div>
     );
   }

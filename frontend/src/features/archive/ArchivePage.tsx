@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useMemo, useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -39,25 +40,33 @@ export default function ArchivePage() {
   }, [data, search]);
 
   return (
-    <Panel title="АРХИВ ЗАДАЧ" count={isLoading ? undefined : closed.length}>
+    <Panel title={t("АРХИВ ЗАДАЧ")} count={isLoading ? undefined : closed.length}>
       {selected && <TaskDetailModal code={selected} onClose={() => setSelected(null)} />}
       <input
         className={forms.input}
-        placeholder="Поиск по коду, названию, бренду…"
+        placeholder={t("Поиск по коду, названию, бренду…")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
       {isLoading ? (
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
       ) : closed.length === 0 ? (
         <p style={{ color: "var(--text3)", fontSize: 12 }}>
-          {search ? "Ничего не найдено" : "Закрытых задач пока нет"}
+          {search ? t("Ничего не найдено") : t("Закрытых задач пока нет")}
         </p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              {["Код", "Название", "Бренд", "Группа", "Дедлайн", "Бюджет", ""].map((h) => (
+              {[
+                t("Код"),
+                t("Название"),
+                t("Бренд"),
+                t("Группа"),
+                t("Дедлайн"),
+                t("Бюджет"),
+                "",
+              ].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -103,12 +112,12 @@ function ArchiveRow({
 
   async function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
-    if (!confirm(`Удалить задачу ${task.code} безвозвратно?`)) return;
+    if (!confirm(t("Удалить задачу {code} безвозвратно?", { code: task.code }))) return;
     setError("");
     try {
       await deleteTask.mutateAsync();
     } catch (err) {
-      setError(apiErrorMessage(err, "Не удалось удалить задачу"));
+      setError(apiErrorMessage(err, t("Не удалось удалить задачу")));
     }
   }
 
@@ -119,7 +128,10 @@ function ArchiveRow({
       </td>
       <td style={cellStyle}>{task.name}</td>
       <td style={cellStyle}>{task.brand}</td>
-      <td style={cellStyle}>Гр.{task.group}</td>
+      <td style={cellStyle}>
+        {t("Гр.")}
+        {task.group}
+      </td>
       <td style={cellStyle}>{task.deadline ?? "—"}</td>
       <td style={cellStyle}>{formatMoney(kopToRub(task.budget))}</td>
       <td style={cellStyle}>
@@ -127,7 +139,7 @@ function ArchiveRow({
           <button
             onClick={handleDelete}
             disabled={deleteTask.isPending}
-            title={error || "Удалить задачу"}
+            title={error || t("Удалить задачу")}
             style={{
               background: "none",
               border: "none",

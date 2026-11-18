@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { api, apiErrorMessage, getToken, setToken, setUnauthorizedHandler } from "../api/client";
@@ -19,7 +20,7 @@ const AuthContext = createContext<AuthState | null>(null);
 
 async function fetchMe(): Promise<UserOut> {
   const { data, error } = await api.GET("/api/auth/me");
-  if (error) throw new Error(apiErrorMessage(error, "Не удалось получить профиль"));
+  if (error) throw new Error(apiErrorMessage(error, t("Не удалось получить профиль")));
   return data;
 }
 
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      throw new Error(apiErrorMessage(body, "Неверный email или пароль"));
+      throw new Error(apiErrorMessage(body, t("Неверный email или пароль")));
     }
     const data: components["schemas"]["Token"] = await res.json();
     setToken(data.access_token);

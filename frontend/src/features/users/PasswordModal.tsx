@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useState } from "react";
 
 import { Button } from "../../components/Button/Button";
@@ -23,7 +24,7 @@ export function PasswordModal({ title, requireCurrent, onSubmit, onClose }: Pass
   async function submit() {
     setError("");
     if (next.length < 6) {
-      setError("Пароль должен быть не короче 6 символов");
+      setError(t("Пароль должен быть не короче 6 символов"));
       return;
     }
     setPending(true);
@@ -31,7 +32,7 @@ export function PasswordModal({ title, requireCurrent, onSubmit, onClose }: Pass
       await onSubmit({ currentPassword: current || undefined, newPassword: next });
       onClose();
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось сменить пароль"));
+      setError(apiErrorMessage(e, t("Не удалось сменить пароль")));
     } finally {
       setPending(false);
     }
@@ -41,7 +42,7 @@ export function PasswordModal({ title, requireCurrent, onSubmit, onClose }: Pass
     <Modal title={title} onClose={onClose}>
       {requireCurrent && (
         <div className={forms.row}>
-          <label className={forms.label}>Текущий пароль</label>
+          <label className={forms.label}>{t("Текущий пароль")}</label>
           <input
             type="password"
             className={forms.input}
@@ -51,7 +52,7 @@ export function PasswordModal({ title, requireCurrent, onSubmit, onClose }: Pass
         </div>
       )}
       <div className={forms.row}>
-        <label className={forms.label}>Новый пароль (мин. 6 символов)</label>
+        <label className={forms.label}>{t("Новый пароль (мин. 6 символов)")}</label>
         <input
           type="password"
           className={forms.input}
@@ -61,7 +62,7 @@ export function PasswordModal({ title, requireCurrent, onSubmit, onClose }: Pass
       </div>
       <div className={forms.error}>{error}</div>
       <Button variant="primary" disabled={pending} onClick={submit}>
-        Сохранить
+        {t("Сохранить")}
       </Button>
     </Modal>
   );

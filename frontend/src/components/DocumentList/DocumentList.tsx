@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { useEffect, useState } from "react";
 
 import { downloadFile } from "../../api/client";
@@ -65,7 +66,7 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
         </div>
       )}
       <div className={styles.list}>
-        {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</span>}
+        {isLoading && <span style={{ fontSize: 12, color: "var(--text3)" }}>{t("Загрузка…")}</span>}
         {(data ?? []).map((d) => (
           <div className={styles.item} key={d.id}>
             {d.content_type.startsWith("image/") && (
@@ -74,16 +75,16 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
             <a className={styles.link} onClick={() => downloadFile(d.download_url, d.filename)}>
               📎 {d.filename}
             </a>
-            <span style={{ color: "var(--text3)", fontSize: 10 }}>{d.kind_label}</span>
+            <span style={{ color: "var(--text3)", fontSize: 10 }}>{tServer(d.kind_label)}</span>
             {canEdit && (
-              <button className={styles.del} onClick={() => del.mutate(d.id)} title="Удалить">
+              <button className={styles.del} onClick={() => del.mutate(d.id)} title={t("Удалить")}>
                 ✕
               </button>
             )}
           </div>
         ))}
         {!isLoading && (data ?? []).length === 0 && (
-          <span style={{ fontSize: 12, color: "var(--text3)" }}>Нет файлов</span>
+          <span style={{ fontSize: 12, color: "var(--text3)" }}>{t("Нет файлов")}</span>
         )}
       </div>
       {canEdit && (
@@ -104,7 +105,7 @@ export function DocumentList({ code, stage, kinds, canEdit }: DocumentListProps)
           )}
           <FileInput onChange={handleFile} disabled={upload.isPending} />
           {upload.isPending && (
-            <span style={{ fontSize: 11, color: "var(--text3)" }}>Загрузка…</span>
+            <span style={{ fontSize: 11, color: "var(--text3)" }}>{t("Загрузка…")}</span>
           )}
         </div>
       )}

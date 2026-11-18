@@ -1,15 +1,16 @@
+import { t } from "../i18n";
 /** Mirrors backend/app/models/enums.py Role. The API types this as a plain
  * `string` (Pydantic schema uses `role: str`), so we re-assert the closed
  * set here for exhaustive checks in the UI. */
 export type Role = "admin" | "manager" | "brand" | "retailer" | "shipment_manager" | "viewer";
 
 export const ROLE_LABELS: Record<Role, string> = {
-  admin: "Администратор",
-  manager: "Менеджер",
-  brand: "Бренд",
-  retailer: "Ритейлер",
-  shipment_manager: "Отдел отгрузки",
-  viewer: "Наблюдатель",
+  admin: t("Администратор"),
+  manager: t("Менеджер"),
+  brand: t("Бренд"),
+  retailer: t("Ритейлер"),
+  shipment_manager: t("Отдел отгрузки"),
+  viewer: t("Наблюдатель"),
 };
 
 /** admin/manager may create/edit most resources — mirrors isEditor() in the

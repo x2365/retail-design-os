@@ -41,3 +41,10 @@
   color: var(--text3);
   margin-top: 4px;
 }
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

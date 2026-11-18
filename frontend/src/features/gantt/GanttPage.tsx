@@ -1,3 +1,4 @@
+import { locale, t, tServer } from "../../i18n";
 import { useMemo, useState } from "react";
 
 import { Panel } from "../../components/Panel/Panel";
@@ -49,16 +50,16 @@ export default function GanttPage() {
   const todayPos = pct(now);
 
   const fmt = (t: number) =>
-    new Date(t).toLocaleDateString("ru-RU", { day: "2-digit", month: "short" });
+    new Date(t).toLocaleDateString(locale, { day: "2-digit", month: "short" });
 
   return (
-    <Panel title="ТАЙМЛАЙН" count={isLoading ? undefined : rows.length}>
+    <Panel title={t("ТАЙМЛАЙН")} count={isLoading ? undefined : rows.length}>
       {selected && <TaskDetailModal code={selected} onClose={() => setSelected(null)} />}
       {isLoading ? (
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
       ) : rows.length === 0 ? (
         <p style={{ color: "var(--text3)", fontSize: 12 }}>
-          Нет задач с заданным дедлайном ТТ — таймлайну не из чего строить полосы.
+          {t("Нет задач с заданным дедлайном ТТ — таймлайну не из чего строить полосы.")}
         </p>
       ) : (
         <div className={styles.wrap}>
@@ -92,7 +93,7 @@ export default function GanttPage() {
                         background: `color-mix(in srgb, ${barColor(task.stage)} 55%, transparent)`,
                       }}
                     />
-                    <span className={styles.barLabel}>{task.stage_name}</span>
+                    <span className={styles.barLabel}>{tServer(task.stage_name)}</span>
                   </div>
                   {todayPos >= 0 && todayPos <= 100 && (
                     <div className={styles.today} style={{ left: `${todayPos}%` }} />
@@ -106,22 +107,22 @@ export default function GanttPage() {
           <div className={styles.legend}>
             <div className={styles.legendItem}>
               <div className={styles.legendDot} style={{ background: "var(--accent2)" }} />
-              Разработка
+              {t("Разработка")}
             </div>
             <div className={styles.legendItem}>
               <div className={styles.legendDot} style={{ background: "var(--accent)" }} />
-              Согласование/Производство
+              {t("Согласование/Производство")}
             </div>
             <div className={styles.legendItem}>
               <div className={styles.legendDot} style={{ background: "var(--accent3)" }} />
-              Логистика
+              {t("Логистика")}
             </div>
             <div className={styles.legendItem}>
               <div
                 className={styles.legendDot}
                 style={{ background: "var(--danger)", width: 2, height: 10, borderRadius: 0 }}
               />
-              Сегодня
+              {t("Сегодня")}
             </div>
           </div>
         </div>

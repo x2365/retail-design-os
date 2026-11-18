@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useEffect, useState } from "react";
 
 import { fetchAuthedBlobUrl } from "../../api/client";
@@ -86,7 +87,7 @@ export function DocumentPreview({
   }
 
   if (!src) {
-    return <span style={{ fontSize: 11, color: "var(--text3)" }}>Загрузка превью…</span>;
+    return <span style={{ fontSize: 11, color: "var(--text3)" }}>{t("Загрузка превью…")}</span>;
   }
   return (
     <img

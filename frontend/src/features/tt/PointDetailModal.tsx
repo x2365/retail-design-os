@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { Badge } from "../../components/Badge/Badge";
 import { Modal } from "../../components/Modal/Modal";
 import { useAuth } from "../../auth/AuthContext";
@@ -10,9 +11,9 @@ import {
 import styles from "./PointDetailModal.module.css";
 
 const REGION_OPTIONS: { value: string; label: string }[] = [
-  { value: "local", label: "Локально" },
-  { value: "rc", label: "РЦ" },
-  { value: "cis", label: "СНГ" },
+  { value: "local", label: t("Локально") },
+  { value: "rc", label: t("РЦ") },
+  { value: "cis", label: t("СНГ") },
   { value: "middle_east", label: "Middle East" },
 ];
 
@@ -34,9 +35,11 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
       onClose={onClose}
     >
       {isLoading ? (
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
       ) : !data || data.length === 0 ? (
-        <p style={{ color: "var(--text3)", fontSize: 12 }}>В эту точку пока ничего не отгружено</p>
+        <p style={{ color: "var(--text3)", fontSize: 12 }}>
+          {t("В эту точку пока ничего не отгружено")}
+        </p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -49,7 +52,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                   padding: "6px 8px",
                 }}
               >
-                Задача
+                {t("Задача")}
               </th>
               <th
                 style={{
@@ -59,7 +62,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                   padding: "6px 8px",
                 }}
               >
-                Изделие
+                {t("Изделие")}
               </th>
               <th
                 style={{
@@ -69,7 +72,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                   padding: "6px 8px",
                 }}
               >
-                Статус
+                {t("Статус")}
               </th>
               <th
                 style={{
@@ -79,7 +82,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                   padding: "6px 8px",
                 }}
               >
-                Регион
+                {t("Регион")}
               </th>
               <th
                 style={{
@@ -89,7 +92,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                   padding: "6px 8px",
                 }}
               >
-                Кол-во
+                {t("Кол-во")}
               </th>
             </tr>
           </thead>
@@ -139,7 +142,7 @@ export function PointDetailModal({ point, onClose }: PointDetailModalProps) {
                       ))}
                     </select>
                   ) : (
-                    <Badge color="gray">{d.region_label}</Badge>
+                    <Badge color="gray">{tServer(d.region_label)}</Badge>
                   )}
                 </td>
                 <td style={{ padding: "8px", fontSize: 12 }}>

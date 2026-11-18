@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import type { ReactNode } from "react";
 
 import styles from "./Modal.module.css";
@@ -20,7 +21,7 @@ export function Modal({ title, sub, onClose, headerExtra, children }: ModalProps
             {sub && <div className={styles.sub}>{sub}</div>}
           </div>
           {headerExtra}
-          <button className={styles.close} onClick={onClose} title="Закрыть">
+          <button className={styles.close} onClick={onClose} title={t("Закрыть")}>
             ✕
           </button>
         </div>

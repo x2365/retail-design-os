@@ -1,3 +1,5 @@
+import { LangSwitch } from "../../components/LangSwitch/LangSwitch";
+import { t } from "../../i18n";
 import { useState, type FormEvent } from "react";
 import { Navigate } from "react-router-dom";
 
@@ -22,7 +24,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка входа");
+      setError(err instanceof Error ? err.message : t("Ошибка входа"));
     } finally {
       setSubmitting(false);
     }
@@ -31,8 +33,11 @@ export default function LoginPage() {
   return (
     <div className={styles.overlay}>
       <form className={styles.card} onSubmit={handleSubmit}>
-        <div className={styles.brand}>RETAILDESIGN&nbsp;OS</div>
-        <div className={styles.subtitle}>Вход в систему трекинга</div>
+        <div className={styles.brandRow}>
+          <div className={styles.brand}>RETAILDESIGN&nbsp;OS</div>
+          <LangSwitch />
+        </div>
+        <div className={styles.subtitle}>{t("Вход в систему трекинга")}</div>
 
         <div className={forms.row} style={{ marginTop: 20 }}>
           <label className={forms.label} htmlFor="login-email">
@@ -49,7 +54,7 @@ export default function LoginPage() {
         </div>
         <div className={forms.row} style={{ marginBottom: 8 }}>
           <label className={forms.label} htmlFor="login-pass">
-            Пароль
+            {t("Пароль")}
           </label>
           <input
             id="login-pass"
@@ -67,7 +72,7 @@ export default function LoginPage() {
           disabled={submitting}
           style={{ width: "100%", padding: 10 }}
         >
-          {submitting ? "Входим…" : "Войти →"}
+          {submitting ? t("Входим…") : t("Войти →")}
         </Button>
       </form>
     </div>

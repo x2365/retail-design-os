@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { Badge } from "../Badge/Badge";
 import { Button } from "../Button/Button";
 import styles from "./ApprovalGate.module.css";
@@ -27,7 +28,9 @@ export function ApprovalGate({
     return (
       <div className={styles.row}>
         <Badge color={approved ? "green" : "amber"}>
-          {approved ? `✓ ${label}: согласовано` : `${label}: не согласовано`}
+          {approved
+            ? t("✓ {label}: согласовано", { label })
+            : t("{label}: не согласовано", { label })}
         </Badge>
       </div>
     );
@@ -36,10 +39,13 @@ export function ApprovalGate({
   if (approved) {
     return (
       <div className={styles.row}>
-        <Badge color="green">✓ {label}: согласовано</Badge>
-        {by && <span className={styles.by}>{by}</span>}
+        <Badge color="green">
+          ✓ {label}
+          {t(": согласовано")}
+        </Badge>
+        {by && <span className={styles.by}>{tServer(by)}</span>}
         <Button variant="ghost" disabled={pending} onClick={() => onSetApproved(false)}>
-          снять
+          {t("снять")}
         </Button>
       </div>
     );
@@ -48,9 +54,9 @@ export function ApprovalGate({
   return (
     <div className={styles.row}>
       <span className={styles.label}>{label}</span>
-      <span className={styles.pendingLabel}>не согласовано</span>
+      <span className={styles.pendingLabel}>{t("не согласовано")}</span>
       <button className={styles.approveBtn} disabled={pending} onClick={() => onSetApproved(true)}>
-        Согласовано
+        {t("Согласовано")}
       </button>
     </div>
   );

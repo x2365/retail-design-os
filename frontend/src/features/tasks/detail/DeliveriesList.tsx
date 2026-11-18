@@ -1,3 +1,4 @@
+import { t } from "../../../i18n";
 import { useState } from "react";
 
 import { Badge } from "../../../components/Badge/Badge";
@@ -29,7 +30,7 @@ export function DeliveriesList({ code }: { code: string }) {
   const [count, setCount] = useState(30);
   const [error, setError] = useState("");
 
-  if (isLoading) return <p style={{ fontSize: 12, color: "var(--text3)" }}>Загрузка…</p>;
+  if (isLoading) return <p style={{ fontSize: 12, color: "var(--text3)" }}>{t("Загрузка…")}</p>;
   const rows = data ?? [];
 
   async function handleDistribute() {
@@ -37,14 +38,14 @@ export function DeliveriesList({ code }: { code: string }) {
     try {
       await distribute.mutateAsync(count);
     } catch (e) {
-      setError(apiErrorMessage(e, "Не удалось распределить по ТТ"));
+      setError(apiErrorMessage(e, t("Не удалось распределить по ТТ")));
     }
   }
 
   if (rows.length === 0) {
     return (
       <div>
-        <p style={{ fontSize: 12, color: "var(--text3)" }}>Нет доставок по ТТ</p>
+        <p style={{ fontSize: 12, color: "var(--text3)" }}>{t("Нет доставок по ТТ")}</p>
         {canDistribute && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
             <NumberInput
@@ -55,7 +56,7 @@ export function DeliveriesList({ code }: { code: string }) {
               style={{ width: 70, marginBottom: 0, padding: "6px 8px" }}
             />
             <Button variant="ghost" disabled={distribute.isPending} onClick={handleDistribute}>
-              Распределить по ТТ
+              {t("Распределить по ТТ")}
             </Button>
             {error && <span style={{ fontSize: 11, color: "var(--danger)" }}>{error}</span>}
           </div>
@@ -78,7 +79,7 @@ export function DeliveriesList({ code }: { code: string }) {
             <input
               className={forms.input}
               type="date"
-              title="Дата прихода в ТТ"
+              title={t("Дата прихода в ТТ")}
               value={d.arrival_date ?? ""}
               disabled={update.isPending}
               onChange={(e) =>
@@ -87,7 +88,7 @@ export function DeliveriesList({ code }: { code: string }) {
               style={{ width: "auto", marginBottom: 0, padding: "4px 8px" }}
             />
           ) : (
-            <span style={{ color: "var(--text3)", fontSize: 11 }} title="Дата прихода в ТТ">
+            <span style={{ color: "var(--text3)", fontSize: 11 }} title={t("Дата прихода в ТТ")}>
               {d.arrival_date ?? "—"}
             </span>
           )}

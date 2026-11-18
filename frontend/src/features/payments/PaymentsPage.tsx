@@ -1,3 +1,4 @@
+import { t, tServer } from "../../i18n";
 import { useMemo, useState } from "react";
 
 import { Badge } from "../../components/Badge/Badge";
@@ -10,11 +11,11 @@ import forms from "../../styles/forms.module.css";
 import styles from "./PaymentsPage.module.css";
 
 const PAYMENT_STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "unpaid", label: "Авто (по факту оплаты)" },
-  { value: "registry", label: "Отправлен в реестр" },
-  { value: "queued", label: "Заведён на оплату" },
-  { value: "prepaid", label: "Предоплачен" },
-  { value: "paid", label: "Оплачено" },
+  { value: "unpaid", label: t("Авто (по факту оплаты)") },
+  { value: "registry", label: t("Отправлен в реестр") },
+  { value: "queued", label: t("Заведён на оплату") },
+  { value: "prepaid", label: t("Предоплачен") },
+  { value: "paid", label: t("Оплачено") },
 ];
 
 function statusColor(status: string): "green" | "amber" | "blue" {
@@ -72,36 +73,39 @@ export default function PaymentsPage() {
       {isEditor && (
         <div style={{ marginBottom: 14 }}>
           <Button variant="ghost" onClick={() => setFormOpen((o) => !o)}>
-            {formOpen ? "Скрыть форму" : "+ Новое КП"}
+            {formOpen ? t("Скрыть форму") : t("+ Новое КП")}
           </Button>
           {formOpen && <NewPaymentForm onDone={() => setFormOpen(false)} />}
         </div>
       )}
 
-      <Panel title="ОПЛАТЫ / КП" count={isLoading ? undefined : data?.length}>
+      <Panel title={t("ОПЛАТЫ / КП")} count={isLoading ? undefined : data?.length}>
         {isLoading ? (
-          <p style={{ color: "var(--text3)", fontSize: 12 }}>Загрузка…</p>
+          <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Загрузка…")}</p>
         ) : !data || data.length === 0 ? (
-          <p style={{ color: "var(--text3)", fontSize: 12 }}>Пока нет оплат</p>
+          <p style={{ color: "var(--text3)", fontSize: 12 }}>{t("Пока нет оплат")}</p>
         ) : (
           <table className={styles.table}>
             <thead>
               <tr>
                 <th className={styles.sortable} onClick={() => toggleSort("task")}>
-                  Задача{sortArrow("task")}
+                  {t("Задача")}
+                  {sortArrow("task")}
                 </th>
                 <th className={styles.sortable} onClick={() => toggleSort("brand")}>
-                  Бренд{sortArrow("brand")}
+                  {t("Бренд")}
+                  {sortArrow("brand")}
                 </th>
-                <th>Подрядчик</th>
+                <th>{t("Подрядчик")}</th>
                 <th className={styles.sortable} onClick={() => toggleSort("date")}>
-                  Дата КП{sortArrow("date")}
+                  {t("Дата КП")}
+                  {sortArrow("date")}
                 </th>
-                <th>Образец</th>
-                <th>Тираж</th>
-                <th>Предоплата</th>
-                <th>Баланс</th>
-                <th>Статус</th>
+                <th>{t("Образец")}</th>
+                <th>{t("Тираж")}</th>
+                <th>{t("Предоплата")}</th>
+                <th>{t("Баланс")}</th>
+                <th>{t("Статус")}</th>
               </tr>
             </thead>
             <tbody>
@@ -126,7 +130,7 @@ export default function PaymentsPage() {
                             )
                           }
                         >
-                          📎 файл
+                          {t("📎 файл")}
                         </a>
                       </>
                     )}
@@ -154,7 +158,7 @@ export default function PaymentsPage() {
                         ))}
                       </select>
                     ) : (
-                      <Badge color={statusColor(p.status)}>{p.status}</Badge>
+                      <Badge color={statusColor(p.status)}>{tServer(p.status)}</Badge>
                     )}
                   </td>
                 </tr>
@@ -184,7 +188,7 @@ function NewPaymentForm({ onDone }: { onDone: () => void }) {
       { task, contractor, currency: "RUB", sample, tirazh, prepaid, balance, status },
       {
         onSuccess: onDone,
-        onError: (e) => setError(apiErrorMessage(e, "Не удалось сохранить оплату")),
+        onError: (e) => setError(apiErrorMessage(e, t("Не удалось сохранить оплату"))),
       },
     );
   }
@@ -192,11 +196,11 @@ function NewPaymentForm({ onDone }: { onDone: () => void }) {
   return (
     <div className={forms.grid2} style={{ marginTop: 10 }}>
       <div className={forms.row}>
-        <label className={forms.label}>Код задачи (RD-xxx)</label>
+        <label className={forms.label}>{t("Код задачи (RD-xxx)")}</label>
         <input className={forms.input} value={task} onChange={(e) => setTask(e.target.value)} />
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Подрядчик</label>
+        <label className={forms.label}>{t("Подрядчик")}</label>
         <input
           className={forms.input}
           value={contractor}
@@ -204,15 +208,15 @@ function NewPaymentForm({ onDone }: { onDone: () => void }) {
         />
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Образец</label>
+        <label className={forms.label}>{t("Образец")}</label>
         <input className={forms.input} value={sample} onChange={(e) => setSample(e.target.value)} />
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Тираж</label>
+        <label className={forms.label}>{t("Тираж")}</label>
         <input className={forms.input} value={tirazh} onChange={(e) => setTirazh(e.target.value)} />
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Предоплата</label>
+        <label className={forms.label}>{t("Предоплата")}</label>
         <input
           className={forms.input}
           value={prepaid}
@@ -220,7 +224,7 @@ function NewPaymentForm({ onDone }: { onDone: () => void }) {
         />
       </div>
       <div className={forms.row}>
-        <label className={forms.label}>Баланс</label>
+        <label className={forms.label}>{t("Баланс")}</label>
         <input
           className={forms.input}
           value={balance}
@@ -228,11 +232,11 @@ function NewPaymentForm({ onDone }: { onDone: () => void }) {
         />
       </div>
       <div className={forms.row} style={{ gridColumn: "1 / -1" }}>
-        <label className={forms.label}>Статус</label>
+        <label className={forms.label}>{t("Статус")}</label>
         <input className={forms.input} value={status} onChange={(e) => setStatus(e.target.value)} />
       </div>
       <Button variant="primary" disabled={upsert.isPending || !task} onClick={submit}>
-        Сохранить
+        {t("Сохранить")}
       </Button>
       {error && (
         <div style={{ gridColumn: "1 / -1", color: "var(--danger)", fontSize: 11 }}>{error}</div>

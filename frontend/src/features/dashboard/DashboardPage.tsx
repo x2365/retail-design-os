@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useOutletContext } from "react-router-dom";
@@ -35,7 +36,7 @@ export default function DashboardPage() {
     setHighlightCode(code);
   }
 
-  if (isLoading || !k) return <p style={{ color: "var(--text2)" }}>Загрузка…</p>;
+  if (isLoading || !k) return <p style={{ color: "var(--text2)" }}>{t("Загрузка…")}</p>;
 
   const budgetSpent = kopToRub(k.budget_spent);
   const budgetTotal = kopToRub(k.budget_total);
@@ -43,14 +44,12 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {openedCode && (
-        <TaskDetailModal code={openedCode} onClose={() => setOpenedCode(null)} />
-      )}
+      {openedCode && <TaskDetailModal code={openedCode} onClose={() => setOpenedCode(null)} />}
       {isEditor &&
         topbarActionsEl &&
         createPortal(
           <Button variant="primary" onClick={() => setCreating(true)}>
-            + Создать задачу
+            {t("+ Создать задачу")}
           </Button>,
           topbarActionsEl,
         )}
@@ -59,42 +58,42 @@ export default function DashboardPage() {
       <KpiRow>
         <KpiCard
           accent="blue"
-          label="Активных задач"
+          label={t("Активных задач")}
           value={k.active_tasks}
-          sub={`из ${k.brands_count} брендов`}
+          sub={t("из {n} брендов", { n: k.brands_count })}
         />
         <KpiCard
           accent="amber"
-          label="Срок < 14 дней"
+          label={t("Срок < 14 дней")}
           value={k.due_soon}
           valueColor="var(--warn)"
-          sub="требуют внимания"
+          sub={t("требуют внимания")}
         />
         <KpiCard
           accent="green"
-          label="Завершено"
+          label={t("Завершено")}
           value={k.completed}
           valueColor="var(--accent3)"
-          sub="лончей"
+          sub={t("лончей")}
           delta={(k.on_time_rate == null ? "—" : `${k.on_time_rate}%`) + " on-time"}
           deltaDirection="up"
         />
         <KpiCard
           accent="purple"
-          label="Бюджет"
+          label={t("Бюджет")}
           value={formatMoney(budgetSpent)}
           valueFontSize={16}
-          sub={`из ${formatMoney(budgetTotal)} плана`}
-          delta={`${budgetPct}% освоено`}
+          sub={t("из {sum} плана", { sum: formatMoney(budgetTotal) })}
+          delta={t("{pct}% освоено", { pct: budgetPct })}
           deltaDirection="up"
         />
         <KpiCard
           accent="red"
-          label="ТТ без подтв."
+          label={t("ТТ без подтв.")}
           value={k.tt_unconfirmed}
           valueColor="var(--danger)"
-          sub={`из ${k.points_total} точек`}
-          delta="нужна проверка"
+          sub={t("из {n} точек", { n: k.points_total })}
+          delta={t("нужна проверка")}
           deltaDirection="down"
         />
       </KpiRow>
@@ -103,16 +102,16 @@ export default function DashboardPage() {
         <ActiveTasksPanel highlightCode={highlightCode} />
 
         <div className={styles.sideStack}>
-          <Panel title="ОЖИДАЮТ РЕШЕНИЯ" count={pendingCount} countAlert>
+          <Panel title={t("ОЖИДАЮТ РЕШЕНИЯ")} count={pendingCount} countAlert>
             <ApprovalsMini onOpenTask={openTask} />
           </Panel>
-          <Panel title="БЮДЖЕТ ПО ГРУППАМ">
+          <Panel title={t("БЮДЖЕТ ПО ГРУППАМ")}>
             <BudgetMini />
           </Panel>
         </div>
       </div>
 
-      <Panel title="СТАТУС ТОРГОВЫХ ТОЧЕК — АКТИВНЫЕ ЛОНЧИ">
+      <Panel title={t("СТАТУС ТОРГОВЫХ ТОЧЕК — АКТИВНЫЕ ЛОНЧИ")}>
         <TTMini />
       </Panel>
     </div>

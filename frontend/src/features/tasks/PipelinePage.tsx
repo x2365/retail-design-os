@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -70,9 +71,9 @@ export default function PipelinePage() {
           >
             <div className={styles.colBody}>
               {query.isLoading ? (
-                <p className={styles.empty}>Загрузка…</p>
+                <p className={styles.empty}>{t("Загрузка…")}</p>
               ) : tasks.length === 0 ? (
-                <p className={styles.empty}>Нет задач</p>
+                <p className={styles.empty}>{t("Нет задач")}</p>
               ) : (
                 tasks.map((t) => (
                   <TaskCard
