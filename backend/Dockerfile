@@ -11,8 +11,18 @@ WORKDIR /app
 # point (see routers/internal.py's /internal/snapshot/* endpoints). Not
 # needed at all when DATABASE_URL is SQLite (dev) — snapshot.py just raises
 # a clear error there instead of failing at import time.
+#
+# pg_dump refuses to dump a server newer than itself, and Debian's own
+# postgresql-client lags behind (17 on trixie) while Neon runs Postgres 18 —
+# so take the client from the official PostgreSQL apt repo (PGDG) instead.
+# postgresql-common ships the PGDG setup script and its signing key, so
+# nothing is downloaded outside apt. Bump PG_CLIENT_MAJOR together with the
+# server's major version.
+ARG PG_CLIENT_MAJOR=18
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client \
+    && apt-get install -y --no-install-recommends postgresql-common ca-certificates \
+    && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y \
+    && apt-get install -y --no-install-recommends postgresql-client-${PG_CLIENT_MAJOR} \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first for better layer caching

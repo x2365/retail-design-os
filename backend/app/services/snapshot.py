@@ -24,7 +24,11 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..models import DataSnapshot
 
-EXCLUDED_TABLES = ["data_snapshots", "alembic_version"]
+# `--exclude-table` also matches sequences, and pg_dump does NOT drop a
+# serial column's sequence along with its excluded table — left in, the
+# restore's `--clean` tries to DROP data_snapshots_id_seq while the live
+# data_snapshots.id still depends on it, and pg_restore exits non-zero.
+EXCLUDED_TABLES = ["data_snapshots", "data_snapshots_id_seq", "alembic_version"]
 _DUMP_TIMEOUT_S = 120
 _RESTORE_TIMEOUT_S = 180
 
@@ -74,6 +78,13 @@ def restore_snapshot(db: Session) -> DataSnapshot:
     with tempfile.NamedTemporaryFile(suffix=".dump", delete=False) as f:
         f.write(snap.payload)
         tmp_path = f.name
+    # End this request's transaction before pg_restore runs: it still holds
+    # ACCESS SHARE locks on every table it read (e.g. `users`, loaded by the
+    # auth dependency), and `pg_restore --clean` needs ACCESS EXCLUSIVE to
+    # drop them — so it would wait on our own session until the timeout.
+    # `snap` is expired by the rollback and reloads from data_snapshots, which
+    # the dump excludes, once the restore is done.
+    db.rollback()
     try:
         args = [
             "pg_restore",
