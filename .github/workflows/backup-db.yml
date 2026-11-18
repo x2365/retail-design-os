@@ -1,9 +1,24 @@
 name: Backup database
 
-# Render's free Postgres plan has no automatic backups and the DB is dropped
-# after a period of inactivity/expiry — this is the only safety net.
-# Dumps go into the same R2 bucket already used for file uploads
-# (backend/app/storage.py), under a separate db-backups/ prefix.
+# Daily dump of the Neon database (free plan: point-in-time restore only covers
+# a short window). The dump is encrypted with BACKUP_PASSPHRASE before it
+# leaves the runner — this repo is public, and workflow artifacts of public
+# repos can be downloaded by any signed-in GitHub user.
+#
+# Required secrets:
+#   BACKUP_DATABASE_URL  Neon connection string (pooled or direct — the
+#                        `-pooler` host is rewritten to the direct one, see
+#                        backend/app/services/snapshot.py for why)
+#   BACKUP_PASSPHRASE    encryption passphrase; keep a copy outside GitHub,
+#                        without it the backups can't be opened
+# Optional (all four, to also copy each backup to Cloudflare R2):
+#   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME
+#
+# Restore:
+#   gh run download <run-id> -n db-backup
+#   gpg --decrypt backup.dump.gpg > backup.dump
+#   pg_restore --clean --if-exists --no-owner --no-privileges -d "$DIRECT_URL" backup.dump
+#   (pg_restore 18+, against the direct host, NOT the -pooler one)
 
 on:
   schedule:
@@ -14,34 +29,74 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump database
-        run: |
-          set -euo pipefail
-          docker run --rm postgres:16-alpine \
-            pg_dump --no-owner --no-privileges --format=plain "$DATABASE_URL" \
-            | gzip > backup.sql.gz
-          # Sanity check: fail loudly on an empty/near-empty dump instead of
-          # silently uploading a useless backup (e.g. bad/expired DATABASE_URL).
-          size=$(stat -c%s backup.sql.gz 2>/dev/null || stat -f%z backup.sql.gz)
-          if [ "$size" -lt 1024 ]; then
-            echo "::error::Dump is suspiciously small ($size bytes) — aborting." >&2
-            exit 1
-          fi
+      - name: Check secrets
         env:
           DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          missing=""
+          [ -n "$DATABASE_URL" ] || missing="$missing BACKUP_DATABASE_URL"
+          [ -n "$BACKUP_PASSPHRASE" ] || missing="$missing BACKUP_PASSPHRASE"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repo secret(s):$missing"
+            exit 1
+          fi
 
-      - name: Upload to R2
+      - name: Dump database
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
         run: |
           set -euo pipefail
-          name="db-backups/$(date -u +%F)-backup.sql.gz"
-          docker run --rm -v "$PWD:/data" \
-            -e AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
-            -e AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
-            -e AWS_DEFAULT_REGION=auto \
-            amazon/aws-cli s3 cp /data/backup.sql.gz "s3://$R2_BUCKET_NAME/$name" \
-            --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          # Direct endpoint: pg_dump's session-level search_path='' must not
+          # land on a PgBouncer connection the app will reuse.
+          direct=$(printf '%s' "$DATABASE_URL" | sed -E 's/(@[^/@]*)-pooler\./\1./')
+          # Client major version must be >= the server's (Neon runs 18).
+          docker run --rm -e PGURL="$direct" postgres:18-alpine \
+            sh -c 'pg_dump --format=custom --no-owner --no-privileges "$PGURL"' > backup.dump
+          size=$(stat -c%s backup.dump)
+          # Fail loudly on an empty/near-empty dump instead of storing a
+          # useless backup (bad or expired DATABASE_URL).
+          if [ "$size" -lt 4096 ]; then
+            echo "::error::Dump is suspiciously small ($size bytes) — aborting."
+            exit 1
+          fi
+          tables=$(docker run --rm -i postgres:18-alpine pg_restore --list < backup.dump | grep -c ' TABLE DATA ' || true)
+          echo "Dump: $size bytes, $tables tables with data"
+          [ "$tables" -ge 10 ] || { echo "::error::Only $tables tables in the dump — aborting."; exit 1; }
+
+      - name: Encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 -o backup.dump.gpg backup.dump <<< "$BACKUP_PASSPHRASE"
+          shred -u backup.dump
+
+      - name: Keep as workflow artifact (30 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup
+          path: backup.dump.gpg
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Copy to R2 (if configured)
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "$R2_ACCOUNT_ID" ] || [ -z "$R2_ACCESS_KEY_ID" ] || [ -z "$R2_SECRET_ACCESS_KEY" ] || [ -z "$R2_BUCKET_NAME" ]; then
+            echo "R2 not configured — the workflow artifact is the only copy."
+            exit 0
+          fi
+          name="db-backups/$(date -u +%F)-backup.dump.gpg"
+          docker run --rm -v "$PWD:/data" \
+            -e AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
+            -e AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
+            -e AWS_DEFAULT_REGION=auto \
+            amazon/aws-cli s3 cp /data/backup.dump.gpg "s3://$R2_BUCKET_NAME/$name" \
+            --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
