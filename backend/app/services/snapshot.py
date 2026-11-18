@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import datetime as dt
 import os
+import re
 import subprocess
 import tempfile
 
@@ -33,11 +34,22 @@ _DUMP_TIMEOUT_S = 120
 _RESTORE_TIMEOUT_S = 180
 
 
+def _direct_url(url: str) -> str:
+    """Bypass a Neon connection pooler (host `ep-…-pooler.…`) for pg_dump /
+    pg_restore. Both run `SELECT set_config('search_path', '', false)` — a
+    SESSION setting — and behind PgBouncer's transaction pooling that setting
+    stays on the shared server connection after they exit. The app's next
+    queries on it then fail with "relation … does not exist" (this took the
+    live demo down once). The direct endpoint is the same host without
+    `-pooler`; any other URL is returned unchanged."""
+    return re.sub(r"(@[^/@]*?)-pooler\.", r"\1.", url, count=1)
+
+
 def _require_postgres() -> str:
     settings = get_settings()
     if settings.is_sqlite:
         raise RuntimeError("Точка сброса поддерживается только для PostgreSQL")
-    return settings.database_url
+    return _direct_url(settings.database_url)
 
 
 def take_snapshot(db: Session) -> DataSnapshot:

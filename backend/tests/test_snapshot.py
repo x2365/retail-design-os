@@ -134,3 +134,21 @@ def test_dump_excludes_snapshot_table_and_its_sequence(monkeypatch):
         seen["args"][i + 1] for i, a in enumerate(seen["args"]) if a == "--exclude-table"
     }
     assert {"data_snapshots", "data_snapshots_id_seq", "alembic_version"} <= excluded
+
+
+def test_snapshot_tools_bypass_the_neon_pooler():
+    """pg_restore's session-level search_path='' leaks onto PgBouncer's shared
+    server connections and breaks every later app query on them."""
+    from app.services.snapshot import _direct_url
+
+    pooled = "postgresql://u:p@ep-fancy-brook-123-pooler.c-4.us-west-2.aws.neon.tech/db?sslmode=require"
+    assert _direct_url(pooled) == (
+        "postgresql://u:p@ep-fancy-brook-123.c-4.us-west-2.aws.neon.tech/db?sslmode=require"
+    )
+    # anything that isn't a pooler host is left alone
+    for url in (
+        "postgresql://u:p@ep-x.us-west-2.aws.neon.tech/db",
+        "postgresql://postgres:pw@db:5432/rd",
+        "postgresql://u:p-pooler.x@host/db",  # "-pooler." in the password, not the host
+    ):
+        assert _direct_url(url) == url
